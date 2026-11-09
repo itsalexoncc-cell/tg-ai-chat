@@ -382,6 +382,21 @@ async function cloudKeyRequest(method,provider,key){
 
 /* ---------- state ---------- */
 const KEY='tgai.state.v1';
+const THEME_KEY='tgai.theme.v1';
+let currentTheme=localStorage.getItem(THEME_KEY)||'dark';
+
+function applyTheme(){
+  document.documentElement.dataset.theme=currentTheme;
+  const color=currentTheme==='light'?'#f5f5f7':'#121212';
+  try{
+    if(tg){
+      tg.setHeaderColor(color);
+      tg.setBackgroundColor(color);
+      if(tg.setBottomBarColor)tg.setBottomBarColor(color);
+    }
+  }catch(e){}
+}
+applyTheme();
 let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
 S=Object.assign({providers:{},chats:[],system:'',maxTokens:4096,lastModel:''},S||{});
@@ -899,9 +914,19 @@ function renderSettings(){
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
    '<p class="hint">Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
+   '<h3>Внешний вид</h3><div class="gb"><label>Тема оформления</label><button class="btn" id="themeToggle">'+(currentTheme==='light'?'☀️ Светлая тема':'🌙 Тёмная тема')+'</button></div>'+
    '<h3>Общее</h3><div class="gb"><label>Системный промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай кратко и по делу">'+esc(S.system)+'</textarea>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
+
+  const themeBtn=$('#themeToggle');
+  if(themeBtn)themeBtn.addEventListener('click',()=>{
+    currentTheme=currentTheme==='light'?'dark':'light';
+    localStorage.setItem(THEME_KEY,currentTheme);
+    applyTheme();
+    themeBtn.textContent=currentTheme==='light'?'☀️ Светлая тема':'🌙 Тёмная тема';
+  });
+
   renderUsage();renderProvs();
 }
 function renderUsage(){
