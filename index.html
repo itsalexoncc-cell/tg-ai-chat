@@ -30,7 +30,7 @@ svg{display:block}
 /* messages */
 #msgs{flex:1;min-height:0;overflow-y:auto;padding:8px 16px 16px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .empty{height:100%;display:grid;place-items:center;color:#5d5d5d;font-size:22px;font-weight:500}
-.m{margin:14px 0;font-size:16px;line-height:1.55}
+.m{margin:16px 0;font-size:17px;line-height:1.65;letter-spacing:.01em}
 .m.u{display:flex;justify-content:flex-end}
 .m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:86%;white-space:pre-wrap;word-break:break-word}
 .m.a .b{word-break:break-word}
@@ -57,7 +57,7 @@ svg{display:block}
 
 /* bottom */
 #bottom{flex:none;padding:0 16px max(14px,env(safe-area-inset-bottom))}
-.sugg{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px 12px;padding:0 16px;scrollbar-width:none}
+.sugg{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;padding:0;scrollbar-width:none}
 .sugg::-webkit-scrollbar{display:none}
 .sugg.hide{display:none}
 .sc{flex:none;width:min(78vw,300px);scroll-snap-align:start;display:flex;align-items:center;gap:14px;padding:12px 14px;
@@ -65,10 +65,10 @@ svg{display:block}
 .sc .tile{width:50px;height:50px;border-radius:16px;background:#181818;display:grid;place-items:center;flex:none}
 .sc b{display:block;font-size:17px;font-weight:600}
 .sc small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
-.composer{background:var(--surface);border:1px solid #333;border-radius:28px;padding:14px 14px 10px 18px}
-#inp{display:block;width:100%;background:none;border:0;resize:none;font-size:17px;line-height:1.4;min-height:52px;max-height:160px;padding:0}
+.composer{background:var(--surface);border:1px solid #3a3a3a;border-radius:30px;padding:7px 9px}
+#inp{display:block;flex:1;min-width:0;width:100%;background:none;border:0;resize:none;font-size:17px;line-height:1.4;min-height:40px;max-height:120px;padding:9px 4px}
 #inp::placeholder{color:#a5a5a5}
-.crow{display:flex;align-items:center;gap:4px;margin-top:6px}
+.crow{display:flex;align-items:center;gap:5px;margin-top:0}
 .sp{flex:1}
 .ib{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:#e6e6e6}
 .ib:active{background:#2a2a2a}
@@ -168,10 +168,9 @@ svg{display:block}
   <div id="bottom">
     <div id="sugg" class="sugg"></div>
     <div class="composer">
-      <textarea id="inp" rows="2" placeholder="Спроси что угодно…" enterkeyhint="enter"></textarea>
       <div class="crow">
         <button class="ib" id="btnAttach" aria-label="Прикрепить файл"></button>
-        <span class="sp"></span>
+        <textarea id="inp" rows="1" placeholder="Спроси что угодно…" enterkeyhint="enter"></textarea>
         <button class="ib" id="btnMic" aria-label="Диктовка"></button>
         <button class="send" id="btnSend" aria-label="Отправить"></button>
       </div>
