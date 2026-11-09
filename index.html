@@ -37,7 +37,8 @@ svg{display:block}
 .m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:86%;white-space:pre-wrap;word-break:break-word}
 .m.a .b{word-break:break-word}
 .word-in{
-  animation:wordSettle .45s cubic-bezier(.2,.7,.2,1) both;
+  display:inline-block;
+  animation:wordSettle .24s cubic-bezier(.2,.7,.2,1) both;
 }
 @keyframes wordSettle{
   from{
@@ -458,7 +459,7 @@ function paint(){
 }
 
     if(paintIndex<m.content.length){
-      setTimeout(()=>requestAnimationFrame(step), 45);
+      setTimeout(()=>requestAnimationFrame(step), 260);
     }else{
       paintQ=false;
     }
