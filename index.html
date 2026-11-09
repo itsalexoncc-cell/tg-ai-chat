@@ -433,7 +433,6 @@ svg{display:block}
       <div class="crow">
         <button class="ib" id="btnAttach" aria-label="Прикрепить файл"></button>
         <textarea id="inp" rows="1" placeholder="Спроси что угодно…" enterkeyhint="enter"></textarea>
-        <button class="ib" id="btnMic" aria-label="Диктовка"></button>
         <button class="send" id="btnSend" aria-label="Отправить"></button>
       </div>
     </div>
@@ -577,7 +576,7 @@ const avail=()=>{const r=[];PROVIDERS.forEach(p=>{if(isAvail(p.id))getModels(p.i
 const splitM=s=>{const i=(s||'').indexOf('|');return i<0?['','']:[s.slice(0,i),s.slice(i+1)]};
 const modelLabel=s=>{const m=splitM(s)[1];if(!m)return 'Выбрать модель';const t=m.split('/').pop();return t.length>20?t.slice(0,19)+'…':t};
 
-let cur=null,busy=false,abortC=null,errMsg='',rec=null;
+let cur=null,busy=false,abortC=null,errMsg='';
 function newChat(){
   const a=avail();
   cur={id:uid(),title:'Новый чат',model:a.includes(S.lastModel)?S.lastModel:(a[0]||''),messages:[],updated:Date.now()};
@@ -787,9 +786,8 @@ function autosize(){inp.style.height='auto';inp.style.height=Math.min(inp.scroll
 inp.addEventListener('input',()=>{autosize();updateComposer()});
 $('#btnSend').addEventListener('click',()=>{
   if(busy){if(abortC)abortC.abort();return}
-  if(inp.value.trim())send();else dictate();
+  if(inp.value.trim())send();
 });
-$('#btnMic').addEventListener('click',dictate);
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
 $('#file').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
@@ -799,17 +797,6 @@ $('#file').addEventListener('change',e=>{
   r.onerror=()=>toast('Не удалось прочитать файл');
   r.readAsText(f);
 });
-function dictate(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){toast('Голосовой ввод недоступен в этом клиенте');return}
-  if(rec){rec.stop();return}
-  rec=new SR();rec.lang='ru-RU';rec.interimResults=true;
-  const base=inp.value;
-  rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=(base?base+' ':'')+t;autosize();updateComposer()};
-  rec.onend=()=>{rec=null;$('#btnMic').classList.remove('on')};
-  rec.onerror=()=>toast('Не удалось включить микрофон');
-  try{rec.start();$('#btnMic').classList.add('on')}catch(e){rec=null}
-}
 
 /* ---------- sending ---------- */
 function send(){
