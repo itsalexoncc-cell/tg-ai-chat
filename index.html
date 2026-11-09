@@ -392,6 +392,31 @@ svg{display:block}
 :root[data-theme="light"] .empty{
   color:var(--muted);
 }
+/* Светлая тема: контраст индикаторов */
+:root[data-theme="light"] .dot.on{
+  background:#16a34a;
+  box-shadow:0 0 0 3px rgba(22,163,74,.16);
+}
+
+:root[data-theme="light"] .dot:not(.on){
+  background:#b8b8c0;
+}
+
+/* Полоска токенов */
+:root[data-theme="light"] .bar{
+  height:8px;
+  background:#c5c5ce;
+  border-radius:10px;
+}
+
+:root[data-theme="light"] .bar i{
+  background:#2563eb;
+  border-radius:10px;
+}
+
+:root[data-theme="light"] .bar i.low{
+  background:#dc2626;
+}
 </style>
 </head>
 <body>
