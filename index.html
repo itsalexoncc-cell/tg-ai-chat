@@ -249,6 +249,21 @@ const PROVIDERS=[
  {id:'custom',name:'Свой endpoint (OpenAI-совместимый)',type:'oai',base:'',models:[],custom:true}
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
+const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
+
+async function cloudKeyRequest(method,provider,key){
+  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  const query=(method==='GET'||method==='DELETE')?'?provider='+encodeURIComponent(provider):'';
+  const options={method,headers:{'X-Telegram-Init-Data':tg.initData}};
+  if(method==='PUT'){
+    options.headers['Content-Type']='application/json';
+    options.body=JSON.stringify({provider,key});
+  }
+  const res=await fetch(CLOUD_API+'/keys'+query,options);
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error||'Ошибка сервера');
+  return data;
+}
 
 /* ---------- state ---------- */
 const KEY='tgai.state.v1';
@@ -256,7 +271,28 @@ let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
 S=Object.assign({providers:{},chats:[],system:'',maxTokens:4096,lastModel:''},S||{});
 PROVIDERS.forEach(p=>{S.providers[p.id]=Object.assign({key:'',base:'',limit:0,used:{in:0,out:0},by:{}},S.providers[p.id]||{})});
-let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},150)};
+let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{const stored=JSON.parse(JSON.stringify(S));PROVIDERS.forEach(p=>{if(stored.providers[p.id])stored.providers[p.id].key=''});localStorage.setItem(KEY,JSON.stringify(stored))}catch(e){}},150)};
+async function saveCloudKey(provider,key){
+  try{
+    if(key)await cloudKeyRequest('PUT',provider,key);
+    else await cloudKeyRequest('DELETE',provider);
+    toast('API ключ сохранён в облаке');
+  }catch(e){toast('Ошибка сохранения ключа: '+e.message)}
+}
+async function loadCloudKeys(){
+  if(!tg||!tg.initData){toast('Откройте приложение через Telegram');return}
+  let migrated=0,loaded=0,failed=0;
+  await Promise.all(PROVIDERS.map(async p=>{
+    const c=S.providers[p.id];
+    try{
+      if(c.key){await cloudKeyRequest('PUT',p.id,c.key);migrated++}
+      else{const data=await cloudKeyRequest('GET',p.id);if(data.key){c.key=data.key;loaded++}}
+    }catch(e){failed++}
+  }));
+  save();
+  if(failed)toast('Не удалось синхронизировать '+failed+' ключ(а). Проверьте Telegram и соединение.');
+  else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
+}
 
 const getModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
 const isAvail=pid=>{const p=PROV[pid],c=S.providers[pid];return p.custom?!!c.base:!!c.key};
@@ -643,7 +679,7 @@ function renderSettings(){
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
-   '<p class="hint">Ключи хранятся только на этом устройстве (localStorage) и отправляются напрямую провайдеру. Если запросы блокируются (CORS, региональные ограничения), укажите свой прокси в поле Base URL.</p>'+
+   '<p class="hint">Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Системный промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай кратко и по делу">'+esc(S.system)+'</textarea>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
@@ -690,11 +726,20 @@ $('#setBody').addEventListener('input',e=>{
   }
   const pv=t.closest('[data-pv]');if(!pv||!t.dataset.f)return;
   const pid=pv.dataset.pv,c=S.providers[pid],f=t.dataset.f;
-  if(f==='key')c.key=t.value.trim();
+  if(f==='key'){c.key=t.value.trim();return}
   else if(f==='base')c.base=t.value.trim();
   else if(f==='models')c.models=t.value.split('\n').map(s=>s.trim()).filter(Boolean);
   else if(f==='limit')c.limit=Math.max(0,parseInt(t.value)||0);
   save();
+  const d=pv.querySelector('.dot');if(d)d.classList.toggle('on',isAvail(pid));
+  renderUsage();
+});
+$('#setBody').addEventListener('change',e=>{
+  const t=e.target;if(t.dataset.f!=='key')return;
+  const pv=t.closest('[data-pv]');if(!pv)return;
+  const pid=pv.dataset.pv,key=t.value.trim();
+  S.providers[pid].key=key;
+  saveCloudKey(pid,key);
   const d=pv.querySelector('.dot');if(d)d.classList.toggle('on',isAvail(pid));
   renderUsage();
 });
@@ -770,7 +815,7 @@ try{
 fit();
 window.addEventListener('resize',fit);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
-newChat();
+loadCloudKeys().finally(()=>newChat());
 })();
 </script>
 </body>
