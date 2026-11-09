@@ -418,7 +418,7 @@ function renderMsgs(){
       box.scrollTop+=top-16;
     }
   }else{
-    scrollDown(true);
+    if(stick)scrollDown(true);
   }
 }
 let paintQ=false;
