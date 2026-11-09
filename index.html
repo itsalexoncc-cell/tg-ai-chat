@@ -395,7 +395,6 @@ svg{display:block}
 /* Светлая тема: контраст индикаторов */
 :root[data-theme="light"] .dot.on{
   background:#16a34a;
-  box-shadow:0 0 0 3px rgba(22,163,74,.16);
 }
 
 :root[data-theme="light"] .dot:not(.on){
@@ -1197,9 +1196,7 @@ async function loadModels(pid){
 try{
   if(tg){
     tg.ready();tg.expand();
-    try{tg.setHeaderColor('#121212')}catch(e){}
-    try{tg.setBackgroundColor('#121212')}catch(e){}
-    try{tg.setBottomBarColor&&tg.setBottomBarColor('#121212')}catch(e){}
+    applyTheme();
     try{tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}catch(e){}
     tg.onEvent&&tg.onEvent('viewportChanged',fit);
   }
