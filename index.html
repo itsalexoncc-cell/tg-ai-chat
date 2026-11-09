@@ -19,8 +19,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 input,textarea{font:inherit;color:var(--text);outline:none}
 svg{display:block}
 #app{position:fixed;left:0;top:0;width:100%;height:var(--h,100dvh);
-  transform:translateY(var(--t,0px));display:flex;flex-direction:column;overflow:hidden;
-  transition:height .2s ease-out}
+  display:flex;flex-direction:column;overflow:hidden}
 
 /* header */
 #top{display:flex;justify-content:space-between;align-items:center;
@@ -319,11 +318,8 @@ function newChat(){
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
 function fit(){
   const v=window.visualViewport;
-  const h=(v&&v.height)||window.innerHeight;
-  const t=(v&&v.offsetTop)||0;
-  const r=document.documentElement.style;
-  r.setProperty('--h',h+'px');
-  r.setProperty('--t',t+'px');
+  const h=(tg&&tg.viewportHeight)||(v&&v.height)||window.innerHeight;
+  document.documentElement.style.setProperty('--h',h+'px');
   window.scrollTo(0,0);
   if(stick)box.scrollTop=box.scrollHeight;
 }
@@ -831,10 +827,7 @@ try{
 }catch(e){}
 fit();
 window.addEventListener('resize',fit);
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',fit);
-  window.visualViewport.addEventListener('scroll',fit);
-}
+if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
 inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
 loadCloudKeys().finally(()=>newChat());
 })();
