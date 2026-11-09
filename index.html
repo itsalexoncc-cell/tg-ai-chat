@@ -380,12 +380,42 @@ function renderMsgs(){
   scrollDown(true);
 }
 let paintQ=false;
+let paintMsg=null;
+let paintIndex=0;
+
 function paint(){
-  if(paintQ)return;paintQ=true;
-  requestAnimationFrame(()=>{paintQ=false;
-    const i=cur.messages.length-1,m=cur.messages[i];if(!m)return;
-    const n=box.querySelector('.m.a[data-i="'+i+'"] .b');if(n){n.innerHTML=m.content?md(m.content):'<span class="dots"><i></i><i></i><i></i></span>';scrollDown(false)}
-  });
+  if(paintQ)return;
+  paintQ=true;
+
+  function step(){
+    const i=cur.messages.length-1;
+    const m=cur.messages[i];
+
+    if(!m){paintQ=false;return}
+
+    if(paintMsg!==m){
+      paintMsg=m;
+      paintIndex=0;
+    }
+
+    const n=box.querySelector('.m.a[data-i="'+i+'"] .b');
+
+    if(n){
+      paintIndex=Math.min(m.content.length,paintIndex+2);
+      n.innerHTML=m.content
+        ?md(m.content.slice(0,paintIndex))
+        :'<span class="dots"><i></i><i></i><i></i></span>';
+      scrollDown(false);
+    }
+
+    if(paintIndex<m.content.length){
+      requestAnimationFrame(step);
+    }else{
+      paintQ=false;
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 box.addEventListener('click',e=>{
   const cp=e.target.closest('[data-copy]');
