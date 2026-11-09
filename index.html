@@ -387,14 +387,34 @@ const scrollDown=f=>{if(f||stick)box.scrollTop=box.scrollHeight};
 
 function renderMsgs(){
   const c=cur;
-  if(!c.messages.length&&!errMsg){box.innerHTML='<div class="empty">Чем могу помочь?</div>';return}
+
+  if(!c.messages.length&&!errMsg){
+    box.innerHTML='<div class="empty">Чем могу помочь?</div>';
+    return;
+  }
+
   box.innerHTML=c.messages.map((m,i)=>{
-    if(m.role==='user')return '<div class="m u"><div class="b">'+esc(m.content)+'</div></div>';
+    if(m.role==='user'){
+      return '<div class="m u"><div class="b">'+esc(m.content)+'</div></div>';
+    }
+
     const last=i===c.messages.length-1;
     const act=(busy&&last)?'':'<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button>'+(last?'<button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button>':'')+'</div>';
+
     return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):'<span class="dots"><i></i><i></i><i></i></span>')+'</div>'+act+'</div>';
   }).join('')+(errMsg?'<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>':'');
-  scrollDown(true);
+
+  if(busy){
+    const users=box.querySelectorAll('.m.u');
+    const lastUser=users[users.length-1];
+
+    if(lastUser){
+      const top=lastUser.getBoundingClientRect().top-box.getBoundingClientRect().top;
+      box.scrollTop+=top-16;
+    }
+  }else{
+    scrollDown(true);
+  }
 }
 let paintQ=false;
 let paintMsg=null;
