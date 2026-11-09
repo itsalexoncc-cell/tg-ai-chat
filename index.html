@@ -31,6 +31,11 @@ svg{display:block}
 
 /* messages */
 #msgs{flex:1;min-height:0;overflow-y:auto;padding:8px 16px 16px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.send-space{
+  height:100vh;
+  height:100dvh;
+  flex:none;
+}
 .empty{height:100%;display:grid;place-items:center;color:#5d5d5d;font-size:22px;font-weight:500}
 .m{margin:16px 0;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .m.u{display:flex;justify-content:flex-end}
@@ -402,7 +407,7 @@ function renderMsgs(){
     const act=(busy&&last)?'':'<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button>'+(last?'<button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button>':'')+'</div>';
 
     return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):'<span class="dots"><i></i><i></i><i></i></span>')+'</div>'+act+'</div>';
-  }).join('')+(errMsg?'<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>':'');
+  }).join('')+(errMsg?'<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>':'')+(busy?'<div class="send-space"></div>':'');
 
   if(busy){
     const users=box.querySelectorAll('.m.u');
