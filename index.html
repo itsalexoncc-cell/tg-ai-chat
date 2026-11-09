@@ -17,7 +17,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);overflow:h
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input,textarea{font:inherit;color:var(--text);outline:none}
 svg{display:block}
-#app{position:relative;height:var(--h,100dvh);display:flex;flex-direction:column;overflow:hidden}
+#app{position:relative;height:var(--h,100dvh);display:flex;flex-direction:column;overflow:hidden;transition:height .25s ease}
 
 /* header */
 #top{display:flex;justify-content:space-between;align-items:center;
@@ -34,6 +34,11 @@ svg{display:block}
 .m.u{display:flex;justify-content:flex-end}
 .m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:86%;white-space:pre-wrap;word-break:break-word}
 .m.a .b{word-break:break-word}
+.m.a{animation:answerIn .28s ease-out}
+@keyframes answerIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
 .m.a .b>*:first-child{margin-top:0}
 .m.a .b p{margin:0 0 .75em}
 .m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{margin:1em 0 .4em;font-size:17px}
