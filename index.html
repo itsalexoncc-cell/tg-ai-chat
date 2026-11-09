@@ -13,11 +13,14 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--text);overflow:hidden;
+  position:fixed;inset:0;width:100%;
   font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input,textarea{font:inherit;color:var(--text);outline:none}
 svg{display:block}
-#app{position:relative;height:var(--h,100dvh);display:flex;flex-direction:column;overflow:hidden;transition:height .25s ease}
+#app{position:fixed;left:0;top:0;width:100%;height:var(--h,100dvh);
+  transform:translateY(var(--t,0px));display:flex;flex-direction:column;overflow:hidden;
+  transition:height .2s ease-out}
 
 /* header */
 #top{display:flex;justify-content:space-between;align-items:center;
@@ -314,7 +317,16 @@ function newChat(){
 
 /* ---------- helpers ---------- */
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
-function fit(){const h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight;document.documentElement.style.setProperty('--h',h+'px');window.scrollTo(0,0)}
+function fit(){
+  const v=window.visualViewport;
+  const h=(v&&v.height)||window.innerHeight;
+  const t=(v&&v.offsetTop)||0;
+  const r=document.documentElement.style;
+  r.setProperty('--h',h+'px');
+  r.setProperty('--t',t+'px');
+  window.scrollTo(0,0);
+  if(stick)box.scrollTop=box.scrollHeight;
+}
 const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+'M':n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+'k':String(Math.round(n));
 function copyText(t){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('Скопировано'),()=>fb())}else fb();
@@ -819,7 +831,11 @@ try{
 }catch(e){}
 fit();
 window.addEventListener('resize',fit);
-if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',fit);
+  window.visualViewport.addEventListener('scroll',fit);
+}
+inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
 loadCloudKeys().finally(()=>newChat());
 })();
 </script>
