@@ -668,7 +668,23 @@ async function generate(){
     if(uIn||uOut)addUsage(pid,model,uIn,uOut);
     if(!msg.content)cur.messages.pop();
     busy=false;abortC=null;cur.updated=Date.now();save();
-    renderAll();if(!$('#settings').classList.contains('open'))renderUsageSafe();
+    renderTop();
+    updateComposer();
+    box.querySelector('.send-space')?.remove();
+    
+    const lastIndex=cur.messages.length-1;
+    const last=box.querySelector('.m.a[data-i="'+lastIndex+'"]');
+    
+    if(last&&!last.querySelector('.act')){
+      last.insertAdjacentHTML('beforeend',
+        '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button><button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button></div>'
+        );
+    }
+    if(errMsg){
+      box.insertAdjacentHTML('beforeend',
+        '<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>'
+        );
+    }
   }
 }
 
