@@ -401,7 +401,8 @@ function paint(){
     const n=box.querySelector('.m.a[data-i="'+i+'"] .b');
 
     if(n){
-      paintIndex=Math.min(m.content.length,paintIndex+2);
+      const next=m.content.indexOf(' ',paintIndex);
+      paintIndex=next===-1?m.content.length:next+1;
       n.innerHTML=m.content
         ?md(m.content.slice(0,paintIndex))
         :'<span class="dots"><i></i><i></i><i></i></span>';
@@ -409,7 +410,7 @@ function paint(){
     }
 
     if(paintIndex<m.content.length){
-      requestAnimationFrame(step);
+      setTimeout(()=>requestAnimationFrame(step), 30);
     }else{
       paintQ=false;
     }
