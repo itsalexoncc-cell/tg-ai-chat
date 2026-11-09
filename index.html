@@ -186,6 +186,89 @@ svg{display:block}
 #toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:10px 16px;border-radius:14px;
   font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:86vw;text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%)}
+/* LIGHT THEME */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --card:#e9e9ed;
+  --card2:#ffffff;
+  --border:#d8d8de;
+  --text:#1c1c1e;
+  --muted:#77777f;
+  --danger:#e5484d;
+  --ok:#269b58;
+}
+
+:root[data-theme="light"] body,
+:root[data-theme="light"] #app{
+  background:var(--bg);
+  color:var(--text);
+}
+
+:root[data-theme="light"] .pill,
+:root[data-theme="light"] .send{
+  background:#1c1c1e;
+  color:#fff;
+}
+
+:root[data-theme="light"] .m.u .b,
+:root[data-theme="light"] .sc,
+:root[data-theme="light"] .uc,
+:root[data-theme="light"] .pv,
+:root[data-theme="light"] .gb{
+  background:var(--card);
+  border-color:var(--border);
+}
+
+:root[data-theme="light"] .composer,
+:root[data-theme="light"] .dcard,
+:root[data-theme="light"] .pcard,
+:root[data-theme="light"] #settings{
+  background:var(--surface);
+  border-color:var(--border);
+}
+
+:root[data-theme="light"] #drawer{
+  background:#fff;
+  border-color:var(--border);
+}
+
+:root[data-theme="light"] .search,
+:root[data-theme="light"] .sc .tile,
+:root[data-theme="light"] .pvb input,
+:root[data-theme="light"] .pvb textarea,
+:root[data-theme="light"] .gb input,
+:root[data-theme="light"] .gb textarea,
+:root[data-theme="light"] .dcard input{
+  background:#f2f2f5;
+  color:var(--text);
+  border-color:var(--border);
+}
+
+:root[data-theme="light"] .code{
+  background:#f0f0f2;
+  border-color:var(--border);
+  color:#222;
+}
+
+:root[data-theme="light"] .code .ch{
+  background:#e5e5e9;
+}
+
+:root[data-theme="light"] .code pre code{
+  color:#222;
+}
+
+:root[data-theme="light"] .ib{
+  color:#333;
+}
+
+:root[data-theme="light"] .empty,
+:root[data-theme="light"] .hint,
+:root[data-theme="light"] #setBody h3{
+  color:var(--muted);
+}
 </style>
 </head>
 <body>
