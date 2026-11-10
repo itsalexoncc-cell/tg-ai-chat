@@ -1397,7 +1397,7 @@ async function generate(){
     }
   }catch(e){
     if(e&&e.name==='AbortError'){/* остановлено пользователем */}
-    else if(e instanceof TypeError)errMsg='Не удалось связаться с API: сеть, CORS или блокировка. Проверьте интернет и Base URL (можно указать свой прокси) в настройках.';
+    else if(e instanceof TypeError)errMsg='Не удалось связаться с API: сеть, CORS или блокировка. Проверьте интернет и Base URL (можно указать свой прокси) в настройках.'+(cur.messages.some(m=>m.attachments&&m.attachments.length)?' Есть вложения: если без них запрос проходит, дело в размере запроса.':'')+' ['+(e.message||'TypeError')+']';
     else errMsg=String(e&&e.message||e);
   }finally{
     if(!got){uIn=est(hist);uOut=Math.ceil(msg.content.length/3.5)}
@@ -1416,7 +1416,7 @@ async function generate(){
         '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button><button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button></div>'
         );
     }
-    if(errMsg){
+    if(errMsg&&!box.querySelector('.err')){
       box.insertAdjacentHTML('beforeend',
         '<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>'
         );
