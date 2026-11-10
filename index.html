@@ -763,7 +763,7 @@ function openUserMessageMenu(index){
     .slice(index+1)
     .some(x=>x.role==='assistant'&&x.content);
 
-  const canRetry=!busy&&!hasAnswer;
+  const canRetry=!busy;
   const d=$('#dlg');
 
   d.innerHTML=
