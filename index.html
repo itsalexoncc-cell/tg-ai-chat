@@ -1093,7 +1093,6 @@ $('#btnSend').addEventListener('click',()=>{
   if(busy){if(abortC)abortC.abort();return}
   if(inp.value.trim())send();
 });
-$('#btnMic').addEventListener('click',dictate);
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
 $('#file').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
