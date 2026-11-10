@@ -1217,7 +1217,7 @@ async function generate(){
   }finally{
     if(!got){uIn=est(hist);uOut=Math.ceil(msg.content.length/3.5)}
     if(uIn||uOut)addUsage(pid,model,uIn,uOut);
-    if(!msg.content)cur.messages.pop();
+    if(!msg.content){cur.messages.pop();renderMsgs();}
     busy=false;abortC=null;cur.updated=Date.now();save();
     renderTop();
     updateComposer();
