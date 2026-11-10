@@ -40,6 +40,33 @@ svg{display:block}
 .m{margin:16px 0;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .m.u{display:flex;justify-content:flex-end}
 .m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:86%;white-space:pre-wrap;word-break:break-word}
+.m.u .b{
+  display:flex;
+  flex-direction:column;
+}
+
+.ufoot{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  height:20px;
+  margin:3px -4px -4px 0;
+  color:#858585;
+  font-size:11px;
+}
+
+.umore{
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:22px;
+  padding:0;
+  color:#858585;
+  background:transparent;
+  border:0;
+  border-radius:6px;
+}
 .m.a .b{word-break:break-word}
 .word-in{
   display:inline-block;
@@ -673,8 +700,17 @@ function renderMsgs(){
 
   box.innerHTML=c.messages.map((m,i)=>{
     if(m.role==='user'){
-      return '<div class="m u" data-i="'+i+'"><div class="b">'+esc(m.content)+'</div></div>';
-    }
+  const time=m.timestamp
+    ?new Date(m.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})
+    :'';
+
+  return '<div class="m u" data-i="'+i+'"><div class="b">'+esc(m.content)+
+    '<div class="ufoot">'+
+      (time?'<span>'+time+'</span>':'')+
+      '<button class="umore" data-user-menu aria-label="Действия сообщения">'+ic('more-horizontal',16)+'</button>'+
+    '</div>'+
+  '</div></div>';
+}
 
     const last=i===c.messages.length-1;
     const act=(busy&&last)?'':'<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button>'+(last?'<button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button>':'')+'</div>';
@@ -880,7 +916,8 @@ box.addEventListener('click',e=>{
 
   const user=e.target.closest('.m.u[data-i]');
   if(user){
-    openUserMessageMenu(+user.dataset.i,user);
+    const more=e.target.closest('[data-user-menu]');
+    openUserMessageMenu(+user.dataset.i,more||user);
     return;
   }
 
@@ -971,7 +1008,7 @@ function send(){
     toast(avail().length?'Выберите модель':'Добавьте API ключ в настройках');
     if(avail().length)openPicker();else openSettings();return;
   }
-  cur.messages.push({role:'user',content:text});
+  cur.messages.push({role:'user',content:text,timestamp:Date.now()});
   if(cur.messages.length===1)cur.title=text.replace(/\s+/g,' ').slice(0,42);
   if(S.chats.indexOf(cur)<0)S.chats.unshift(cur);
   cur.updated=Date.now();S.lastModel=cur.model;save();
