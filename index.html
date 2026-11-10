@@ -151,6 +151,27 @@ svg{display:block}
 .btn.pri{background:#fff;color:#121212}
 .btn.dan{background:#5a2323;color:#ffb4b4}
 .btn.ghost{background:none;border:1px solid #3a3a3a}
+/* Контекстные меню возле нажатого элемента */
+#dlg.context{
+  background:transparent;
+  display:block;
+  padding:0;
+}
+
+#dlg.context .dcard{
+  position:absolute;
+  width:min(260px,calc(100vw - 24px));
+  max-width:none;
+  padding:10px;
+  border-radius:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  animation:menuIn .14s ease-out;
+}
+
+@keyframes menuIn{
+  from{opacity:0;transform:scale(.96)}
+  to{opacity:1;transform:scale(1)}
+}
 
 /* settings */
 #settings{position:absolute;inset:0;background:var(--bg);z-index:30;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
@@ -755,7 +776,35 @@ function retryUserMessage(index){
   generate();
 }
 
-function openUserMessageMenu(index){
+function positionContextMenu(anchor){
+  const d=$('#dlg');
+  const card=d.querySelector('.dcard');
+  if(!card||!anchor)return;
+
+  d.classList.add('context');
+
+  const r=anchor.getBoundingClientRect();
+  const root=$('#app').getBoundingClientRect();
+
+  const w=card.offsetWidth;
+  const h=card.offsetHeight;
+
+  let x=r.right-w;
+  let y=r.bottom+8;
+
+  x=Math.max(12,Math.min(x,window.innerWidth-w-12));
+
+  if(y+h>window.innerHeight-12){
+    y=r.top-h-8;
+  }
+
+  y=Math.max(12,y);
+
+  card.style.left=(x-root.left)+'px';
+  card.style.top=(y-root.top)+'px';
+}
+
+function openUserMessageMenu(index,anchor){
   const m=cur.messages[index];
   if(!m||m.role!=='user')return;
 
@@ -780,11 +829,13 @@ function openUserMessageMenu(index){
     '</div>';
 
   d.classList.add('on');
+  positionContextMenu(anchor);
 
   const close=()=>{
     d.classList.remove('on');
     d.innerHTML='';
     popLayer(close);
+    d.classList.remove('context');
   };
 
   pushLayer(close);
@@ -829,7 +880,7 @@ box.addEventListener('click',e=>{
 
   const user=e.target.closest('.m.u[data-i]');
   if(user){
-    openUserMessageMenu(+user.dataset.i);
+    openUserMessageMenu(+user.dataset.i,user);
     return;
   }
 
@@ -1108,7 +1159,7 @@ $('#chatList').addEventListener('click',async e=>{
   const it=e.target.closest('.ci');if(!it)return;
   const chat=S.chats.find(c=>c.id===it.dataset.id);if(!chat)return;
   if(e.target.closest('[data-more]')){
-    const v=await menuSheet(chat);
+    const v=await menuSheet(chat,e.target.closest('[data-more]'));
     if(v==='ren'){const n=await dialog({title:'Переименовать чат',input:chat.title,ok:'Сохранить'});if(n){chat.title=n.slice(0,80);save();renderDrawer()}}
     else if(v==='del'){const ok=await dialog({title:'Удалить чат?',text:'«'+chat.title+'» будет удалён без возможности восстановления.',ok:'Удалить',danger:true});
       if(ok){S.chats=S.chats.filter(c=>c!==chat);save();if(cur===chat){if(busy&&abortC)abortC.abort();newChat()}renderDrawer()}}
@@ -1117,14 +1168,15 @@ $('#chatList').addEventListener('click',async e=>{
   if(busy&&abortC)abortC.abort();
   cur=chat;errMsg='';closeDrawer();renderAll();stick=true;
 });
-function menuSheet(chat){
+function menuSheet(chat,anchor){
   return new Promise(res=>{
     const d=$('#dlg');
     d.innerHTML='<div class="dcard" style="padding:10px"><div class="pg" style="text-transform:none;letter-spacing:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(chat.title)+'</div>'+
       '<button class="pi" data-r="ren">'+ic('edit',18)+'<span style="flex:1;margin-left:10px">Переименовать</span></button>'+
       '<button class="pi" data-r="del" style="color:#ff8a8a">'+ic('trash',18)+'<span style="flex:1;margin-left:10px">Удалить</span></button></div>';
     d.classList.add('on');
-    const done=v=>{d.classList.remove('on');d.innerHTML='';popLayer(cancel);res(v)};
+    positionContextMenu(anchor);
+    const done=v=>{d.classList.remove('on');d.innerHTML='';popLayer(cancel);res(v)};d.classList.remove('context');
     const cancel=()=>done(null);pushLayer(cancel);
     d.onclick=e=>{if(e.target===d)return done(null);const b=e.target.closest('[data-r]');if(b)done(b.dataset.r)};
   });
