@@ -1177,7 +1177,7 @@ function menuSheet(chat,anchor){
     d.classList.add('context');
     d.classList.add('on');
     positionContextMenu(anchor);
-    const done=v=>{d.classList.remove('on');d.innerHTML='';popLayer(cancel);res(v)};d.classList.remove('context');
+    const done=v=>{d.classList.remove('on','context');d.innerHTML='';popLayer(cancel);res(v)};
     const cancel=()=>done(null);pushLayer(cancel);
     d.onclick=e=>{if(e.target===d)return done(null);const b=e.target.closest('[data-r]');if(b)done(b.dataset.r)};
   });
