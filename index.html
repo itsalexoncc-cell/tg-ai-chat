@@ -133,6 +133,17 @@ svg{display:block}
 .ib:active{background:#2a2a2a}
 .ib.on{color:var(--danger)}
 .send{width:46px;height:46px;border-radius:50%;background:#fff;color:#121212;display:grid;place-items:center;margin-left:4px}
+.send:disabled{
+  background:#3a3a3a;
+  color:#777;
+  opacity:1;
+  cursor:default;
+}
+
+:root[data-theme="light"] .send:disabled{
+  background:#d1d1d6;
+  color:#8e8e93;
+}
 
 /* drawer */
 #scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
