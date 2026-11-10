@@ -1268,9 +1268,6 @@ function send(){
     toast(avail().length?'Выберите модель':'Добавьте API ключ в настройках');
     if(avail().length)openPicker();else openSettings();return;
   }
-  if(PROV[splitM(cur.model)[0]].type==='oai'&&pending.some(a=>isPdf(a.type))){
-    toast('Эта модель не принимает PDF. Выберите Claude или Gemini');return;
-  }
   const atts=pending.splice(0).map(a=>({id:a.id,name:a.name,type:a.type,size:a.size}));
   renderAtts();
   const um={role:'user',content:text,timestamp:Date.now()};
@@ -1294,13 +1291,9 @@ async function wireHist(hist,kind,limitMb){
     if(m.role!=='user'||!atts.length){out.push({role:m.role,text:m.content,files:[]});continue}
     const files=[];let note='';
     for(const a of atts){
-      if(kind==='oai'&&isPdf(a.type)){
-        if(i===hist.length-1)throw new Error('Эта модель не принимает PDF. Выберите Claude или Gemini.');
-        note+='\n[PDF «'+a.name+'» не передан: провайдер не поддерживает PDF]';continue;
-      }
       const b=await fileGet(a.id);
       if(!b){note+='\n[Вложение «'+a.name+'» недоступно]';continue}
-      const d=await b64(b);total+=d.length;files.push({type:a.type,data:d});
+      const d=await b64(b);total+=d.length;files.push({type:a.type,data:d,name:a.name});
     }
     out.push({role:'user',text:(m.content+note).trim(),files:files});
   }
@@ -1352,7 +1345,9 @@ async function generate(){
   try{
     if(p.type==='oai'){
       const wh=(await wireHist(hist,'oai',0)).map(m=>m.files.length
-        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>({type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}})))}
+        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>isPdf(f.type)
+            ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
+            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
         :{role:m.role,content:m.text});
       const body={model:model,messages:(S.system?[{role:'system',content:S.system}]:[]).concat(wh),stream:true};
       if(p.usage)body.stream_options={include_usage:true};
