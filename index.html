@@ -416,6 +416,13 @@ svg{display:block}
 :root[data-theme="light"] .bar i.low{
   background:#dc2626;
 }
+/* Выделение текста сообщений на iPhone */
+.m .b,
+.m .b * {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default;
+}
 </style>
 </head>
 <body>
@@ -645,7 +652,7 @@ function renderMsgs(){
 
   box.innerHTML=c.messages.map((m,i)=>{
     if(m.role==='user'){
-      return '<div class="m u"><div class="b">'+esc(m.content)+'</div></div>';
+      return '<div class="m u" data-i="'+i+'"><div class="b">'+esc(m.content)+'</div></div>';
     }
 
     const last=i===c.messages.length-1;
@@ -736,13 +743,108 @@ function paint(){
 
   requestAnimationFrame(step);
 }
+function retryUserMessage(index){
+  if(busy)return;
+
+  cur.messages=cur.messages.slice(0,index+1);
+  errMsg='';
+  cur.updated=Date.now();
+
+  save();
+  renderAll();
+  generate();
+}
+
+function openUserMessageMenu(index){
+  const m=cur.messages[index];
+  if(!m||m.role!=='user')return;
+
+  const hasAnswer=cur.messages
+    .slice(index+1)
+    .some(x=>x.role==='assistant'&&x.content);
+
+  const canRetry=!busy&&!hasAnswer;
+  const d=$('#dlg');
+
+  d.innerHTML=
+    '<div class="dcard" style="padding:10px">'+
+      '<button class="pi" data-user-action="copy">'+
+        ic('copy',18)+
+        '<span style="flex:1;margin-left:10px">Копировать</span>'+
+      '</button>'+
+      (canRetry?
+        '<button class="pi" data-user-action="retry">'+
+          ic('refresh',18)+
+          '<span style="flex:1;margin-left:10px">Повторить отправку</span>'+
+        '</button>':'')+
+    '</div>';
+
+  d.classList.add('on');
+
+  const close=()=>{
+    d.classList.remove('on');
+    d.innerHTML='';
+    popLayer(close);
+  };
+
+  pushLayer(close);
+
+  d.onclick=e=>{
+    if(e.target===d){
+      close();
+      return;
+    }
+
+    const b=e.target.closest('[data-user-action]');
+    if(!b)return;
+
+    const action=b.dataset.userAction;
+    close();
+
+    if(action==='copy'){
+      copyText(m.content);
+      hap();
+    }
+
+    if(action==='retry'){
+      retryUserMessage(index);
+    }
+  };
+}
 box.addEventListener('click',e=>{
+  const selection=window.getSelection();
+
+  // Не открываем меню, если пользователь выделяет текст
+  if(selection&&!selection.isCollapsed&&selection.toString().trim()){
+    return;
+  }
+
   const cp=e.target.closest('[data-copy]');
-  if(cp){const pre=cp.closest('.code').querySelector('pre');copyText(pre.textContent);hap();return}
-  const b=e.target.closest('[data-act]');if(!b)return;
+  if(cp){
+    const pre=cp.closest('.code').querySelector('pre');
+    copyText(pre.textContent);
+    hap();
+    return;
+  }
+
+  const user=e.target.closest('.m.u[data-i]');
+  if(user){
+    openUserMessageMenu(+user.dataset.i);
+    return;
+  }
+
+  const b=e.target.closest('[data-act]');
+  if(!b)return;
+
   const a=b.dataset.act;
-  if(a==='copy'){const i=+b.closest('.m').dataset.i;copyText(cur.messages[i].content)}
-  else if(a==='regen'||a==='retry'){generate()}
+
+  if(a==='copy'){
+    const i=+b.closest('.m').dataset.i;
+    copyText(cur.messages[i].content);
+  }
+  else if(a==='regen'||a==='retry'){
+    generate();
+  }
 });
 
 function updateComposer(){
