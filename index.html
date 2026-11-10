@@ -1091,7 +1091,7 @@ function autosize(){inp.style.height='auto';inp.style.height=Math.min(inp.scroll
 inp.addEventListener('input',()=>{autosize();updateComposer()});
 $('#btnSend').addEventListener('click',()=>{
   if(busy){if(abortC)abortC.abort();return}
-  if(inp.value.trim())send();else dictate();
+  if(inp.value.trim())send();
 });
 $('#btnMic').addEventListener('click',dictate);
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
