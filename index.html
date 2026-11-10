@@ -1174,6 +1174,7 @@ function menuSheet(chat,anchor){
     d.innerHTML='<div class="dcard" style="padding:10px"><div class="pg" style="text-transform:none;letter-spacing:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(chat.title)+'</div>'+
       '<button class="pi" data-r="ren">'+ic('edit',18)+'<span style="flex:1;margin-left:10px">Переименовать</span></button>'+
       '<button class="pi" data-r="del" style="color:#ff8a8a">'+ic('trash',18)+'<span style="flex:1;margin-left:10px">Удалить</span></button></div>';
+    d.classList.add('context');
     d.classList.add('on');
     positionContextMenu(anchor);
     const done=v=>{d.classList.remove('on');d.innerHTML='';popLayer(cancel);res(v)};d.classList.remove('context');
