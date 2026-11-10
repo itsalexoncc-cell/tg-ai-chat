@@ -1040,7 +1040,8 @@ box.addEventListener('click',e=>{
 function updateComposer(){
   const has=$('#inp').value.trim().length>0;
   const s=$('#btnSend');
-  s.innerHTML=busy?ic('stop',22):(has?ic('up',22):ic('wave',24));
+  s.innerHTML=busy?ic('stop',22):ic('up',22);
+  s.disabled=!has&&!busy;
   $('#sugg').classList.toggle('hide',cur.messages.length>0||has||busy);
 }
 function renderTop(){
