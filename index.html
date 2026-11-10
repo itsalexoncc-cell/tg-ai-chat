@@ -471,6 +471,43 @@ svg{display:block}
   user-select: text !important;
   -webkit-touch-callout: default;
 }
+.tbl-wrap{
+  width:100%;
+  overflow-x:auto;
+  margin:12px 0;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.md-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  line-height:1.45;
+}
+
+.md-table th,
+.md-table td{
+  padding:10px;
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  text-align:left;
+  vertical-align:top;
+}
+
+.md-table th{
+  background:var(--card);
+  font-weight:600;
+}
+
+.md-table tr:last-child td{
+  border-bottom:0;
+}
+
+.md-table th:last-child,
+.md-table td:last-child{
+  border-right:0;
+}
 </style>
 </head>
 <body>
@@ -668,22 +705,87 @@ function inline(s){
     .replace(/(^|[^*\w])\*([^*\n]+)\*/g,'$1<i>$2</i>')
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
 }
+
 function md(src){
   const blocks=[];
-  src=src.replace(/```([\w+#.-]*)[ \t]*\n?([\s\S]*?)(```|$)/g,(m,l,c)=>{blocks.push({l:l,c:c.replace(/\n$/,'')});return '\n\u0000'+(blocks.length-1)+'\u0000\n'});
-  const out=[];let list='';
-  const close=()=>{if(list){out.push('</'+list+'>');list=''}};
-  esc(src).split('\n').forEach(line=>{
-    let m;
-    if((m=line.match(/^\u0000(\d+)\u0000$/))){close();const b=blocks[+m[1]];
-      out.push('<div class="code"><div class="ch"><span>'+esc(b.l||'код')+'</span><button data-copy>Копировать</button></div><pre><code>'+esc(b.c)+'</code></pre></div>')}
-    else if((m=line.match(/^(#{1,4})\s+(.*)/))){close();out.push('<h3>'+inline(m[2])+'</h3>')}
-    else if((m=line.match(/^\s*[-*•]\s+(.*)/))){if(list!=='ul'){close();out.push('<ul>');list='ul'}out.push('<li>'+inline(m[1])+'</li>')}
-    else if((m=line.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=='ol'){close();out.push('<ol>');list='ol'}out.push('<li>'+inline(m[1])+'</li>')}
-    else if(!line.trim()){close()}
-    else{close();out.push('<p>'+inline(line)+'</p>')}
+  src=src.replace(/```([\w+#.-]*)[ \t]*\n?([\s\S]*?)(```|$)/g,(m,l,c)=>{
+    blocks.push({l:l,c:c.replace(/\n$/,'')});
+    return '\n\u0000'+(blocks.length-1)+'\u0000\n';
   });
-  close();return out.join('');
+
+  const out=[];
+  let list='';
+  const close=()=>{
+    if(list){out.push('</'+list+'>');list=''}
+  };
+
+  const lines=esc(src).split('\n');
+
+  const cells=line=>line.trim()
+    .replace(/^\|/,'')
+    .replace(/\|$/,'')
+    .split('|')
+    .map(x=>x.trim());
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    let m;
+
+    const isTable=line.includes('|') &&
+      i+1<lines.length &&
+      /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[i+1]);
+
+    if(isTable){
+      close();
+      const head=cells(line);
+      i+=2;
+      const rows=[];
+
+      while(i<lines.length && lines[i].includes('|') && lines[i].trim()){
+        rows.push(cells(lines[i]));
+        i++;
+      }
+      i--;
+
+      let html='<div class="tbl-wrap"><table class="md-table"><thead><tr>';
+      head.forEach(c=>html+='<th>'+inline(c)+'</th>');
+      html+='</tr></thead><tbody>';
+
+      rows.forEach(row=>{
+        html+='<tr>';
+        head.forEach((_,j)=>html+='<td>'+inline(row[j]||'')+'</td>');
+        html+='</tr>';
+      });
+
+      html+='</tbody></table></div>';
+      out.push(html);
+    }
+    else if((m=line.match(/^\u0000(\d+)\u0000$/))){
+      close();
+      const b=blocks[+m[1]];
+      out.push('<div class="code"><div class="ch"><span>'+esc(b.l||'код')+'</span><button data-copy>Копировать</button></div><pre><code>'+esc(b.c)+'</code></pre></div>');
+    }
+    else if((m=line.match(/^(#{1,4})\s+(.*)/))){
+      close();out.push('<h3>'+inline(m[2])+'</h3>');
+    }
+    else if((m=line.match(/^\s*[-*•]\s+(.*)/))){
+      if(list!=='ul'){close();out.push('<ul>');list='ul'}
+      out.push('<li>'+inline(m[1])+'</li>');
+    }
+    else if((m=line.match(/^\s*\d+[.)]\s+(.*)/))){
+      if(list!=='ol'){close();out.push('<ol>');list='ol'}
+      out.push('<li>'+inline(m[1])+'</li>');
+    }
+    else if(!line.trim()){
+      close();
+    }
+    else{
+      close();out.push('<p>'+inline(line)+'</p>');
+    }
+  }
+
+  close();
+  return out.join('');
 }
 /* ---------- rendering ---------- */
 const box=$('#msgs');let stick=true;
@@ -707,7 +809,7 @@ function renderMsgs(){
   return '<div class="m u" data-i="'+i+'"><div class="b">'+esc(m.content)+
     '<div class="ufoot">'+
       (time?'<span>'+time+'</span>':'')+
-      '<button class="umore" data-user-menu aria-label="Действия сообщения">'+ic('more-horizontal',16)+'</button>'+
+      '<button class="umore" data-user-menu aria-label="Действия сообщения">'+ic('dots',16)+'</button>'+
     '</div>'+
   '</div></div>';
 }
