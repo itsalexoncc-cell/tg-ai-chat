@@ -522,6 +522,21 @@ svg{display:block}
 .md-table td:last-child{
   border-right:0;
 }
+
+/* Вложения: превью в поле ввода (пусто — не занимает места) */
+.atts{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.atts::-webkit-scrollbar{display:none}
+.atts:empty{display:none}
+.att{position:relative;flex:none;height:64px;border-radius:14px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.att img{display:block;width:64px;height:64px;object-fit:cover}
+.att.pdf{display:flex;align-items:center;gap:8px;padding:0 30px 0 12px;max-width:190px;font-size:13px}
+.att.pdf span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .x{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;display:grid;place-items:center}
+/* Вложения в сообщении пользователя */
+.uatts{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px;white-space:normal}
+.uimg{display:block;width:120px;height:120px;object-fit:cover;border-radius:12px;background:rgba(127,127,127,.18)}
+.ufile{display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 10px;border-radius:12px;background:rgba(127,127,127,.18);font-size:14px;white-space:nowrap}
+.ufile span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -536,6 +551,7 @@ svg{display:block}
   <div id="bottom">
     <div id="sugg" class="sugg"></div>
     <div class="composer">
+      <div class="atts" id="atts"></div>
       <div class="crow">
         <button class="ib" id="btnAttach" aria-label="Прикрепить файл"></button>
         <button class="ib" id="btnMic" aria-label="Диктовка" hidden></button>
@@ -565,7 +581,7 @@ svg{display:block}
   <div id="dlg"></div>
   <div id="toast"></div>
 </div>
-<input type="file" id="file" hidden accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.log,.java,.c,.cpp,.go,.rs,.sql,text/*">
+<input type="file" id="file" hidden multiple accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.log,.java,.c,.cpp,.go,.rs,.sql,text/*,.pdf,application/pdf,image/jpeg,image/png,image/webp,image/gif">
 
 <script>
 (()=>{
@@ -600,7 +616,9 @@ const I={
  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 19V5M9 8h6"/>',
  code:'<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
  lang:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
- pen:'<path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16Z"/><path d="M14 6l4 4"/>'
+ pen:'<path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16Z"/><path d="M14 6l4 4"/>',
+ file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>'
 };
 const ic=(n,s)=>{s=s||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>'};
 
@@ -820,7 +838,7 @@ function renderMsgs(){
     ?new Date(m.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})
     :'';
 
-  return '<div class="m u" data-i="'+i+'"><div class="b">'+esc(m.content)+
+  return '<div class="m u" data-i="'+i+'"><div class="b">'+attHtml(m)+esc(m.content)+
     '<div class="ufoot">'+
       (time?'<span>'+time+'</span>':'')+
       '<button class="umore" data-user-menu aria-label="Действия сообщения">'+ic('dots',16)+'</button>'+
@@ -834,6 +852,7 @@ function renderMsgs(){
     return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):'<span class="dots"><i></i><i></i><i></i></span>')+'</div>'+act+'</div>';
   }).join('')+(errMsg?'<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>':'')+(busy?'<div class="send-space"></div>':'');
 
+  hydrateAtts();
   if(busy){
     const users=box.querySelectorAll('.m.u');
     const lastUser=users[users.length-1];
@@ -1052,7 +1071,7 @@ box.addEventListener('click',e=>{
 });
 
 function updateComposer(){
-  const has=$('#inp').value.trim().length>0;
+  const has=$('#inp').value.trim().length>0||pending.length>0;
   const s=$('#btnSend');
   s.innerHTML=busy?ic('stop',22):ic('up',22);
   s.disabled=!has&&!busy;
@@ -1094,17 +1113,142 @@ function autosize(){inp.style.height='auto';inp.style.height=Math.min(inp.scroll
 inp.addEventListener('input',()=>{autosize();updateComposer()});
 $('#btnSend').addEventListener('click',()=>{
   if(busy){if(abortC)abortC.abort();return}
-  if(inp.value.trim())send();
+  if(inp.value.trim()||pending.length)send();
 });
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
-$('#file').addEventListener('change',e=>{
-  const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+
+/* ---------- вложения: фото и PDF (текстовые файлы — как раньше, в поле ввода) ---------- */
+const ATT_MAX=5,ATT_SIZE=8*1024*1024;
+const IMG_TYPES=['image/jpeg','image/png','image/webp','image/gif'];
+const isImg=t=>IMG_TYPES.indexOf(t)>=0;
+const isPdf=t=>t==='application/pdf';
+const pending=[];            // вложения, ещё не отправленные: {id,name,type,size,blob}
+const memFiles=new Map();    // запасное хранилище, если IndexedDB недоступна
+const urlCache=new Map();    // id -> object URL для превью
+let dbP=null;
+function idb(){
+  if(dbP)return dbP;
+  dbP=new Promise((res,rej)=>{
+    try{
+      const r=indexedDB.open('tgai.files',1);
+      r.onupgradeneeded=()=>r.result.createObjectStore('files',{keyPath:'id'});
+      r.onsuccess=()=>res(r.result);
+      r.onerror=()=>rej(r.error);
+    }catch(e){rej(e)}
+  });
+  return dbP;
+}
+async function fileSave(id,blob){
+  try{
+    const db=await idb();
+    await new Promise((res,rej)=>{const t=db.transaction('files','readwrite');t.objectStore('files').put({id:id,blob:blob});t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)});
+  }catch(e){memFiles.set(id,blob)}
+}
+async function fileGet(id){
+  if(memFiles.has(id))return memFiles.get(id);
+  try{
+    const db=await idb();
+    return await new Promise((res,rej)=>{const q=db.transaction('files').objectStore('files').get(id);q.onsuccess=()=>res(q.result&&q.result.blob||null);q.onerror=()=>rej(q.error)});
+  }catch(e){return null}
+}
+async function fileDel(ids){
+  ids=(ids||[]).filter(Boolean);if(!ids.length)return;
+  ids.forEach(id=>{memFiles.delete(id);const u=urlCache.get(id);if(u){try{URL.revokeObjectURL(u)}catch(e){}urlCache.delete(id)}});
+  try{
+    const db=await idb();
+    await new Promise(res=>{const t=db.transaction('files','readwrite');const st=t.objectStore('files');ids.forEach(id=>st.delete(id));t.oncomplete=res;t.onerror=res;t.onabort=res});
+  }catch(e){}
+}
+async function gcFiles(){   // удаляет файлы, не привязанные ни к одному сообщению (например, не отправленные)
+  try{
+    const used=new Set();
+    S.chats.forEach(c=>c.messages.forEach(m=>(m.attachments||[]).forEach(a=>used.add(a.id))));
+    const db=await idb();
+    const keys=await new Promise((res,rej)=>{const q=db.transaction('files').objectStore('files').getAllKeys();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)});
+    await fileDel(keys.filter(k=>!used.has(k)));
+  }catch(e){}
+}
+const chatFileIds=c=>{const r=[];c.messages.forEach(m=>(m.attachments||[]).forEach(a=>r.push(a.id)));return r};
+function getUrl(id,blob){let u=urlCache.get(id);if(!u){u=URL.createObjectURL(blob);urlCache.set(id,u)}return u}
+function mimeOf(f){
+  const t=(f.type||'').toLowerCase();if(t)return t;
+  const m=/\.([a-z0-9]+)$/i.exec(f.name||'');const e=m?m[1].toLowerCase():'';
+  return {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',pdf:'application/pdf'}[e]||'';
+}
+function loadImg(blob){
+  return new Promise((res,rej)=>{
+    const u=URL.createObjectURL(blob),i=new Image();
+    i.onload=()=>{URL.revokeObjectURL(u);res(i)};
+    i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};
+    i.src=u;
+  });
+}
+async function prepImage(f){   // большие фото уменьшаем, чтобы уложиться в лимиты API (напр. 5 МБ у Anthropic)
+  if(f.type==='image/gif')return f;
+  try{
+    const img=await loadImg(f),w=img.naturalWidth,h=img.naturalHeight,mx=Math.max(w,h);
+    if(f.size<=3*1024*1024&&mx<=2560)return f;
+    const k=Math.min(1,2048/mx),cv=document.createElement('canvas');
+    cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
+    const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
+    const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.88));
+    return b&&b.size<f.size?b:f;
+  }catch(e){return f}
+}
+function addTextFile(f){
   if(f.size>200*1024){toast('Файл больше 200 КБ');return}
   const r=new FileReader();
   r.onload=()=>{inp.value+=(inp.value?'\n\n':'')+'Файл «'+f.name+'»:\n```\n'+String(r.result)+'\n```\n';autosize();updateComposer();inp.focus()};
   r.onerror=()=>toast('Не удалось прочитать файл');
   r.readAsText(f);
+}
+async function addFiles(list){
+  for(const f of list){
+    const t=mimeOf(f);
+    if(isPdf(t)||/^image\//.test(t)){
+      if(!isPdf(t)&&!isImg(t)){toast('Формат «'+(f.name||t)+'» не поддерживается. Нужны JPEG, PNG, WebP или GIF');continue}
+      if(pending.length>=ATT_MAX){toast('Не больше '+ATT_MAX+' файлов за раз');break}
+      if(f.size>ATT_SIZE){toast('«'+(f.name||'Файл')+'» больше 8 МБ');continue}
+      let blob=f;
+      if(isImg(t))blob=await prepImage(f.type?f:new Blob([f],{type:t}));
+      if(pending.length>=ATT_MAX){toast('Не больше '+ATT_MAX+' файлов за раз');break}
+      const a={id:uid(),name:f.name||(isPdf(t)?'document.pdf':'image'),type:isPdf(t)?'application/pdf':(blob.type||t),size:blob.size,blob:blob};
+      pending.push(a);
+      fileSave(a.id,blob);
+      renderAtts();
+    }else addTextFile(f);
+  }
+}
+function renderAtts(){
+  $('#atts').innerHTML=pending.map(a=>'<div class="att'+(isPdf(a.type)?' pdf':'')+'">'+
+    (isImg(a.type)?'<img alt="" src="'+getUrl(a.id,a.blob)+'">':ic('file',22)+'<span>'+esc(a.name)+'</span>')+
+    '<button class="x" data-rm="'+esc(a.id)+'" aria-label="Убрать файл">'+ic('x',12)+'</button></div>').join('');
+  updateComposer();
+}
+$('#atts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-rm]');if(!b)return;
+  const i=pending.findIndex(a=>a.id===b.dataset.rm);if(i<0)return;
+  const a=pending.splice(i,1)[0];fileDel([a.id]);renderAtts();hap();
 });
+$('#file').addEventListener('change',e=>{
+  const list=Array.prototype.slice.call(e.target.files||[]);e.target.value='';
+  if(list.length)addFiles(list);
+});
+function attHtml(m){
+  if(!m.attachments||!m.attachments.length)return '';
+  return '<div class="uatts">'+m.attachments.map(a=>isImg(a.type)
+    ?'<img class="uimg" data-att="'+esc(a.id)+'" alt="'+esc(a.name)+'">'
+    :'<div class="ufile">'+ic('file',18)+'<span>'+esc(a.name)+'</span></div>').join('')+'</div>';
+}
+function hydrateAtts(){
+  box.querySelectorAll('img[data-att]').forEach(async im=>{
+    if(im.getAttribute('src'))return;
+    const id=im.dataset.att;let u=urlCache.get(id);
+    if(!u){const b=await fileGet(id);if(b)u=getUrl(id,b)}
+    if(u)im.src=u;
+    else if(im.isConnected)im.outerHTML='<div class="ufile">'+ic('file',18)+'<span>'+esc(im.alt||'Изображение')+'</span></div>';
+  });
+}
 function dictate(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('Голосовой ввод недоступен в этом клиенте');return}
@@ -1119,19 +1263,50 @@ function dictate(){
 
 /* ---------- sending ---------- */
 function send(){
-  const text=inp.value.trim();if(!text||busy)return;
+  const text=inp.value.trim();if((!text&&!pending.length)||busy)return;
   if(!cur.model||!avail().includes(cur.model)){
     toast(avail().length?'Выберите модель':'Добавьте API ключ в настройках');
     if(avail().length)openPicker();else openSettings();return;
   }
-  cur.messages.push({role:'user',content:text,timestamp:Date.now()});
-  if(cur.messages.length===1)cur.title=text.replace(/\s+/g,' ').slice(0,42);
+  if(PROV[splitM(cur.model)[0]].type==='oai'&&pending.some(a=>isPdf(a.type))){
+    toast('Эта модель не принимает PDF. Выберите Claude или Gemini');return;
+  }
+  const atts=pending.splice(0).map(a=>({id:a.id,name:a.name,type:a.type,size:a.size}));
+  renderAtts();
+  const um={role:'user',content:text,timestamp:Date.now()};
+  if(atts.length)um.attachments=atts;
+  cur.messages.push(um);
+  if(cur.messages.length===1)cur.title=(text||atts[0].name).replace(/\s+/g,' ').slice(0,42);
   if(S.chats.indexOf(cur)<0)S.chats.unshift(cur);
   cur.updated=Date.now();S.lastModel=cur.model;save();
   inp.value='';autosize();errMsg='';hap();
   generate();
 }
 function est(hist){let n=(S.system||'').length;hist.forEach(m=>n+=m.content.length);return Math.ceil(n/3.5)}
+function b64(blob){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
+}
+/* Превращает историю в нейтральный вид {role,text,files:[{type,data}]}; сообщения без вложений не меняются */
+async function wireHist(hist,kind,limitMb){
+  let total=0;const out=[];
+  for(let i=0;i<hist.length;i++){
+    const m=hist[i],atts=m.attachments||[];
+    if(m.role!=='user'||!atts.length){out.push({role:m.role,text:m.content,files:[]});continue}
+    const files=[];let note='';
+    for(const a of atts){
+      if(kind==='oai'&&isPdf(a.type)){
+        if(i===hist.length-1)throw new Error('Эта модель не принимает PDF. Выберите Claude или Gemini.');
+        note+='\n[PDF «'+a.name+'» не передан: провайдер не поддерживает PDF]';continue;
+      }
+      const b=await fileGet(a.id);
+      if(!b){note+='\n[Вложение «'+a.name+'» недоступно]';continue}
+      const d=await b64(b);total+=d.length;files.push({type:a.type,data:d});
+    }
+    out.push({role:'user',text:(m.content+note).trim(),files:files});
+  }
+  if(limitMb&&total>limitMb*1024*1024)throw new Error('Слишком большой общий размер вложений в этом чате (лимит API около '+limitMb+' МБ). Начните новый чат или удалите часть файлов.');
+  return out;
+}
 function addUsage(pid,model,i,o){
   const c=S.providers[pid];c.used.in+=i;c.used.out+=o;
   const b=c.by[model]||(c.by[model]={in:0,out:0});b.in+=i;b.out+=o;save();
@@ -1166,7 +1341,7 @@ async function generate(){
   const pm=splitM(cur.model),pid=pm[0],model=pm[1];
   if(!pid||!isAvail(pid)){toast('Добавьте API ключ в настройках');openSettings();return}
   const p=PROV[pid],c=S.providers[pid];
-  const hist=cur.messages.filter(m=>m.content).map(m=>({role:m.role,content:m.content}));
+  const hist=cur.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
   const msg={role:'assistant',content:'',model:cur.model};
   cur.messages.push(msg);
   busy=true;errMsg='';abortC=new AbortController();stick=true;renderAll();
@@ -1176,7 +1351,10 @@ async function generate(){
   const push=d=>{msg.content+=d;paint()};
   try{
     if(p.type==='oai'){
-      const body={model:model,messages:(S.system?[{role:'system',content:S.system}]:[]).concat(hist),stream:true};
+      const wh=(await wireHist(hist,'oai',0)).map(m=>m.files.length
+        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>({type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}})))}
+        :{role:m.role,content:m.text});
+      const body={model:model,messages:(S.system?[{role:'system',content:S.system}]:[]).concat(wh),stream:true};
       if(p.usage)body.stream_options={include_usage:true};
       const res=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
         headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
@@ -1186,7 +1364,12 @@ async function generate(){
         if(j.usage&&j.usage.prompt_tokens!=null){uIn=j.usage.prompt_tokens;uOut=j.usage.completion_tokens||0;got=true}
       });
     }else if(p.type==='anthropic'){
-      const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:hist,stream:true};
+      const wh=(await wireHist(hist,'anthropic',30)).map(m=>m.files.length
+        ?{role:m.role,content:m.files.map(f=>isPdf(f.type)
+            ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}}
+            :{type:'image',source:{type:'base64',media_type:f.type,data:f.data}}).concat(m.text?[{type:'text',text:m.text}]:[])}
+        :{role:m.role,content:m.text});
+      const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
       if(S.system)body.system=S.system;
       const res=await fetch(base+'/v1/messages',{method:'POST',signal:signal,
         headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
@@ -1198,7 +1381,9 @@ async function generate(){
         else if(j.type==='error')throw new Error((j.error&&j.error.message)||'Ошибка API');
       });
     }else{
-      const body={contents:hist.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]})),
+      const wh=await wireHist(hist,'gemini',19);
+      const body={contents:wh.map(m=>({role:m.role==='assistant'?'model':'user',
+          parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
       if(S.system)body.systemInstruction={parts:[{text:S.system}]};
       const res=await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
@@ -1315,7 +1500,7 @@ $('#chatList').addEventListener('click',async e=>{
     const v=await menuSheet(chat,e.target.closest('[data-more]'));
     if(v==='ren'){const n=await dialog({title:'Переименовать чат',input:chat.title,ok:'Сохранить'});if(n){chat.title=n.slice(0,80);save();renderDrawer()}}
     else if(v==='del'){const ok=await dialog({title:'Удалить чат?',text:'«'+chat.title+'» будет удалён без возможности восстановления.',ok:'Удалить',danger:true});
-      if(ok){S.chats=S.chats.filter(c=>c!==chat);save();if(cur===chat){if(busy&&abortC)abortC.abort();newChat()}renderDrawer()}}
+      if(ok){fileDel(chatFileIds(chat));S.chats=S.chats.filter(c=>c!==chat);save();if(cur===chat){if(busy&&abortC)abortC.abort();newChat()}renderDrawer()}}
     return;
   }
   if(busy&&abortC)abortC.abort();
@@ -1452,7 +1637,7 @@ $('#setBody').addEventListener('click',async e=>{
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
-  else if(a==='clearchats'){const ok=await dialog({title:'Удалить все чаты?',text:'Это действие нельзя отменить.',ok:'Удалить',danger:true});if(ok){if(busy&&abortC)abortC.abort();S.chats=[];save();newChat();toast('Чаты удалены')}}
+  else if(a==='clearchats'){const ok=await dialog({title:'Удалить все чаты?',text:'Это действие нельзя отменить.',ok:'Удалить',danger:true});if(ok){if(busy&&abortC)abortC.abort();S.chats.forEach(c=>fileDel(chatFileIds(c)));S.chats=[];save();newChat();toast('Чаты удалены')}}
 });
 
 async function fetchBal(pid,silent){
@@ -1514,6 +1699,7 @@ window.addEventListener('resize',fit);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
 inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
 loadCloudKeys().finally(()=>newChat());
+gcFiles();
 })();
 </script>
 </body>
