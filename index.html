@@ -39,11 +39,8 @@ svg{display:block}
 .empty{height:100%;display:grid;place-items:center;color:#5d5d5d;font-size:22px;font-weight:500}
 .m{margin:16px 0;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .m.u{display:flex;justify-content:flex-end}
-.m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:86%;white-space:pre-wrap;word-break:break-word}
-.m.u .b{
-  display:flex;
-  flex-direction:column;
-}
+.m.u .uwrap{display:flex;flex-direction:column;align-items:flex-end;max-width:86%;min-width:0}
+.m.u .b{background:var(--card);padding:10px 16px;border-radius:20px;max-width:100%;white-space:pre-wrap;word-break:break-word}
 
 .ufoot{
   display:flex;
@@ -51,7 +48,7 @@ svg{display:block}
   justify-content:flex-end;
   gap:5px;
   height:20px;
-  margin:3px -4px -4px 0;
+  margin:2px -4px 0 0;
   color:#858585;
   font-size:11px;
 }
@@ -534,9 +531,9 @@ svg{display:block}
 .att.pdf span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .att .x{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;display:grid;place-items:center}
 /* Вложения в сообщении пользователя */
-.uatts{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px;white-space:normal}
-.uimg{display:block;width:120px;height:120px;object-fit:cover;border-radius:12px;background:rgba(127,127,127,.18)}
-.ufile{display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 10px;border-radius:12px;background:rgba(127,127,127,.18);font-size:14px;white-space:nowrap}
+.uatts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:0 0 6px;max-width:100%;white-space:normal}
+.uimg{display:block;width:120px;height:120px;object-fit:cover;border-radius:12px}
+.ufile{display:flex;align-items:center;gap:8px;max-width:100%;padding:4px 2px;font-size:14px;white-space:nowrap}
 .ufile span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 
 [hidden]{display:none!important}
@@ -572,7 +569,7 @@ svg{display:block}
 :root[data-theme="light"] .mh{color:var(--muted)}
 
 /* Сообщения пользователя: меню по долгому нажатию, без выделения текста */
-.m.u .b,.m.u .b *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+.m.u .uwrap,.m.u .uwrap *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 .uimg{cursor:zoom-in;-webkit-user-drag:none}
 
 /* Полноэкранный просмотр фото */
@@ -1057,7 +1054,8 @@ function renderMsgs(){
     ?new Date(m.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})
     :'';
 
-  return '<div class="m u" data-i="'+i+'"><div class="b">'+attHtml(m)+esc(m.content)+
+  return '<div class="m u" data-i="'+i+'"><div class="uwrap">'+attHtml(m)+
+    (m.content?'<div class="b">'+esc(m.content)+'</div>':'')+
     '<div class="ufoot">'+
       (time?'<span>'+time+'</span>':'')+
       '<button class="umore" data-user-menu aria-label="Действия сообщения">'+ic('dots',16)+'</button>'+
@@ -1296,7 +1294,7 @@ function lpOpen(b){
 }
 box.addEventListener('touchstart',e=>{
   lpCancel();
-  const b=e.target.closest('.m.u .b');
+  const b=e.target.closest('.m.u .uwrap');
   if(!b||e.touches.length!==1||e.target.closest('[data-user-menu]'))return;
   const t=e.touches[0];
   lp={x:t.clientX,y:t.clientY,t:setTimeout(()=>{lp=null;lpTouch=true;lpOpen(b)},450)};
@@ -1317,7 +1315,7 @@ box.addEventListener('touchend',lpEnd,{passive:false});
 box.addEventListener('touchcancel',lpEnd);
 box.addEventListener('scroll',lpCancel,{passive:true});
 box.addEventListener('contextmenu',e=>{   // ПК / Android: правая кнопка или системное долгое нажатие
-  const b=e.target.closest('.m.u .b');if(!b)return;
+  const b=e.target.closest('.m.u .uwrap');if(!b)return;
   e.preventDefault();
   if(Date.now()-lpFired<900||$('#dlg').classList.contains('on'))return;
   lpOpen(b);
