@@ -630,6 +630,9 @@ svg{display:block}
 .mbox .mempty{text-align:center;padding:14px 4px 6px}
 :root[data-theme="light"] .mbox{background:#f2f2f5;border-color:var(--border)}
 :root[data-theme="light"] .pvb .mfilter input{color:var(--text)}
+
+.btns.one{flex-wrap:nowrap}
+.btns.one .btn{flex:1;white-space:nowrap;text-align:center}
 </style>
 </head>
 <body>
@@ -743,7 +746,7 @@ const PROVIDERS=[
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
 /* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
-const DEFAULT_SYSTEM='Отвечай кратко и по делу, отвечай подробно только при прямом запросе';   // запасной вариант, если воркер недоступен
+const DEFAULT_SYSTEM='';   // по умолчанию базового промпта нет; его задаёт администратор на сервере
 let remoteSystem=null,isAdmin=false;   // базовый промпт с сервера и признак администратора (определяет сервер, а не приложение)
 const sysPrompt=()=>{
   const base=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
@@ -1610,7 +1613,7 @@ async function generate(){
             :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
         :{role:m.role,content:m.text});
       if(signal.aborted)return;
-      const body={model:model,messages:[{role:'system',content:sysPrompt()}].concat(wh),stream:true};
+      const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(wh),stream:true};
       if(p.usage)body.stream_options={include_usage:true};
       const res=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
         headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
@@ -1627,7 +1630,7 @@ async function generate(){
         :{role:m.role,content:m.text});
       if(signal.aborted)return;
       const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
-      body.system=sysPrompt();
+      if(sysPrompt())body.system=sysPrompt();
       const res=await fetch(base+'/v1/messages',{method:'POST',signal:signal,
         headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
@@ -1643,7 +1646,7 @@ async function generate(){
       const body={contents:wh.map(m=>({role:m.role==='assistant'?'model':'user',
           parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
-      body.systemInstruction={parts:[{text:sysPrompt()}]};
+      if(sysPrompt())body.systemInstruction={parts:[{text:sysPrompt()}]};
       const res=await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
         {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
@@ -1913,7 +1916,7 @@ function renderSettings(){
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
    '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
-   '<p class="hint" style="margin:6px 0 0">Ваш текст добавляется к базовым правилам приложения.</p>'+
+   '<p class="hint" style="margin:6px 0 0">Этот текст добавляется ко всем вашим запросам.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>'+adminHtml();
 
@@ -1923,8 +1926,8 @@ function adminHtml(){
   if(!isAdmin)return '';
   return '<h3>Администратор</h3><div class="gb"><label>Базовый промпт для всех пользователей</label>'+
     '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта">'+esc(remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM)+'</textarea>'+
-    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. Эта секция видна только вам.</p>'+
-    '<div class="btns"><button class="btn pri" data-act="adminsave">Сохранить для всех</button><button class="btn" data-act="adminreset">Вернуть по умолчанию</button></div></div>';
+    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
+    '<div class="btns one"><button class="btn pri" data-act="adminsave">Сохранить</button><button class="btn" data-act="adminreset">Восстановить</button></div></div>';
 }
 async function adminRequest(method,text){
   const res=await fetch(CLOUD_API+'/admin/system-prompt',{method:method,
@@ -2059,9 +2062,8 @@ $('#setBody').addEventListener('click',async e=>{
     if(!isAdmin||!tg||!tg.initData)return;
     b.disabled=true;
     try{
-      if(a==='adminsave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t}
-      else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value=DEFAULT_SYSTEM}
-      toast('Базовый промпт сохранён для всех');
+      if(a==='adminsave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t;toast('Промпт сохранён для всех')}
+      else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value='';toast('Промпт очищен')}
     }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
     b.disabled=false;
   }
