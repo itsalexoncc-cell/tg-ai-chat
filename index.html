@@ -603,6 +603,33 @@ svg{display:block}
 :root[data-theme="light"] .md-table th{background:#e8e8ee}
 :root[data-theme="light"] .md-table td,:root[data-theme="light"] .md-table th{border-color:#c9c9d2}
 :root[data-theme="light"] .tbl-wrap{border-color:#c9c9d2}
+
+/* Размер текста ответа */
+.m.a{font-size:15px;line-height:1.55}
+.m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{font-size:16px}
+.code pre code{font-size:13px}
+.md-table{font-size:13px}
+
+/* Окно API ключа: ключ + лимит в одну строку */
+.kl{display:flex;gap:10px}
+.kl .kf{flex:1;min-width:0}
+.kl .lf{flex:none;width:calc(10ch + 26px)}
+.inw{position:relative}
+.pvb .inw input{padding-right:44px}
+.eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;color:var(--muted);border-radius:10px}
+
+/* Одно окно моделей */
+.mbox{margin-top:14px;border:1px solid #363636;border-radius:14px;padding:10px;background:#181818}
+.mtop{display:flex;gap:8px;align-items:center}
+.mtop .btn{flex:none;display:flex;align-items:center;gap:6px;height:40px;padding:0 12px;white-space:nowrap}
+.mtop .btn.plus{width:40px;padding:0;justify-content:center}
+.mtop input{flex:1;min-width:0;height:40px;padding:0 10px!important;font-size:15px!important}
+.mfilter{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 4px;color:var(--muted)}
+.pvb .mfilter input{width:55%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
+.mbox .mlist{border:0;background:none;border-radius:0;max-height:280px;margin-top:4px}
+.mbox .mempty{text-align:center;padding:14px 4px 6px}
+:root[data-theme="light"] .mbox{background:#f2f2f5;border-color:var(--border)}
+:root[data-theme="light"] .pvb .mfilter input{color:var(--text)}
 </style>
 </head>
 <body>
@@ -691,6 +718,8 @@ const I={
  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
  next:'<path d="M9 18l6-6-6-6"/>',
+ download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+ filter:'<path d="M3 5h18l-7 8v6l-4 2v-8Z"/>',
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>'
 };
@@ -1862,7 +1891,7 @@ function renderSettings(){
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
-   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
+   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Системный промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай кратко и по делу">'+esc(S.system)+'</textarea>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
@@ -1894,14 +1923,15 @@ function modelsHtml(p){
   const rows=all.map(m=>'<div class="mrow'+(on.has(m)?' on':'')+'" data-act="mtog" data-m="'+esc(m)+'" role="checkbox" aria-checked="'+on.has(m)+'">'+
     '<span class="cb">'+ic('check',14)+'</span><span class="mt">'+esc(m)+'</span>'+
     '<button class="mx" data-act="mdel" data-m="'+esc(m)+'" aria-label="Убрать из списка">'+ic('x',14)+'</button></div>').join('');
-  return '<div class="mh"><span>Модели на главном экране</span><span class="mcnt">выбрано <b>'+on.size+'</b> из '+all.length+'</span></div>'+
-    '<div class="btns" style="margin:0 0 8px"><button class="btn" data-act="load">Загрузить список</button>'+(p.balance?'<button class="btn" data-act="bal">Проверить баланс</button>':'')+'</div>'+
+  return '<div class="mbox">'+
+    '<div class="mtop"><button class="btn" data-act="load" aria-label="Загрузить список моделей">'+ic('download',18)+'<span>Модели</span></button>'+
+      '<input data-f="newmodel" placeholder="Своя модель" autocapitalize="off" autocomplete="off" spellcheck="false">'+
+      '<button class="btn plus" data-act="madd" aria-label="Добавить модель">'+ic('plus',20)+'</button></div>'+
     (all.length
-      ?(all.length>8?'<input data-f="mfilter" placeholder="Фильтр по названию" autocapitalize="off" spellcheck="false" style="margin-bottom:8px">':'')+
-       '<div class="mtools"><button class="btn sm" data-act="mall">Выбрать все</button><button class="btn sm" data-act="mnone">Снять все</button></div>'+
+      ?'<div class="mfilter">'+ic('filter',16)+'<input data-f="mfilter" placeholder="Фильтр" autocapitalize="off" autocomplete="off" spellcheck="false"></div>'+
        '<div class="mlist">'+rows+'</div>'
-      :'<div class="mempty">Список пуст. Нажмите «Загрузить список» или добавьте модель вручную.</div>')+
-    '<div class="row" style="margin-top:8px"><input data-f="newmodel" placeholder="Своя модель (id)" autocapitalize="off" autocomplete="off" spellcheck="false"><button class="btn" data-act="madd">Добавить</button></div>';
+      :'<div class="mempty">Список пуст. Нажмите «Модели», чтобы загрузить, или добавьте свою.</div>')+
+    '</div>';
 }
 function renderProvs(){
   const el=$('#provs');if(!el)return;
@@ -1910,11 +1940,11 @@ function renderProvs(){
     return '<div class="pv'+(open?' open':'')+'" data-pv="'+p.id+'"><button class="pvh" data-act="tog"><span class="dot'+(isAvail(p.id)?' on':'')+'"></span><span class="pvn">'+esc(provName(p.id))+'</span><span class="chev">'+ic('chev',18)+'</span></button>'+
     (open?'<div class="pvb">'+
       (p.custom?'<label>Название (необязательно)</label><input data-f="name" maxlength="40" autocomplete="off" placeholder="Например: Together AI" value="'+esc(c.name||'')+'">':'')+
-      '<label>API ключ</label><div class="row"><input type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-f="key" value="'+esc(c.key)+'" placeholder="'+(p.custom?'если требуется':'sk-…')+'"><button class="ib" data-act="eye" aria-label="Показать">'+ic('eye',20)+'</button></div>'+
+      '<div class="kl"><div class="kf"><label>API ключ</label><div class="inw"><input type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-f="key" value="'+esc(c.key)+'" placeholder="'+(p.custom?'если требуется':'sk-…')+'"><button class="eye" data-act="eye" aria-label="Показать ключ">'+ic('eye',20)+'</button></div></div>'+
+      '<div class="lf"><label>Лимит</label><input inputmode="numeric" data-f="limit" value="'+(c.limit||'')+'" placeholder="0"></div></div>'+
       '<label>Base URL'+(p.custom?' (обязательно)':' (необязательно)')+'</label><input data-f="base" autocapitalize="off" spellcheck="false" placeholder="'+esc(p.base||'https://example.com/v1')+'" value="'+esc(c.base)+'">'+
       modelsHtml(p)+
-      '<label>Лимит токенов (для расчёта остатка, 0 — без лимита)</label><input inputmode="numeric" data-f="limit" value="'+(c.limit||'')+'" placeholder="например 1000000">'+
-      '<div class="btns"><button class="btn ghost" data-act="resetu">Сбросить счётчик</button></div></div>':'')+'</div>';
+      '<div class="btns">'+(p.balance?'<button class="btn" data-act="bal">Проверить баланс</button>':'')+'<button class="btn ghost" data-act="resetu">Сбросить счётчик</button></div></div>':'')+'</div>';
   }).join('');
 }
 function updModelCount(pv,pid){
@@ -1972,20 +2002,13 @@ $('#setBody').addEventListener('click',async e=>{
   const pid=pv?pv.dataset.pv:(pu?pu.dataset.pid:'');
   if(a==='tog'){openProv.has(pid)?openProv.delete(pid):openProv.add(pid);renderProvs()}
   else if(a==='eye'){const i=b.parentElement.querySelector('input');i.type=i.type==='password'?'text':'password'}
-  else if(a==='load'){b.disabled=true;b.textContent='Загрузка…';await loadModels(pid);renderProvs()}
+  else if(a==='load'){b.disabled=true;const sp=b.querySelector('span');if(sp)sp.textContent='Загрузка…';await loadModels(pid);renderProvs()}
   else if(a==='mtog'){
     const m=b.dataset.m,set=new Set(getModels(pid)),c=S.providers[pid];
     if(set.has(m))set.delete(m);else set.add(m);
     c.enabled=allModels(pid).filter(x=>set.has(x));save();
     b.classList.toggle('on',set.has(m));b.setAttribute('aria-checked',String(set.has(m)));
     updModelCount(pv,pid);hap();
-  }
-  else if(a==='mall'||a==='mnone'){
-    const c=S.providers[pid],set=new Set(getModels(pid));
-    pv.querySelectorAll('.mrow:not([hidden])').forEach(r=>{if(a==='mall')set.add(r.dataset.m);else set.delete(r.dataset.m)});
-    c.enabled=allModels(pid).filter(x=>set.has(x));save();
-    pv.querySelectorAll('.mrow').forEach(r=>{const on=set.has(r.dataset.m);r.classList.toggle('on',on);r.setAttribute('aria-checked',String(on))});
-    updModelCount(pv,pid);
   }
   else if(a==='mdel'){
     const m=b.dataset.m,c=S.providers[pid],set=new Set(getModels(pid));
