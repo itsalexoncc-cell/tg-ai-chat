@@ -649,6 +649,35 @@ svg{display:block}
 .m.a .b .md-table th:last-child,.m.a .b .md-table td:last-child{padding-right:2px}
 .m.a .b .md-table tr:last-child td{border-bottom:0}
 .m.a .b .md-table td b,.m.a .b .md-table td strong{font-weight:700}
+
+/* ---- Управление обновлениями (админ) ---- */
+#upd{position:absolute;inset:0;background:var(--bg);z-index:35;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+#upd.open{transform:none}
+#updBody{flex:1;overflow-y:auto;padding:4px 16px max(30px,env(safe-area-inset-bottom));overscroll-behavior:contain}
+#updBody h3{margin:22px 0 10px;font-size:13px;color:#8a8a8a;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+:root[data-theme="light"] #updBody h3{color:var(--muted)}
+#updBody .atts{padding-top:10px}
+#updBody .atts:empty{display:none}
+.att.up{opacity:.45}
+.att.up::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.att.er{border-color:var(--danger)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tgp{background:#0e1621;border-radius:18px;padding:14px}
+.tgb{background:#182533;color:#fff;border-radius:16px 16px 16px 4px;max-width:100%;overflow:hidden;font-size:15px;line-height:1.4}
+.tgm{display:grid;gap:2px;grid-template-columns:1fr 1fr}
+.tgm img,.tgm video{width:100%;height:150px;object-fit:cover;display:block}
+.tgm.n1{grid-template-columns:1fr}
+.tgm.n1 img,.tgm.n1 video{height:auto;max-height:300px}
+.tgm.n3>:first-child{grid-column:1/-1}
+.tgt{padding:8px 12px 2px;white-space:pre-wrap;word-break:break-word}
+.tgt a{color:#6ab3f3}
+.tgt code{background:rgba(255,255,255,.12);padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
+.tgs{text-align:right;font-size:11px;opacity:.6;padding:2px 10px 6px}
+:root[data-theme="light"] .tgp{background:#dbe7ef}
+:root[data-theme="light"] .tgb{background:#fff;color:#0d0d10}
+:root[data-theme="light"] .tgt a{color:#1769c2}
+:root[data-theme="light"] .tgt code{background:#eef0f3}
+.uc .btns{margin-top:10px}
 </style>
 </head>
 <body>
@@ -689,6 +718,11 @@ svg{display:block}
     <div id="setBody"></div>
   </section>
 
+  <section id="upd">
+    <div class="sh"><button class="ib" id="updBack" aria-label="Назад"></button><h2>Обновления</h2></div>
+    <div id="updBody"></div>
+  </section>
+
   <div id="pop"><div class="pcard" id="pcard"></div></div>
   <div id="dlg"></div>
   <div id="viewer">
@@ -699,6 +733,7 @@ svg{display:block}
   </div>
   <div id="toast"></div>
 </div>
+<input type="file" id="upFile" hidden multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4">
 <input type="file" id="file" hidden multiple accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.log,.java,.c,.cpp,.go,.rs,.sql,text/*,.pdf,application/pdf,image/jpeg,image/png,image/webp,image/gif">
 
 <script>
@@ -1800,7 +1835,7 @@ document.addEventListener('touchend',e=>{
   const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(Math.abs(dy)>70||Date.now()-st>700)return;
   if(V.open)return;
-  if(!dOpen&&!$('#settings').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
+  if(!dOpen&&!$('#settings').classList.contains('open')&&!$('#upd').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
   else if(dOpen&&dx<-70)closeDrawer();
 },{passive:true});
 
@@ -1947,7 +1982,7 @@ function renderSettings(){
 }
 function adminHtml(){
   if(!isAdmin)return '';
-  return '<h3>Администратор</h3><div class="gb"><label>Базовый промпт для всех пользователей</label>'+
+  return '<h3>Администратор</h3><div class="gb"><button class="btn pri" data-act="openupd" style="width:100%;margin-bottom:6px">Управление обновлениями</button><label>Базовый промпт для всех пользователей</label>'+
     '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта">'+esc(remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM)+'</textarea>'+
     '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
     '<div class="btns one"><button class="btn pri" data-act="adminsave">Сохранить</button><button class="btn" data-act="adminreset">Восстановить</button></div></div>';
@@ -2081,6 +2116,7 @@ $('#setBody').addEventListener('click',async e=>{
     updModelCount(pv,pid);
   }
   else if(a==='madd'){addModel(pv,pid)}
+  else if(a==='openupd'){openUpd()}
   else if(a==='adminsave'||a==='adminreset'){
     if(!isAdmin||!tg||!tg.initData)return;
     b.disabled=true;
@@ -2146,6 +2182,217 @@ async function loadModels(pid){
     toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
   }catch(e){toast('Не удалось загрузить: '+(e instanceof TypeError?'нет связи с сервисом':e.message))}
 }
+
+/* ---------- Управление обновлениями (только администратор) ---------- */
+const UP={built:false,media:[],token:null,running:null,stop:false,cur:null,users:null,items:[]};
+const sleepMs=ms=>new Promise(r=>setTimeout(r,ms));
+/* та же мини-разметка, что и на сервере: **жирный**, *курсив*, `код`, [ссылка](https://…) */
+function tgHtml(title,text){
+  const codes=[];
+  let s=String(text||'').replace(/`([^`\n]+)`/g,(m,c)=>{codes.push(c);return '\u0000'+(codes.length-1)+'\u0000'});
+  s=esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
+    .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>')
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2">$1</a>');
+  s=s.replace(/\u0000(\d+)\u0000/g,(m,i)=>'<code>'+esc(codes[+i])+'</code>');
+  return ((title?'<b>'+esc(title)+'</b>\n\n':'')+s).trim();
+}
+async function upApi(method,path,body){
+  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  const h={'X-Telegram-Init-Data':tg.initData};
+  if(body)h['Content-Type']='application/json';
+  let r;
+  try{r=await fetch(CLOUD_API+path,{method:method,headers:h,body:body?JSON.stringify(body):undefined})}
+  catch(e){throw new Error('Нет связи с сервером')}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok){const er=new Error(j.error||('Ошибка '+r.status));er.status=r.status;er.data=j;throw er}
+  return j;
+}
+async function prepTgImage(f){   // Telegram надёжно принимает JPEG/PNG; остальное конвертируем в JPEG
+  if(f.type==='image/jpeg'||f.type==='image/png')return prepImage(f);
+  const img=await loadImg(f),w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,2048/Math.max(w,h));
+  const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
+  const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
+  const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.9));
+  if(!b)throw new Error('img');
+  return b;
+}
+function statLine(s){
+  return 'Доставлено <em>'+s.sent+'</em> из '+s.total+' · Заблокировали бота: '+s.blocked+' · Ошибки: '+s.failed;
+}
+function upAtts(){
+  const el=$('#uAtts');if(!el)return;
+  el.innerHTML=UP.media.map(m=>'<div class="att'+(m.state==='up'?' up':'')+(m.state==='err'?' er':'')+'">'+
+    (m.type==='video'
+      ?'<video src="'+m.url+'#t=0.1" muted playsinline preload="metadata" style="width:64px;height:64px;object-fit:cover;display:block"></video>'
+      :'<img alt="" src="'+m.url+'">')+
+    '<button class="x" data-urm="'+m.uid+'" aria-label="Убрать">'+ic('x',12)+'</button></div>').join('');
+}
+function upPrev(){
+  const el=$('#uPrev');if(!el)return;
+  const html=tgHtml($('#uTitle').value.trim(),$('#uText').value.trim()),m=UP.media;
+  if(!html&&!m.length){el.innerHTML='<div class="hint">Начните вводить текст — здесь появится предпросмотр.</div>';return}
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const mh=m.length?'<div class="tgm n'+Math.min(m.length,4)+'">'+m.map(x=>x.type==='video'
+    ?'<video src="'+x.url+'#t=0.1" muted playsinline preload="metadata"></video>'
+    :'<img alt="" src="'+x.url+'">').join('')+'</div>':'';
+  el.innerHTML='<div class="tgp"><div class="tgb">'+mh+(html?'<div class="tgt">'+html+'</div>':'')+'<div class="tgs">'+time+'</div></div></div>';
+}
+function upCount(){
+  const el=$('#uCount');if(!el)return;
+  const u=UP.users;
+  el.innerHTML=u?'Получателей: <b>'+(u.total-u.blocked)+'</b> (всего в базе '+u.total+', заблокировали бота '+u.blocked+')':'';
+}
+function upProgress(){
+  const el=$('#uProg');if(!el)return;
+  const s=UP.cur;if(!s){el.innerHTML='';return}
+  const done=s.sent+s.failed+s.blocked,pc=s.total?Math.min(100,done/s.total*100):100,fin=s.status!=='sending';
+  const title=fin?(s.status==='done'?'Рассылка завершена':'Рассылка отменена'):(UP.running?'Идёт рассылка…':'Рассылка на паузе');
+  el.innerHTML='<div class="uc"><div class="uh"><b>'+title+'</b></div><div class="ul">'+statLine(s)+'</div>'+
+    '<div class="bar"><i style="width:'+pc.toFixed(1)+'%"></i></div>'+
+    (s.last_error&&s.failed?'<div class="ul sub">Последняя ошибка: '+esc(s.last_error)+'</div>':'')+
+    (!fin?'<div class="btns">'+(UP.running?'<button class="btn" data-u="pause">Пауза</button>':'<button class="btn pri" data-u="resume" data-id="'+esc(s.id)+'">Продолжить</button>')+'</div>':'')+'</div>';
+}
+function upHist(){
+  const el=$('#uHist');if(!el)return;
+  if(!UP.items.length){el.innerHTML='<div class="hint">Рассылок пока не было.</div>';return}
+  const lbl={sending:'Не завершена',done:'Завершена',cancelled:'Отменена'};
+  el.innerHTML=UP.items.map(s=>{
+    const name=(s.title||s.preview||(s.media?'Медиа-сообщение':'Без заголовка')).replace(/\s+/g,' ').slice(0,60);
+    const d=new Date(s.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const act=(s.status==='sending'&&!UP.running)?'<div class="btns"><button class="btn pri sm" data-u="resume" data-id="'+esc(s.id)+'">Продолжить</button><button class="btn dan sm" data-u="cancel" data-id="'+esc(s.id)+'">Отменить</button></div>':'';
+    return '<div class="uc"><div class="uh"><b>'+esc(name)+'</b></div><div class="ul sub">'+d+' · '+(lbl[s.status]||s.status)+(s.media?' · вложений: '+s.media:'')+'</div><div class="ul">'+statLine(s)+'</div>'+act+'</div>';
+  }).join('');
+}
+async function upLoad(){
+  try{const j=await upApi('GET','/admin/broadcasts');UP.items=j.items||[];UP.users=j.users||null;upHist();upCount()}
+  catch(e){toast('История: '+e.message)}
+}
+function upContent(){
+  const title=$('#uTitle').value.trim(),text=$('#uText').value.trim();
+  if(UP.media.some(m=>m.state==='up')){toast('Дождитесь загрузки файлов');return null}
+  if(UP.media.some(m=>m.state==='err')){toast('Удалите файлы, которые не загрузились');return null}
+  if(!title&&!text&&!UP.media.length){toast('Сообщение пустое');return null}
+  return {title:title,text:text,media:UP.media.map(m=>({id:m.fileId,type:m.type}))};
+}
+async function upAdd(files){
+  for(const f of files){
+    if(UP.media.length>=10){toast('Не больше 10 вложений в альбоме');break}
+    const isV=/^video\//.test(f.type),isI=/^image\//.test(f.type);
+    if(!isV&&!isI){toast('Формат не поддерживается');continue}
+    if(isV&&f.type!=='video/mp4'){toast('Для видео нужен формат MP4');continue}
+    if(isV&&f.size>45*1024*1024){toast('Видео больше 45 МБ');continue}
+    let blob=f;
+    if(isI){try{blob=await prepTgImage(f)}catch(e){toast('Не удалось обработать фото');continue}}
+    const it={uid:uid(),type:isV?'video':'photo',name:f.name||(isV?'video.mp4':'photo.jpg'),url:URL.createObjectURL(blob),state:'up',fileId:''};
+    UP.media.push(it);UP.token=null;upAtts();upPrev();
+    (async()=>{
+      try{
+        const fd=new FormData();fd.append('file',blob,it.name);
+        const r=await fetch(CLOUD_API+'/admin/media',{method:'POST',headers:{'X-Telegram-Init-Data':tg.initData},body:fd});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok)throw new Error(j.error||('Ошибка '+r.status));
+        it.fileId=j.id;it.type=j.type||it.type;it.state='ok';
+      }catch(e){it.state='err';toast('Не загрузилось: '+(e.message||'сеть'))}
+      upAtts();
+    })();
+  }
+}
+function upReset(){
+  UP.media.forEach(m=>{try{URL.revokeObjectURL(m.url)}catch(e){}});
+  UP.media=[];UP.token=null;
+  $('#uTitle').value='';$('#uText').value='';
+  upAtts();upPrev();
+}
+async function upTest(){
+  const c=upContent();if(!c)return;
+  try{await upApi('POST','/admin/broadcasts/test',c);toast('Тест отправлен вам в чат с ботом')}
+  catch(e){toast(e.message)}
+}
+async function upSend(){
+  const c=upContent();if(!c)return;
+  if(UP.running){toast('Рассылка уже идёт');return}
+  const n=UP.users?UP.users.total-UP.users.blocked:null;
+  const ok=await dialog({title:'Разослать всем?',text:'Сообщение получат '+(n!=null?n+' пользователей':'все пользователи')+'. После запуска уже доставленные сообщения вернуть нельзя.',ok:'Разослать',danger:true});
+  if(!ok)return;
+  if(!UP.token)UP.token=uid();
+  try{
+    const s=await upApi('POST','/admin/broadcasts',Object.assign({token:UP.token},c));
+    UP.token=null;UP.cur=s;
+    if(!s.duplicate)upReset();
+    upProgress();
+    const p=$('#uProg');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});
+    upRun(s.id);
+  }catch(e){toast(e.message)}
+}
+async function upRun(id){
+  if(UP.running)return;
+  UP.running=id;UP.stop=false;upProgress();upHist();
+  try{
+    for(;;){
+      const st=await upApi('POST','/admin/broadcasts/'+id+'/run');
+      UP.cur=st;upProgress();
+      if(st.status!=='sending'||UP.stop)break;
+      if(st.retry_after)await sleepMs(st.retry_after*1000);
+      else if(st.busy)await sleepMs(1500);
+    }
+  }catch(e){toast('Рассылка приостановлена: '+e.message)}
+  UP.running=null;UP.stop=false;upProgress();
+  await upLoad();
+  if(UP.cur&&UP.cur.status==='done'){hap('medium');toast('Рассылка завершена')}
+}
+function buildUpd(){
+  if(UP.built)return;UP.built=true;
+  $('#updBody').innerHTML=
+   '<h3>Новое уведомление</h3><div class="gb"><label>Заголовок</label><input id="uTitle" maxlength="200" placeholder="🚀 Вышло новое обновление!" autocomplete="off">'+
+   '<label>Текст</label><textarea id="uText" rows="9" placeholder="Версия 1.5&#10;&#10;Что нового:&#10;• Добавлена новая функция&#10;• Улучшена скорость работы&#10;• Исправлены ошибки&#10;&#10;Спасибо, что пользуетесь нашим ботом! ❤️"></textarea>'+
+   '<p class="hint" style="margin:6px 0 0">Форматирование: **жирный**, *курсив*, `код`, [ссылка](https://…)</p>'+
+   '<div class="atts" id="uAtts"></div>'+
+   '<div class="btns"><button class="btn" data-u="attach">'+ic('plus',16)+' Фото / видео (до 10)</button></div></div>'+
+   '<h3>Предпросмотр</h3><div id="uPrev"></div>'+
+   '<p class="hint" id="uCount"></p>'+
+   '<div class="btns one"><button class="btn" data-u="test">Тест себе</button><button class="btn pri" data-u="send">Разослать всем</button></div>'+
+   '<div id="uProg" style="margin-top:14px"></div>'+
+   '<h3>История рассылок</h3><div id="uHist"></div>';
+  upPrev();upProgress();upHist();
+}
+function openUpd(){
+  if(!isAdmin||$('#upd').classList.contains('open'))return;
+  buildUpd();$('#upd').classList.add('open');pushLayer(closeUpd);upLoad();
+}
+function closeUpd(){
+  if(!$('#upd').classList.contains('open'))return;
+  $('#upd').classList.remove('open');popLayer(closeUpd);
+}
+$('#updBack').innerHTML=ic('back',24);
+$('#updBack').addEventListener('click',closeUpd);
+$('#upFile').addEventListener('change',e=>{
+  const list=Array.prototype.slice.call(e.target.files||[]);e.target.value='';
+  if(list.length)upAdd(list);
+});
+$('#updBody').addEventListener('input',e=>{
+  if(e.target.id==='uTitle'||e.target.id==='uText'){UP.token=null;upPrev()}
+});
+$('#updBody').addEventListener('click',async e=>{
+  const rm=e.target.closest('[data-urm]');
+  if(rm){
+    const i=UP.media.findIndex(m=>m.uid===rm.dataset.urm);
+    if(i>=0){try{URL.revokeObjectURL(UP.media[i].url)}catch(_){}UP.media.splice(i,1);UP.token=null;upAtts();upPrev();hap()}
+    return;
+  }
+  const b=e.target.closest('[data-u]');if(!b)return;
+  const a=b.dataset.u;
+  if(a==='attach')$('#upFile').click();
+  else if(a==='test'){b.disabled=true;await upTest();b.disabled=false}
+  else if(a==='send'){b.disabled=true;await upSend();b.disabled=false}
+  else if(a==='pause'){UP.stop=true;b.disabled=true}
+  else if(a==='resume')upRun(b.dataset.id);
+  else if(a==='cancel'){
+    const ok=await dialog({title:'Отменить рассылку?',text:'Недоставленные сообщения отправлены не будут.',ok:'Отменить рассылку',danger:true});
+    if(!ok)return;
+    try{await upApi('POST','/admin/broadcasts/'+b.dataset.id+'/cancel');if(UP.cur&&UP.cur.id===b.dataset.id)UP.cur=null;upProgress();await upLoad()}
+    catch(err){toast(err.message)}
+  }
+});
 
 /* ---------- init ---------- */
 try{
