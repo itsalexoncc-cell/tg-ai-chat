@@ -537,6 +537,54 @@ svg{display:block}
 .uimg{display:block;width:120px;height:120px;object-fit:cover;border-radius:12px;background:rgba(127,127,127,.18)}
 .ufile{display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 10px;border-radius:12px;background:rgba(127,127,127,.18);font-size:14px;white-space:nowrap}
 .ufile span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+[hidden]{display:none!important}
+
+/* Переключатель темы: солнце — тумблер — луна */
+.tsw{margin-left:auto;display:flex;align-items:center;gap:8px;padding-right:4px}
+.tsw .ico{display:grid;place-items:center;width:24px;height:24px;color:var(--muted);opacity:.4;transition:opacity .2s,color .2s;cursor:pointer}
+.tsw .sw{position:relative;flex:none;width:44px;height:26px;border-radius:13px;background:var(--card);border:1px solid var(--border);transition:background .2s}
+.tsw .sw i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--text);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+:root:not([data-theme="light"]) .tsw .sw i{transform:translateX(18px)}
+:root:not([data-theme="light"]) .tsw .moon{opacity:1;color:#a5b4fc}
+:root[data-theme="light"] .tsw .sun{opacity:1;color:#f59e0b}
+
+/* Список моделей с галочками */
+.mh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px;color:#9a9a9a;font-size:13px}
+.mh b{font-weight:600;color:var(--text)}
+.mcnt{flex:none}
+.mtools{display:flex;gap:8px;margin:0 0 8px}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.mlist{max-height:300px;overflow-y:auto;border:1px solid #363636;border-radius:12px;background:#181818;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 6px 9px 10px;cursor:pointer;border-bottom:1px solid #2a2a2a;-webkit-user-select:none;user-select:none}
+.mrow:last-child{border-bottom:0}
+.mrow:active{background:rgba(127,127,127,.12)}
+.mrow .cb{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #666;display:grid;place-items:center;color:transparent}
+.mrow.on .cb{background:#fff;border-color:#fff;color:#121212}
+.mrow .mt{flex:1;min-width:0;font-size:14px;line-height:1.3;word-break:break-all}
+.mrow .mx{flex:none;width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:8px}
+.mempty{padding:12px 2px;color:var(--muted);font-size:14px;line-height:1.45}
+:root[data-theme="light"] .mlist{background:#f2f2f5;border-color:var(--border)}
+:root[data-theme="light"] .mrow{border-color:var(--border)}
+:root[data-theme="light"] .mrow .cb{border-color:#a0a0a8}
+:root[data-theme="light"] .mrow.on .cb{background:#1c1c1e;border-color:#1c1c1e;color:#fff}
+:root[data-theme="light"] .mh{color:var(--muted)}
+
+/* Сообщения пользователя: меню по долгому нажатию, без выделения текста */
+.m.u .b,.m.u .b *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+.uimg{cursor:zoom-in;-webkit-user-drag:none}
+
+/* Полноэкранный просмотр фото */
+#viewer{position:absolute;inset:0;z-index:80;background:#000;touch-action:none;opacity:0;pointer-events:none;transition:opacity .2s}
+#viewer.on{opacity:1;pointer-events:auto}
+#vstage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;touch-action:none}
+#vimg{display:block;max-width:100%;max-height:100%;transform-origin:center;will-change:transform;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;-webkit-touch-callout:none;touch-action:none;transition:opacity .15s}
+.vtop{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 12px;color:#fff;pointer-events:none;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.vtop span{font-size:15px;font-weight:500;padding-left:8px}
+#viewer .ib{pointer-events:auto;color:#fff;background:rgba(255,255,255,.16)}
+#viewer .ib:active{background:rgba(255,255,255,.28)}
+.vnav{position:absolute;top:50%;z-index:2;margin-top:-20px}
+#vPrev{left:10px}#vNext{right:10px}
 </style>
 </head>
 <body>
@@ -573,12 +621,18 @@ svg{display:block}
   </aside>
 
   <section id="settings">
-    <div class="sh"><button class="ib" id="setBack" aria-label="Назад"></button><h2>Настройки</h2></div>
+    <div class="sh"><button class="ib" id="setBack" aria-label="Назад"></button><h2>Настройки</h2><div class="tsw" id="themeSw"><span class="ico sun" id="icSun" aria-label="Светлая тема"></span><button class="sw" id="themeToggle" role="switch" aria-checked="true" aria-label="Тёмная тема"><i></i></button><span class="ico moon" id="icMoon" aria-label="Тёмная тема"></span></div></div>
     <div id="setBody"></div>
   </section>
 
   <div id="pop"><div class="pcard" id="pcard"></div></div>
   <div id="dlg"></div>
+  <div id="viewer">
+    <div class="vtop"><span id="vcount"></span><button class="ib" id="vClose" aria-label="Закрыть"></button></div>
+    <div id="vstage"><img id="vimg" alt="" draggable="false"></div>
+    <button class="ib vnav" id="vPrev" aria-label="Предыдущее"></button>
+    <button class="ib vnav" id="vNext" aria-label="Следующее"></button>
+  </div>
   <div id="toast"></div>
 </div>
 <input type="file" id="file" hidden multiple accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.log,.java,.c,.cpp,.go,.rs,.sql,text/*,.pdf,application/pdf,image/jpeg,image/png,image/webp,image/gif">
@@ -612,13 +666,15 @@ const I={
  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
  check:'<path d="M5 12l5 5L20 7"/>',
  dots:'<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>',
- cookie:'<path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4-4 4 4 0 0 1-5-5Z"/><circle cx="8.5" cy="11" r=".8" fill="currentColor"/><circle cx="12" cy="15.5" r=".8" fill="currentColor"/><circle cx="15.5" cy="13" r=".8" fill="currentColor"/><circle cx="9" cy="15" r=".8" fill="currentColor"/>',
  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 19V5M9 8h6"/>',
  code:'<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
  lang:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
  pen:'<path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16Z"/><path d="M14 6l4 4"/>',
  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
- x:'<path d="M6 6l12 12M18 6L6 18"/>'
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ next:'<path d="M9 18l6-6-6-6"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>'
 };
 const ic=(n,s)=>{s=s||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>'};
 
@@ -632,7 +688,10 @@ const PROVIDERS=[
  {id:'xai',name:'xAI (Grok)',type:'oai',base:'https://api.x.ai/v1',models:['grok-4']},
  {id:'mistral',name:'Mistral',type:'oai',base:'https://api.mistral.ai/v1',models:['mistral-large-latest','mistral-small-latest']},
  {id:'groq',name:'Groq',type:'oai',base:'https://api.groq.com/openai/v1',models:['llama-3.3-70b-versatile']},
- {id:'custom',name:'Свой endpoint (OpenAI-совместимый)',type:'oai',base:'',models:[],custom:true}
+ {id:'custom',name:'Свой endpoint 1',type:'oai',base:'',models:[],custom:true},
+ {id:'custom2',name:'Свой endpoint 2',type:'oai',base:'',models:[],custom:true},
+ {id:'custom3',name:'Свой endpoint 3',type:'oai',base:'',models:[],custom:true},
+ {id:'custom4',name:'Свой endpoint 4',type:'oai',base:'',models:[],custom:true}
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
@@ -654,11 +713,14 @@ async function cloudKeyRequest(method,provider,key){
 /* ---------- state ---------- */
 const KEY='tgai.state.v1';
 const THEME_KEY='tgai.theme.v1';
-let currentTheme=localStorage.getItem(THEME_KEY)||'dark';
+let currentTheme='dark';
+try{currentTheme=localStorage.getItem(THEME_KEY)==='light'?'light':'dark'}catch(e){}
 
 function applyTheme(){
   document.documentElement.dataset.theme=currentTheme;
   const color=currentTheme==='light'?'#f5f5f7':'#121212';
+  const sw=document.getElementById('themeToggle');
+  if(sw){sw.setAttribute('aria-checked',String(currentTheme!=='light'));sw.setAttribute('aria-label',currentTheme==='light'?'Светлая тема':'Тёмная тема')}
   try{
     if(tg){
       tg.setHeaderColor(color);
@@ -668,10 +730,15 @@ function applyTheme(){
   }catch(e){}
 }
 applyTheme();
+function setTheme(t){
+  currentTheme=t==='light'?'light':'dark';
+  try{localStorage.setItem(THEME_KEY,currentTheme)}catch(e){}
+  applyTheme();
+}
 let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
 S=Object.assign({providers:{},chats:[],system:'',maxTokens:4096,lastModel:''},S||{});
-PROVIDERS.forEach(p=>{S.providers[p.id]=Object.assign({key:'',base:'',limit:0,used:{in:0,out:0},by:{}},S.providers[p.id]||{})});
+PROVIDERS.forEach(p=>{S.providers[p.id]=Object.assign({key:'',base:'',name:'',limit:0,used:{in:0,out:0},by:{}},S.providers[p.id]||{})});
 let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{const stored=JSON.parse(JSON.stringify(S));PROVIDERS.forEach(p=>{if(stored.providers[p.id])stored.providers[p.id].key=''});localStorage.setItem(KEY,JSON.stringify(stored))}catch(e){}},150)};
 async function saveCloudKey(provider,key){
   try{
@@ -695,7 +762,10 @@ async function loadCloudKeys(){
   else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
 }
 
-const getModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
+const allModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
+/* модели, отмеченные галочкой (доступны на главном экране); если галочки ещё не трогали — доступны все */
+const getModels=pid=>{const c=S.providers[pid],all=allModels(pid);return Array.isArray(c.enabled)?all.filter(m=>c.enabled.indexOf(m)>=0):all};
+const provName=pid=>{const c=S.providers[pid];return (PROV[pid].custom&&c&&c.name)||PROV[pid].name};
 const isAvail=pid=>{const p=PROV[pid],c=S.providers[pid];return p.custom?!!c.base:!!c.key};
 const avail=()=>{const r=[];PROVIDERS.forEach(p=>{if(isAvail(p.id))getModels(p.id).forEach(m=>r.push(p.id+'|'+m))});return r};
 const splitM=s=>{const i=(s||'').indexOf('|');return i<0?['','']:[s.slice(0,i),s.slice(i+1)]};
@@ -865,76 +935,119 @@ function renderMsgs(){
     if(stick)scrollDown(true);
   }
 }
-let paintQ=false;
-let paintMsg=null;
-let paintIndex=0;
-let paintWords=0;
+/* ---------- печать ответа и жизненный цикл генерации ----------
+   busy остаётся true, пока ответ не получен И не допечатан на экране —
+   всё это время кнопка работает как «Стоп», а нажатие полностью прекращает и запрос, и печать. */
+let G=null;   // текущая генерация
 
 function paint(){
-  if(paintQ)return;
-  paintQ=true;
+  const g=G;
+  if(!g||g.painting)return;
+  g.painting=true;
 
   function step(){
-    const i=cur.messages.length-1;
-    const m=cur.messages[i];
-
-    if(!m){paintQ=false;return}
-
-    if(paintMsg!==m){
-      paintMsg=m;
-      paintIndex=0;
-      paintWords=0;
-    }
-
-    const n=box.querySelector('.m.a[data-i="'+i+'"] .b');
+    if(G!==g){g.painting=false;return}
+    const m=g.msg;
+    const i=g.chat.messages.indexOf(m);
+    const n=(cur===g.chat&&i>=0)?box.querySelector('.m.a[data-i="'+i+'"] .b'):null;
 
     if(n){
-  const next=m.content.indexOf(' ',paintIndex);
-  paintIndex=next===-1?m.content.length:next+1;
+      const next=m.content.indexOf(' ',g.idx);
+      g.idx=next===-1?m.content.length:next+1;
 
-  n.innerHTML=m.content
-    ?md(m.content.slice(0,paintIndex))
-    :'<span class="dots"><i></i><i></i><i></i></span>';
+      n.innerHTML=m.content
+        ?md(m.content.slice(0,g.idx))
+        :'<span class="dots"><i></i><i></i><i></i></span>';
 
-  if(m.content){
-    const walker=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);
-    const nodes=[];
-    while(walker.nextNode())nodes.push(walker.currentNode);
+      if(m.content){
+        const walker=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);
+        const nodes=[];
+        while(walker.nextNode())nodes.push(walker.currentNode);
 
-    let count=0;
-    nodes.forEach(node=>{
-      const parts=node.textContent.match(/\s+|\S+/g)||[];
-      const frag=document.createDocumentFragment();
+        let count=0;
+        nodes.forEach(node=>{
+          const parts=node.textContent.match(/\s+|\S+/g)||[];
+          const frag=document.createDocumentFragment();
 
-      parts.forEach(part=>{
-        if(/^\s+$/.test(part)){
-          frag.appendChild(document.createTextNode(part));
-        }else{
-          const span=document.createElement('span');
-          span.textContent=part;
-          if(count>=paintWords)span.className='word-in';
-          count++;
-          frag.appendChild(span);
-        }
-      });
+          parts.forEach(part=>{
+            if(/^\s+$/.test(part)){
+              frag.appendChild(document.createTextNode(part));
+            }else{
+              const span=document.createElement('span');
+              span.textContent=part;
+              if(count>=g.words)span.className='word-in';
+              count++;
+              frag.appendChild(span);
+            }
+          });
 
-      node.parentNode.replaceChild(frag,node);
-    });
+          node.parentNode.replaceChild(frag,node);
+        });
 
-    paintWords=count;
-  }
-
-}
-
-    if(paintIndex<m.content.length){
-      setTimeout(()=>requestAnimationFrame(step), 30);
+        g.words=count;
+      }
     }else{
-      paintQ=false;
+      g.idx=m.content.length;   // чат не на экране — печатать нечего
+    }
+
+    if(g.idx<m.content.length){
+      setTimeout(()=>requestAnimationFrame(step),30);
+    }else{
+      g.painting=false;
+      if(g.streamDone)finishGen(g);
     }
   }
 
   requestAnimationFrame(step);
 }
+
+/* Завершает генерацию (один раз): учёт токенов, сохранение, кнопки под ответом */
+function finishGen(g){
+  if(g.done)return;
+  g.done=true;
+  const chat=g.chat,msg=g.msg;
+
+  if(!g.got){g.uIn=est(g.hist);g.uOut=Math.ceil(msg.content.length/3.5)}
+  if(g.uIn||g.uOut)addUsage(g.pid,g.model,g.uIn,g.uOut);
+
+  let removed=false;
+  if(!msg.content){
+    const k=chat.messages.indexOf(msg);
+    if(k>=0){chat.messages.splice(k,1);removed=true}
+  }
+
+  if(G===g){G=null;busy=false;abortC=null}
+  chat.updated=Date.now();save();
+
+  if(cur!==chat)return;
+  renderTop();
+  updateComposer();
+  box.querySelector('.send-space')?.remove();
+  if(removed)renderMsgs();
+
+  const last=box.querySelector('.m.a[data-i="'+(chat.messages.length-1)+'"]');
+  if(last&&!last.querySelector('.act')){
+    last.insertAdjacentHTML('beforeend',
+      '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button><button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button></div>');
+  }
+  if(errMsg&&!box.querySelector('.err')){
+    box.insertAdjacentHTML('beforeend',
+      '<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>');
+  }
+}
+
+/* Остановка в любой момент: и пока идёт запрос, и пока ответ ещё печатается */
+function stopGen(){
+  const g=G;
+  if(!g)return;
+  g.stopped=true;
+  try{g.abort.abort()}catch(e){}
+  // оставляем ровно то, что пользователь уже увидел на экране
+  if(g.idx<g.msg.content.length)g.msg.content=g.msg.content.slice(0,g.idx);
+  finishGen(g);
+  hap();
+}
+
 function retryUserMessage(index){
   if(busy)return;
 
@@ -979,19 +1092,15 @@ function openUserMessageMenu(index,anchor){
   const m=cur.messages[index];
   if(!m||m.role!=='user')return;
 
-  const hasAnswer=cur.messages
-    .slice(index+1)
-    .some(x=>x.role==='assistant'&&x.content);
-
   const canRetry=!busy;
   const d=$('#dlg');
 
   d.innerHTML=
     '<div class="dcard" style="padding:10px">'+
-      '<button class="pi" data-user-action="copy">'+
+      (m.content?'<button class="pi" data-user-action="copy">'+
         ic('copy',18)+
         '<span style="flex:1;margin-left:10px">Копировать</span>'+
-      '</button>'+
+      '</button>':'')+
       (canRetry?
         '<button class="pi" data-user-action="retry">'+
           ic('refresh',18)+
@@ -1033,10 +1142,50 @@ function openUserMessageMenu(index,anchor){
     }
   };
 }
+/* Долгое нажатие на сообщение пользователя открывает меню; обычный тап по фото открывает его на весь экран */
+let lp=null,lpFired=0,lpTouch=false;
+const lpCancel=()=>{if(lp){clearTimeout(lp.t);lp=null}};
+function lpOpen(b){
+  const row=b.closest('.m.u');if(!row)return;
+  lpFired=Date.now();
+  hap('medium');
+  openUserMessageMenu(+row.dataset.i,b);
+}
+box.addEventListener('touchstart',e=>{
+  lpCancel();
+  const b=e.target.closest('.m.u .b');
+  if(!b||e.touches.length!==1||e.target.closest('[data-user-menu]'))return;
+  const t=e.touches[0];
+  lp={x:t.clientX,y:t.clientY,t:setTimeout(()=>{lp=null;lpTouch=true;lpOpen(b)},450)};
+},{passive:true});
+box.addEventListener('touchmove',e=>{
+  if(!lp)return;
+  const t=e.touches[0];
+  if(Math.abs(t.clientX-lp.x)>10||Math.abs(t.clientY-lp.y)>10)lpCancel();
+},{passive:true});
+const lpEnd=e=>{
+  lpCancel();
+  if(lpTouch){            // палец отпущен после долгого нажатия — гасим «хвостовой» клик
+    lpTouch=false;lpFired=Date.now();
+    if(e.cancelable)e.preventDefault();
+  }
+};
+box.addEventListener('touchend',lpEnd,{passive:false});
+box.addEventListener('touchcancel',lpEnd);
+box.addEventListener('scroll',lpCancel,{passive:true});
+box.addEventListener('contextmenu',e=>{   // ПК / Android: правая кнопка или системное долгое нажатие
+  const b=e.target.closest('.m.u .b');if(!b)return;
+  e.preventDefault();
+  if(Date.now()-lpFired<900||$('#dlg').classList.contains('on'))return;
+  lpOpen(b);
+});
+
 box.addEventListener('click',e=>{
+  if(Date.now()-lpFired<700)return;
+
   const selection=window.getSelection();
 
-  // Не открываем меню, если пользователь выделяет текст
+  // Не реагируем, если пользователь выделяет текст
   if(selection&&!selection.isCollapsed&&selection.toString().trim()){
     return;
   }
@@ -1049,12 +1198,21 @@ box.addEventListener('click',e=>{
     return;
   }
 
-  const user=e.target.closest('.m.u[data-i]');
-  if(user){
-    const more=e.target.closest('[data-user-menu]');
-    openUserMessageMenu(+user.dataset.i,more||user);
+  const im=e.target.closest('img[data-att]');
+  if(im){
+    const row=im.closest('.m.u');
+    const imgs=Array.prototype.slice.call(row.querySelectorAll('img[data-att]'));
+    openViewer(imgs.map(x=>x.dataset.att),Math.max(0,imgs.indexOf(im)));
     return;
   }
+
+  const more=e.target.closest('[data-user-menu]');
+  if(more){
+    openUserMessageMenu(+more.closest('.m.u').dataset.i,more);
+    return;
+  }
+
+  if(e.target.closest('.m.u'))return;   // обычный тап по сообщению ничего не делает
 
   const b=e.target.closest('[data-act]');
   if(!b)return;
@@ -1092,9 +1250,19 @@ $('#btnNew2').innerHTML=ic('edit',20);
 $('#btnNew').innerHTML=ic('edit',20)+'<span>Новый чат</span>';
 $('#gIc').innerHTML=ic('set',22);
 $('#setBack').innerHTML=ic('back',24);
+$('#icSun').innerHTML=ic('sun',18);
+$('#icMoon').innerHTML=ic('moon',18);
+$('#vClose').innerHTML=ic('x',22);
+$('#vPrev').innerHTML=ic('back',22);
+$('#vNext').innerHTML=ic('next',22);
+$('#themeSw').addEventListener('click',e=>{
+  if(e.target.closest('.sun'))setTheme('light');
+  else if(e.target.closest('.moon'))setTheme('dark');
+  else setTheme(currentTheme==='light'?'dark':'light');
+  hap();
+});
 (function(){
   const cards=[
-    ['cookie','Придумай рецепт','Найди лучшие рецепты','Придумай рецепт из этих продуктов: '],
     ['book','Объясни тему','Просто о сложном','Объясни простыми словами: '],
     ['code','Помоги с кодом','Написать или починить','Помоги с кодом: '],
     ['lang','Переведи текст','На любой язык','Переведи на английский: '],
@@ -1112,7 +1280,7 @@ const inp=$('#inp');
 function autosize(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,160)+'px'}
 inp.addEventListener('input',()=>{autosize();updateComposer()});
 $('#btnSend').addEventListener('click',()=>{
-  if(busy){if(abortC)abortC.abort();return}
+  if(busy){stopGen();return}
   if(inp.value.trim()||pending.length)send();
 });
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
@@ -1329,19 +1497,23 @@ async function sse(res,onData){
 }
 async function generate(){
   if(busy)return;
-  while(cur.messages.length&&cur.messages[cur.messages.length-1].role==='assistant')cur.messages.pop();
-  if(!cur.messages.length)return;
-  const pm=splitM(cur.model),pid=pm[0],model=pm[1];
+  const chat=cur;
+  while(chat.messages.length&&chat.messages[chat.messages.length-1].role==='assistant')chat.messages.pop();
+  if(!chat.messages.length)return;
+  const pm=splitM(chat.model),pid=pm[0],model=pm[1];
   if(!pid||!isAvail(pid)){toast('Добавьте API ключ в настройках');openSettings();return}
   const p=PROV[pid],c=S.providers[pid];
-  const hist=cur.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
-  const msg={role:'assistant',content:'',model:cur.model};
-  cur.messages.push(msg);
-  busy=true;errMsg='';abortC=new AbortController();stick=true;renderAll();
-  const signal=abortC.signal;
+  const hist=chat.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
+  const msg={role:'assistant',content:'',model:chat.model};
+  chat.messages.push(msg);
+  const abort=new AbortController();
+  const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,
+    got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
+  G=g;busy=true;abortC=abort;errMsg='';stick=true;renderAll();
+  const signal=abort.signal;
   const base=(c.base||p.base).replace(/\/+$/,'');
   let uIn=0,uOut=0,got=false;
-  const push=d=>{msg.content+=d;paint()};
+  const push=d=>{if(g.stopped)return;msg.content+=d;paint()};
   try{
     if(p.type==='oai'){
       const wh=(await wireHist(hist,'oai',0)).map(m=>m.files.length
@@ -1349,6 +1521,7 @@ async function generate(){
             ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
             :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
         :{role:m.role,content:m.text});
+      if(signal.aborted)return;
       const body={model:model,messages:(S.system?[{role:'system',content:S.system}]:[]).concat(wh),stream:true};
       if(p.usage)body.stream_options={include_usage:true};
       const res=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
@@ -1364,6 +1537,7 @@ async function generate(){
             ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}}
             :{type:'image',source:{type:'base64',media_type:f.type,data:f.data}}).concat(m.text?[{type:'text',text:m.text}]:[])}
         :{role:m.role,content:m.text});
+      if(signal.aborted)return;
       const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
       if(S.system)body.system=S.system;
       const res=await fetch(base+'/v1/messages',{method:'POST',signal:signal,
@@ -1377,6 +1551,7 @@ async function generate(){
       });
     }else{
       const wh=await wireHist(hist,'gemini',19);
+      if(signal.aborted)return;
       const body={contents:wh.map(m=>({role:m.role==='assistant'?'model':'user',
           parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
@@ -1391,30 +1566,17 @@ async function generate(){
       });
     }
   }catch(e){
-    if(e&&e.name==='AbortError'){/* остановлено пользователем */}
-    else if(e instanceof TypeError)errMsg='Не удалось связаться с API: сеть, CORS или блокировка. Проверьте интернет и Base URL (можно указать свой прокси) в настройках.'+(cur.messages.some(m=>m.attachments&&m.attachments.length)?' Есть вложения: если без них запрос проходит, дело в размере запроса.':'')+' ['+(e.message||'TypeError')+']';
+    if(g.stopped||(e&&e.name==='AbortError')){/* остановлено пользователем */}
+    else if(e instanceof TypeError)errMsg='Не удалось связаться с API: сеть, CORS или блокировка. Проверьте интернет и Base URL (можно указать свой прокси) в настройках.'+(chat.messages.some(m=>m.attachments&&m.attachments.length)?' Есть вложения: если без них запрос проходит, дело в размере запроса.':'')+' ['+(e.message||'TypeError')+']';
     else errMsg=String(e&&e.message||e);
   }finally{
-    if(!got){uIn=est(hist);uOut=Math.ceil(msg.content.length/3.5)}
-    if(uIn||uOut)addUsage(pid,model,uIn,uOut);
-    if(!msg.content){cur.messages.pop();renderMsgs();}
-    busy=false;abortC=null;cur.updated=Date.now();save();
-    renderTop();
-    updateComposer();
-    box.querySelector('.send-space')?.remove();
-    
-    const lastIndex=cur.messages.length-1;
-    const last=box.querySelector('.m.a[data-i="'+lastIndex+'"]');
-    
-    if(last&&!last.querySelector('.act')){
-      last.insertAdjacentHTML('beforeend',
-        '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button><button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button></div>'
-        );
-    }
-    if(errMsg&&!box.querySelector('.err')){
-      box.insertAdjacentHTML('beforeend',
-        '<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>'
-        );
+    g.uIn=uIn;g.uOut=uOut;g.got=got;
+    g.streamDone=true;
+    if(!g.done){
+      save();
+      // запрос закончился; если ответ ещё печатается — завершим, когда допечатается (кнопка «Стоп» всё это время активна)
+      if(g.idx>=msg.content.length)finishGen(g);
+      else paint();
     }
   }
 }
@@ -1425,11 +1587,11 @@ function openPicker(){
   if(popOpen)return;popOpen=true;
   const a=avail();let h='';
   if(!a.length){
-    h='<div class="pn2">Нет доступных моделей. Добавьте API ключ хотя бы одного провайдера в настройках.</div><button class="pi" data-go="set"><span>Открыть настройки</span></button>';
+    h='<div class="pn2">Нет доступных моделей. Добавьте API ключ и отметьте галочками нужные модели в настройках.</div><button class="pi" data-go="set"><span>Открыть настройки</span></button>';
   }else{
     PROVIDERS.forEach(p=>{
       const ms=isAvail(p.id)?getModels(p.id):[];if(!ms.length)return;
-      h+='<div class="pg">'+esc(p.name)+'</div>';
+      h+='<div class="pg">'+esc(provName(p.id))+'</div>';
       ms.forEach(m=>{const v=p.id+'|'+m;h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span>'+(v===cur.model?ic('check',18):'')+'</button>'});
     });
   }
@@ -1485,7 +1647,7 @@ function renderDrawer(){
   $('#chatList').innerHTML=h;
 }
 $('#q').addEventListener('input',renderDrawer);
-function startNew(){if(busy&&abortC)abortC.abort();closeDrawer();newChat();hap()}
+function startNew(){stopGen();closeDrawer();newChat();hap()}
 $('#btnNew').addEventListener('click',startNew);
 $('#btnNew2').addEventListener('click',startNew);
 $('#chatList').addEventListener('click',async e=>{
@@ -1495,10 +1657,10 @@ $('#chatList').addEventListener('click',async e=>{
     const v=await menuSheet(chat,e.target.closest('[data-more]'));
     if(v==='ren'){const n=await dialog({title:'Переименовать чат',input:chat.title,ok:'Сохранить'});if(n){chat.title=n.slice(0,80);save();renderDrawer()}}
     else if(v==='del'){const ok=await dialog({title:'Удалить чат?',text:'«'+chat.title+'» будет удалён без возможности восстановления.',ok:'Удалить',danger:true});
-      if(ok){fileDel(chatFileIds(chat));S.chats=S.chats.filter(c=>c!==chat);save();if(cur===chat){if(busy&&abortC)abortC.abort();newChat()}renderDrawer()}}
+      if(ok){fileDel(chatFileIds(chat));S.chats=S.chats.filter(c=>c!==chat);save();if(cur===chat){stopGen();newChat()}renderDrawer()}}
     return;
   }
-  if(busy&&abortC)abortC.abort();
+  stopGen();
   cur=chat;errMsg='';closeDrawer();renderAll();stick=true;
 });
 function menuSheet(chat,anchor){
@@ -1523,9 +1685,122 @@ document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=
 document.addEventListener('touchend',e=>{
   const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(Math.abs(dy)>70||Date.now()-st>700)return;
+  if(V.open)return;
   if(!dOpen&&!$('#settings').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
   else if(dOpen&&dx<-70)closeDrawer();
 },{passive:true});
+
+/* ---------- полноэкранный просмотр фото ---------- */
+const V={el:$('#viewer'),st:$('#vstage'),img:$('#vimg'),ids:[],i:0,s:1,x:0,y:0,open:false};
+const vclamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function vApply(anim){
+  V.img.style.transition=(anim?'transform .22s cubic-bezier(.2,.8,.2,1),':'')+'opacity .15s';
+  V.img.style.transform='translate('+V.x+'px,'+V.y+'px) scale('+V.s+')';
+}
+function vBounds(){
+  const w=V.img.offsetWidth*V.s,h=V.img.offsetHeight*V.s;
+  const mx=Math.max(0,(w-V.st.clientWidth)/2),my=Math.max(0,(h-V.st.clientHeight)/2);
+  V.x=vclamp(V.x,-mx,mx);V.y=vclamp(V.y,-my,my);
+}
+async function vShow(i){
+  V.i=i;V.s=1;V.x=0;V.y=0;vApply(false);
+  V.el.style.background='';
+  $('#vcount').textContent=V.ids.length>1?(i+1)+' / '+V.ids.length:'';
+  $('#vPrev').hidden=$('#vNext').hidden=V.ids.length<2;
+  V.img.style.opacity='0';
+  const id=V.ids[i];let u=urlCache.get(id);
+  if(!u){const b=await fileGet(id);if(b)u=getUrl(id,b)}
+  if(!V.open||V.i!==i)return;
+  if(!u){toast('Не удалось открыть фото');closeViewer();return}
+  V.img.onload=()=>{V.img.style.opacity='1'};
+  V.img.src=u;
+  if(V.img.complete)V.img.style.opacity='1';
+}
+function openViewer(ids,i){
+  if(V.open)return;
+  V.ids=ids;V.open=true;V.el.classList.add('on');pushLayer(closeViewer);vShow(i);
+}
+function closeViewer(){
+  if(!V.open)return;
+  V.open=false;V.el.classList.remove('on');popLayer(closeViewer);
+  vp.clear();vg=null;
+  setTimeout(()=>{if(!V.open)V.img.removeAttribute('src')},230);
+}
+const vp=new Map();let vg=null,vTap={t:0,x:0,y:0};
+const vcen=()=>{
+  const a=Array.from(vp.values());
+  return {n:a.length,x:a.reduce((t,p)=>t+p.x,0)/a.length,y:a.reduce((t,p)=>t+p.y,0)/a.length,
+    d:a.length>1?Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y):0};
+};
+function vStart(){const c=vcen();vg={n:c.n,cx:c.x,cy:c.y,d:c.d,s:V.s,x:V.x,y:V.y,t:Date.now(),moved:false}}
+V.st.addEventListener('pointerdown',e=>{
+  try{V.st.setPointerCapture(e.pointerId)}catch(_){}
+  vp.set(e.pointerId,{x:e.clientX,y:e.clientY});vStart();
+});
+V.st.addEventListener('pointermove',e=>{
+  if(!vp.has(e.pointerId)||!vg)return;
+  vp.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const c=vcen();
+  if(c.n>=2&&vg.n>=2&&vg.d>0){            // щипок: масштаб + сдвиг
+    V.s=vclamp(vg.s*c.d/vg.d,1,6);V.x=vg.x+(c.x-vg.cx);V.y=vg.y+(c.y-vg.cy);vg.moved=true;
+  }else if(c.n===1&&vg.n===1){            // один палец
+    const dx=c.x-vg.cx,dy=c.y-vg.cy;
+    if(Math.abs(dx)+Math.abs(dy)>8)vg.moved=true;
+    if(!vg.moved)return;
+    V.x=vg.x+dx;V.y=vg.y+dy;
+    if(V.s<=1.01)V.el.style.background='rgba(0,0,0,'+(1-Math.min(.6,Math.abs(V.y)/500))+')';
+  }else return;
+  vApply(false);
+});
+function vEnd(e){
+  if(!vp.has(e.pointerId))return;
+  vp.delete(e.pointerId);
+  if(vp.size>0){vStart();return}
+  const g=vg;vg=null;if(!g)return;
+  if(V.s<=1.02){
+    const dx=V.x,dy=V.y;
+    if(g.moved&&g.n===1){
+      if(Math.abs(dy)>110&&Math.abs(dy)>Math.abs(dx)){closeViewer();return}              // свайп вниз/вверх — закрыть
+      if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)&&V.ids.length>1){                   // свайп вбок — соседнее фото
+        const n=V.i+(dx<0?1:-1);
+        if(n>=0&&n<V.ids.length){vShow(n);return}
+      }
+    }
+    V.s=1;V.x=0;V.y=0;V.el.style.background='';vApply(true);
+  }else{vBounds();vApply(true)}
+  if(!g.moved&&e.type==='pointerup'&&Date.now()-g.t<350){
+    const now=Date.now(),r=V.img.getBoundingClientRect();
+    const onImg=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+    if(now-vTap.t<320&&Math.hypot(e.clientX-vTap.x,e.clientY-vTap.y)<30){              // двойной тап — зум
+      vTap.t=0;
+      if(V.s>1.05){V.s=1;V.x=0;V.y=0}
+      else{
+        const rc=V.st.getBoundingClientRect(),k=2.5;
+        V.s=k;V.x=-(k-1)*(e.clientX-(rc.left+rc.width/2));V.y=-(k-1)*(e.clientY-(rc.top+rc.height/2));vBounds();
+      }
+      vApply(true);return;
+    }
+    vTap={t:now,x:e.clientX,y:e.clientY};
+    if(!onImg&&V.s<=1.02)closeViewer();                                                   // тап по тёмному фону — закрыть
+  }
+}
+V.st.addEventListener('pointerup',vEnd);
+V.st.addEventListener('pointercancel',vEnd);
+V.st.addEventListener('wheel',e=>{
+  e.preventDefault();
+  V.s=vclamp(V.s*(e.deltaY<0?1.15:1/1.15),1,6);
+  if(V.s<=1.01){V.s=1;V.x=0;V.y=0}
+  vBounds();vApply(false);
+},{passive:false});
+$('#vClose').addEventListener('click',closeViewer);
+$('#vPrev').addEventListener('click',()=>{if(V.i>0)vShow(V.i-1)});
+$('#vNext').addEventListener('click',()=>{if(V.i<V.ids.length-1)vShow(V.i+1)});
+document.addEventListener('keydown',e=>{
+  if(!V.open)return;
+  if(e.key==='Escape')closeViewer();
+  else if(e.key==='ArrowLeft'&&V.i>0)vShow(V.i-1);
+  else if(e.key==='ArrowRight'&&V.i<V.ids.length-1)vShow(V.i+1);
+});
 
 /* ---------- settings ---------- */
 const openProv=new Set();
@@ -1548,19 +1823,10 @@ function renderSettings(){
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
-   '<p class="hint">Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
-   '<h3>Внешний вид</h3><div class="gb"><label>Тема оформления</label><button class="btn" id="themeToggle">'+(currentTheme==='light'?'☀️ Светлая тема':'🌙 Тёмная тема')+'</button></div>'+
+   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Системный промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай кратко и по делу">'+esc(S.system)+'</textarea>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
-
-  const themeBtn=$('#themeToggle');
-  if(themeBtn)themeBtn.addEventListener('click',()=>{
-    currentTheme=currentTheme==='light'?'dark':'light';
-    localStorage.setItem(THEME_KEY,currentTheme);
-    applyTheme();
-    themeBtn.textContent=currentTheme==='light'?'☀️ Светлая тема':'🌙 Тёмная тема';
-  });
 
   renderUsage();renderProvs();
 }
@@ -1579,23 +1845,51 @@ function renderUsage(){
     }
     const top=Object.keys(c.by).sort((a,b)=>(c.by[b].in+c.by[b].out)-(c.by[a].in+c.by[a].out)).slice(0,4)
       .map(m=>'<div class="ul" style="color:#8a8a8a">'+esc(m)+' — '+fmt(c.by[m].in+c.by[m].out)+'</div>').join('');
-    return '<div class="uc" data-pid="'+p.id+'"><div class="uh"><b>'+esc(p.name)+'</b>'+(p.balance&&c.key?'<button class="ib" data-act="bal" aria-label="Обновить">'+ic('refresh',18)+'</button>':'')+'</div>'+
+    return '<div class="uc" data-pid="'+p.id+'"><div class="uh"><b>'+esc(provName(p.id))+'</b>'+(p.balance&&c.key?'<button class="ib" data-act="bal" aria-label="Обновить">'+ic('refresh',18)+'</button>':'')+'</div>'+
       '<div class="ul">Вход: <em>'+fmt(c.used.in)+'</em> · Выход: <em>'+fmt(c.used.out)+'</em> · Всего: <em>'+fmt(tot)+'</em></div>'+line+bar+top+'</div>';
   }).join('');
 }
 function renderUsageSafe(){try{renderUsage()}catch(e){}}
+function modelsHtml(p){
+  const all=allModels(p.id),on=new Set(getModels(p.id));
+  const rows=all.map(m=>'<div class="mrow'+(on.has(m)?' on':'')+'" data-act="mtog" data-m="'+esc(m)+'" role="checkbox" aria-checked="'+on.has(m)+'">'+
+    '<span class="cb">'+ic('check',14)+'</span><span class="mt">'+esc(m)+'</span>'+
+    '<button class="mx" data-act="mdel" data-m="'+esc(m)+'" aria-label="Убрать из списка">'+ic('x',14)+'</button></div>').join('');
+  return '<div class="mh"><span>Модели на главном экране</span><span class="mcnt">выбрано <b>'+on.size+'</b> из '+all.length+'</span></div>'+
+    '<div class="btns" style="margin:0 0 8px"><button class="btn" data-act="load">Загрузить список</button>'+(p.balance?'<button class="btn" data-act="bal">Проверить баланс</button>':'')+'</div>'+
+    (all.length
+      ?(all.length>8?'<input data-f="mfilter" placeholder="Фильтр по названию" autocapitalize="off" spellcheck="false" style="margin-bottom:8px">':'')+
+       '<div class="mtools"><button class="btn sm" data-act="mall">Выбрать все</button><button class="btn sm" data-act="mnone">Снять все</button></div>'+
+       '<div class="mlist">'+rows+'</div>'
+      :'<div class="mempty">Список пуст. Нажмите «Загрузить список» или добавьте модель вручную.</div>')+
+    '<div class="row" style="margin-top:8px"><input data-f="newmodel" placeholder="Своя модель (id)" autocapitalize="off" autocomplete="off" spellcheck="false"><button class="btn" data-act="madd">Добавить</button></div>';
+}
 function renderProvs(){
   const el=$('#provs');if(!el)return;
   el.innerHTML=PROVIDERS.map(p=>{
     const c=S.providers[p.id],open=openProv.has(p.id);
-    return '<div class="pv'+(open?' open':'')+'" data-pv="'+p.id+'"><button class="pvh" data-act="tog"><span class="dot'+(isAvail(p.id)?' on':'')+'"></span><span>'+esc(p.name)+'</span><span class="chev">'+ic('chev',18)+'</span></button>'+
-    (open?'<div class="pvb"><label>API ключ</label><div class="row"><input type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-f="key" value="'+esc(c.key)+'" placeholder="'+(p.custom?'если требуется':'sk-…')+'"><button class="ib" data-act="eye" aria-label="Показать">'+ic('eye',20)+'</button></div>'+
+    return '<div class="pv'+(open?' open':'')+'" data-pv="'+p.id+'"><button class="pvh" data-act="tog"><span class="dot'+(isAvail(p.id)?' on':'')+'"></span><span class="pvn">'+esc(provName(p.id))+'</span><span class="chev">'+ic('chev',18)+'</span></button>'+
+    (open?'<div class="pvb">'+
+      (p.custom?'<label>Название (необязательно)</label><input data-f="name" maxlength="40" autocomplete="off" placeholder="Например: Together AI" value="'+esc(c.name||'')+'">':'')+
+      '<label>API ключ</label><div class="row"><input type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-f="key" value="'+esc(c.key)+'" placeholder="'+(p.custom?'если требуется':'sk-…')+'"><button class="ib" data-act="eye" aria-label="Показать">'+ic('eye',20)+'</button></div>'+
       '<label>Base URL'+(p.custom?' (обязательно)':' (необязательно)')+'</label><input data-f="base" autocapitalize="off" spellcheck="false" placeholder="'+esc(p.base||'https://example.com/v1')+'" value="'+esc(c.base)+'">'+
-      '<label>Модели (по одной в строке)</label><textarea rows="4" data-f="models" autocapitalize="off" spellcheck="false">'+esc(getModels(p.id).join('\n'))+'</textarea>'+
-      '<div class="btns"><button class="btn" data-act="load">Загрузить список</button>'+(p.balance?'<button class="btn" data-act="bal">Проверить баланс</button>':'')+'</div>'+
+      modelsHtml(p)+
       '<label>Лимит токенов (для расчёта остатка, 0 — без лимита)</label><input inputmode="numeric" data-f="limit" value="'+(c.limit||'')+'" placeholder="например 1000000">'+
       '<div class="btns"><button class="btn ghost" data-act="resetu">Сбросить счётчик</button></div></div>':'')+'</div>';
   }).join('');
+}
+function updModelCount(pv,pid){
+  const el=pv.querySelector('.mcnt');
+  if(el)el.innerHTML='выбрано <b>'+getModels(pid).length+'</b> из '+allModels(pid).length;
+}
+function addModel(pv,pid){
+  const ni=pv.querySelector('[data-f="newmodel"]'),v=ni?ni.value.trim():'';
+  if(!v)return;
+  const c=S.providers[pid],all=allModels(pid).slice(),en=new Set(getModels(pid));
+  if(all.indexOf(v)<0)all.push(v);
+  en.add(v);
+  c.models=all;c.enabled=all.filter(x=>en.has(x));
+  save();renderProvs();toast('Модель добавлена');
 }
 $('#setBody').addEventListener('input',e=>{
   const t=e.target;
@@ -1605,13 +1899,24 @@ $('#setBody').addEventListener('input',e=>{
   }
   const pv=t.closest('[data-pv]');if(!pv||!t.dataset.f)return;
   const pid=pv.dataset.pv,c=S.providers[pid],f=t.dataset.f;
+  if(f==='mfilter'){
+    const q=t.value.trim().toLowerCase();
+    pv.querySelectorAll('.mrow').forEach(r=>{r.hidden=!!q&&r.dataset.m.toLowerCase().indexOf(q)<0});
+    return;
+  }
+  if(f==='newmodel')return;
   if(f==='key'){c.key=t.value.trim();return}
   else if(f==='base')c.base=t.value.trim();
-  else if(f==='models')c.models=t.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  else if(f==='name'){c.name=t.value.trim().slice(0,40);const hn=pv.querySelector('.pvn');if(hn)hn.textContent=provName(pid)}
   else if(f==='limit')c.limit=Math.max(0,parseInt(t.value)||0);
   save();
   const d=pv.querySelector('.dot');if(d)d.classList.toggle('on',isAvail(pid));
   renderUsage();
+});
+$('#setBody').addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const t=e.target;
+  if(t.dataset&&t.dataset.f==='newmodel'){e.preventDefault();const pv=t.closest('[data-pv]');if(pv)addModel(pv,pv.dataset.pv)}
 });
 $('#setBody').addEventListener('change',e=>{
   const t=e.target;if(t.dataset.f!=='key')return;
@@ -1629,10 +1934,32 @@ $('#setBody').addEventListener('click',async e=>{
   if(a==='tog'){openProv.has(pid)?openProv.delete(pid):openProv.add(pid);renderProvs()}
   else if(a==='eye'){const i=b.parentElement.querySelector('input');i.type=i.type==='password'?'text':'password'}
   else if(a==='load'){b.disabled=true;b.textContent='Загрузка…';await loadModels(pid);renderProvs()}
+  else if(a==='mtog'){
+    const m=b.dataset.m,set=new Set(getModels(pid)),c=S.providers[pid];
+    if(set.has(m))set.delete(m);else set.add(m);
+    c.enabled=allModels(pid).filter(x=>set.has(x));save();
+    b.classList.toggle('on',set.has(m));b.setAttribute('aria-checked',String(set.has(m)));
+    updModelCount(pv,pid);hap();
+  }
+  else if(a==='mall'||a==='mnone'){
+    const c=S.providers[pid],set=new Set(getModels(pid));
+    pv.querySelectorAll('.mrow:not([hidden])').forEach(r=>{if(a==='mall')set.add(r.dataset.m);else set.delete(r.dataset.m)});
+    c.enabled=allModels(pid).filter(x=>set.has(x));save();
+    pv.querySelectorAll('.mrow').forEach(r=>{const on=set.has(r.dataset.m);r.classList.toggle('on',on);r.setAttribute('aria-checked',String(on))});
+    updModelCount(pv,pid);
+  }
+  else if(a==='mdel'){
+    const m=b.dataset.m,c=S.providers[pid],set=new Set(getModels(pid));
+    c.models=allModels(pid).filter(x=>x!==m);set.delete(m);
+    c.enabled=c.models.filter(x=>set.has(x));save();
+    const row=b.closest('.mrow');if(row)row.remove();
+    updModelCount(pv,pid);
+  }
+  else if(a==='madd'){addModel(pv,pid)}
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
-  else if(a==='clearchats'){const ok=await dialog({title:'Удалить все чаты?',text:'Это действие нельзя отменить.',ok:'Удалить',danger:true});if(ok){if(busy&&abortC)abortC.abort();S.chats.forEach(c=>fileDel(chatFileIds(c)));S.chats=[];save();newChat();toast('Чаты удалены')}}
+  else if(a==='clearchats'){const ok=await dialog({title:'Удалить все чаты?',text:'Это действие нельзя отменить.',ok:'Удалить',danger:true});if(ok){stopGen();S.chats.forEach(c=>fileDel(chatFileIds(c)));S.chats=[];save();newChat();toast('Чаты удалены')}}
 });
 
 async function fetchBal(pid,silent){
@@ -1674,9 +2001,15 @@ async function loadModels(pid){
       if(!r.ok)throw await apiErr(r);const j=await r.json();
       list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace(/^models\//,''));
     }
-    list=list.filter(Boolean).sort();
+    list=Array.from(new Set(list.filter(Boolean))).sort();
     if(!list.length){toast('Список пуст');return}
-    c.models=list;save();toast('Загружено моделей: '+list.length);
+    // что было отмечено до загрузки, остаётся отмеченным; остальное пользователь отмечает галочками
+    const prev=new Set(getModels(pid));
+    const extra=Array.from(prev).filter(m=>list.indexOf(m)<0);
+    c.models=list.concat(extra).sort();
+    c.enabled=c.models.filter(m=>prev.has(m));
+    openProv.add(pid);save();
+    toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
   }catch(e){toast('Не удалось загрузить: '+(e instanceof TypeError?'нет связи с сервисом':e.message))}
 }
 
