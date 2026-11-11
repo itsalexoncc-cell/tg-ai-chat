@@ -601,15 +601,10 @@ svg{display:block}
 :root[data-theme="light"] #drawer{background:#fafafc}
 :root[data-theme="light"] .pcard,:root[data-theme="light"] .dcard{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 :root[data-theme="light"] .sc{background:#f4f4f7;border-color:#c9c9d2}
-:root[data-theme="light"] .md-table th{background:#e8e8ee}
-:root[data-theme="light"] .md-table td,:root[data-theme="light"] .md-table th{border-color:#c9c9d2}
-:root[data-theme="light"] .tbl-wrap{border-color:#c9c9d2}
 
 /* Размер текста ответа */
-.m.a{font-size:16px;line-height:1.55}
-.m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{font-size:17px}
+
 .code pre code{font-size:13px}
-.md-table{font-size:13px}
 
 /* Окно API ключа: ключ + лимит в одну строку */
 .kl{display:flex;gap:10px}
@@ -634,6 +629,26 @@ svg{display:block}
 
 .btns.one{flex-wrap:nowrap}
 .btns.one .btn{flex:1;white-space:nowrap;text-align:center}
+
+/* ---- Оформление ответа в стиле ChatGPT ---- */
+:root{--line:rgba(255,255,255,.15)}
+:root[data-theme="light"]{--line:rgba(0,0,0,.13)}
+.m.a{font-size:17px;line-height:1.4}
+.m.a .b p{margin:0 0 .9em}
+.m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{font-size:19px;font-weight:700;line-height:1.3;margin:1.5em 0 .6em}
+.m.a .b ul,.m.a .b ol{margin:0 0 .9em;padding-left:24px}
+.m.a .b li{margin:.3em 0}
+.m.a .b li::marker{color:var(--muted)}
+
+/* Таблицы: без рамки и фона, жирная шапка, только тонкие линии между строками */
+.m.a .b .tbl-wrap{border:0;border-radius:0;margin:1.1em 0 1.3em;background:none}
+.m.a .b .md-table{border-collapse:collapse;font-size:16px;line-height:1.3;background:none;width:100%;min-width:0}
+.m.a .b .md-table th,.m.a .b .md-table td{min-width:125px}
+.m.a .b .md-table th,.m.a .b .md-table td{background:none;border:0;border-bottom:1px solid var(--line);padding:10px 20px 10px 0;text-align:left;vertical-align:top}
+.m.a .b .md-table th{font-weight:700;padding-top:4px}
+.m.a .b .md-table th:last-child,.m.a .b .md-table td:last-child{padding-right:2px}
+.m.a .b .md-table tr:last-child td{border-bottom:0}
+.m.a .b .md-table td b,.m.a .b .md-table td strong{font-weight:700}
 </style>
 </head>
 <body>
