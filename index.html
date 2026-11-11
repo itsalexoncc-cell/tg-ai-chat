@@ -741,10 +741,25 @@ const PROVIDERS=[
  {id:'custom4',name:'Свой endpoint 4',type:'oai',base:'',models:[],custom:true}
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
-/* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
-const DEFAULT_SYSTEM='Отвечай кратко и по делу, отвечай подробно только при прямом запросе';
-const sysPrompt=()=>{const u=(S.system||'').trim();return DEFAULT_SYSTEM+(u?'\n\n'+u:'')};
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
+/* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
+const DEFAULT_SYSTEM='Отвечай кратко и по делу, отвечай подробно только при прямом запросе';   // запасной вариант, если воркер недоступен
+let remoteSystem=null,isAdmin=false;   // базовый промпт с сервера и признак администратора (определяет сервер, а не приложение)
+const sysPrompt=()=>{
+  const base=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
+  const u=(S.system||'').trim();
+  return (base+(u?'\n\n'+u:'')).trim();
+};
+const configP=(async function(){
+  try{
+    if(!window.Telegram||!window.Telegram.WebApp||!window.Telegram.WebApp.initData)return;
+    const r=await fetch(CLOUD_API+'/config',{headers:{'X-Telegram-Init-Data':window.Telegram.WebApp.initData}});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(typeof j.system_prompt==='string')remoteSystem=j.system_prompt;
+    isAdmin=!!j.admin;
+  }catch(e){}
+})();
 
 async function cloudKeyRequest(method,provider,key){
   if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
@@ -1586,6 +1601,8 @@ async function generate(){
   let uIn=0,uOut=0,got=false;
   const push=d=>{if(g.stopped)return;msg.content+=d;paint()};
   try{
+    await Promise.race([configP,new Promise(r=>setTimeout(r,1500))]);
+    if(signal.aborted)return;
     if(p.type==='oai'){
       const wh=(await wireHist(hist,'oai',0)).map(m=>m.files.length
         ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>isPdf(f.type)
@@ -1896,11 +1913,26 @@ function renderSettings(){
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
    '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
-   '<p class="hint" style="margin:6px 0 0">Всегда действует базовое правило: «'+esc(DEFAULT_SYSTEM)+'». Ваш текст добавляется после него и может его уточнить — например, «всегда отвечай подробно».</p>'+
+   '<p class="hint" style="margin:6px 0 0">Ваш текст добавляется к базовым правилам приложения.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
-   '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
+   '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>'+adminHtml();
 
   renderUsage();renderProvs();
+}
+function adminHtml(){
+  if(!isAdmin)return '';
+  return '<h3>Администратор</h3><div class="gb"><label>Базовый промпт для всех пользователей</label>'+
+    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта">'+esc(remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM)+'</textarea>'+
+    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. Эта секция видна только вам.</p>'+
+    '<div class="btns"><button class="btn pri" data-act="adminsave">Сохранить для всех</button><button class="btn" data-act="adminreset">Вернуть по умолчанию</button></div></div>';
+}
+async function adminRequest(method,text){
+  const res=await fetch(CLOUD_API+'/admin/system-prompt',{method:method,
+    headers:{'X-Telegram-Init-Data':tg.initData,'Content-Type':'application/json'},
+    body:method==='PUT'?JSON.stringify({text:text}):undefined});
+  let j={};try{j=await res.json()}catch(e){}
+  if(!res.ok)throw new Error(j.error||('Ошибка '+res.status));
+  return j;
 }
 function renderUsage(){
   const el=$('#usage');if(!el)return;
@@ -2023,6 +2055,16 @@ $('#setBody').addEventListener('click',async e=>{
     updModelCount(pv,pid);
   }
   else if(a==='madd'){addModel(pv,pid)}
+  else if(a==='adminsave'||a==='adminreset'){
+    if(!isAdmin||!tg||!tg.initData)return;
+    b.disabled=true;
+    try{
+      if(a==='adminsave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t}
+      else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value=DEFAULT_SYSTEM}
+      toast('Базовый промпт сохранён для всех');
+    }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
+    b.disabled=false;
+  }
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
