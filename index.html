@@ -1668,17 +1668,31 @@ async function generate(){
     await Promise.race([configP,new Promise(r=>setTimeout(r,1500))]);
     if(signal.aborted)return;
     if(p.type==='oai'){
-      const wh=(await wireHist(hist,'oai',0)).map(m=>m.files.length
-        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>isPdf(f.type)
-            ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
-            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
-        :{role:m.role,content:m.text});
+      const raw=await wireHist(hist,'oai',0);
       if(signal.aborted)return;
-      const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(wh),stream:true};
-      if(p.usage)body.stream_options={include_usage:true};
-      const res=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
-        headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
-      if(!res.ok)throw await apiErr(res);
+      const mkMsgs=textOnly=>raw.map(m=>m.files.length
+        ?(textOnly
+          ?{role:m.role,content:((m.text||'')+'\n[К сообщению было приложено изображение или файл, но эта модель принимает только текст]').trim()}
+          :{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>isPdf(f.type)
+            ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
+            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))})
+        :{role:m.role,content:m.text});
+      const send=textOnly=>{
+        const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(mkMsgs(textOnly)),stream:true};
+        if(p.usage)body.stream_options={include_usage:true};
+        return fetch(base+'/chat/completions',{method:'POST',signal:signal,
+          headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
+      };
+      let res=await send(false);
+      if(!res.ok){
+        const er=await apiErr(res);
+        // текстовые модели отвечают 400 «content must be a string» на сообщения с картинками — повторяем без вложений
+        if(res.status===400&&/must be a string|expected.*string/i.test(er.message)&&raw.some(m=>m.files.length)){
+          toast('Модель не поддерживает изображения — отправлен только текст');
+          res=await send(true);
+          if(!res.ok)throw await apiErr(res);
+        }else throw er;
+      }
       await sse(res,j=>{
         const ch=j.choices&&j.choices[0];const t=ch&&ch.delta&&ch.delta.content;if(t)push(t);
         if(j.usage&&j.usage.prompt_tokens!=null){uIn=j.usage.prompt_tokens;uOut=j.usage.completion_tokens||0;got=true}
