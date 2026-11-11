@@ -605,8 +605,8 @@ svg{display:block}
 :root[data-theme="light"] .tbl-wrap{border-color:#c9c9d2}
 
 /* Размер текста ответа */
-.m.a{font-size:15px;line-height:1.55}
-.m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{font-size:16px}
+.m.a{font-size:16px;line-height:1.55}
+.m.a .b h1,.m.a .b h2,.m.a .b h3,.m.a .b h4{font-size:17px}
 .code pre code{font-size:13px}
 .md-table{font-size:13px}
 
@@ -625,7 +625,7 @@ svg{display:block}
 .mtop .btn.plus{width:40px;padding:0;justify-content:center}
 .mtop input{flex:1;min-width:0;height:40px;padding:0 10px!important;font-size:15px!important}
 .mfilter{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 4px;color:var(--muted)}
-.pvb .mfilter input{width:55%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
+.pvb .mfilter input{width:auto;max-width:70%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
 .mbox .mlist{border:0;background:none;border-radius:0;max-height:280px;margin-top:4px}
 .mbox .mempty{text-align:center;padding:14px 4px 6px}
 :root[data-theme="light"] .mbox{background:#f2f2f5;border-color:var(--border)}
@@ -1928,7 +1928,7 @@ function modelsHtml(p){
       '<input data-f="newmodel" placeholder="Своя модель" autocapitalize="off" autocomplete="off" spellcheck="false">'+
       '<button class="btn plus" data-act="madd" aria-label="Добавить модель">'+ic('plus',20)+'</button></div>'+
     (all.length
-      ?'<div class="mfilter">'+ic('filter',16)+'<input data-f="mfilter" placeholder="Фильтр" autocapitalize="off" autocomplete="off" spellcheck="false"></div>'+
+      ?'<div class="mfilter">'+ic('filter',16)+'<input data-f="mfilter" size="6" placeholder="Фильтр" autocapitalize="off" autocomplete="off" spellcheck="false"></div>'+
        '<div class="mlist">'+rows+'</div>'
       :'<div class="mempty">Список пуст. Нажмите «Модели», чтобы загрузить, или добавьте свою.</div>')+
     '</div>';
@@ -1969,6 +1969,7 @@ $('#setBody').addEventListener('input',e=>{
   const pv=t.closest('[data-pv]');if(!pv||!t.dataset.f)return;
   const pid=pv.dataset.pv,c=S.providers[pid],f=t.dataset.f;
   if(f==='mfilter'){
+    t.size=Math.max(6,t.value.length+1);
     const q=t.value.trim().toLowerCase();
     pv.querySelectorAll('.mrow').forEach(r=>{r.hidden=!!q&&r.dataset.m.toLowerCase().indexOf(q)<0});
     return;
