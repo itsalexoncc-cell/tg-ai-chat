@@ -678,6 +678,27 @@ svg{display:block}
 .attach-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;margin:12px 0 4px;border:1.5px dashed var(--border);border-radius:14px;color:var(--muted);font-size:15px;font-weight:500;transition:background .15s,color .15s,border-color .15s}
 .attach-btn small{font-size:12px;opacity:.7;font-weight:400}
 .attach-btn:active{background:rgba(127,127,127,.12);color:var(--text);border-color:var(--muted)}
+/* ---- Окно «Подключение API» и мини-инструкция ---- */
+.dcard.cn{width:min(100%,380px);max-height:100%;overflow-y:auto;padding:22px 20px 20px;border-radius:26px}
+.cn-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cn-h h4{margin:0;font-size:19px;font-weight:700;white-space:nowrap}
+.cn-st{flex:none;padding:4px 10px;border-radius:999px;font-size:12.5px;white-space:nowrap;font-weight:600;background:rgba(255,107,107,.16);color:#ff8a8a}
+.cn-ic{width:64px;height:64px;margin:22px auto 14px;border-radius:50%;display:grid;place-items:center;background:rgba(127,127,127,.16);color:var(--muted)}
+.cn-t{text-align:center;font-size:18px;font-weight:700;margin-bottom:8px}
+.dcard.cn p.cn-p{text-align:center;color:var(--muted);margin:0 0 18px}
+.cn-b{display:block;width:100%;height:50px;border-radius:999px;font-size:16px}
+.cn-l{display:block;width:100%;padding:14px 0 6px;text-align:center;color:var(--muted);font-size:15px;font-weight:500}
+.cn-l:active{opacity:.6}
+.cn-f{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);text-align:center;color:var(--muted);font-size:13px;opacity:.85}
+.cn-prov{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:16px;font-weight:700;white-space:nowrap}
+.cn-logo{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:800;letter-spacing:-.02em;background:rgba(127,127,127,.1)}
+.cn-chip{padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:rgba(74,222,128,.15);color:#4ade80}
+.cn-sep{height:1px;background:var(--border);margin:16px 0}
+.cn-steps{margin:10px 0 12px;padding-left:22px;font-size:15.5px;line-height:1.5}
+.cn-steps li{margin:6px 0;padding-left:4px}
+.cn-note{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 14px}
+:root[data-theme="light"] .cn-st{background:#fbe0e0;color:#b42318}
+:root[data-theme="light"] .cn-chip{background:#dff3e4;color:#1f7a3a}
 </style>
 </head>
 <body>
@@ -775,7 +796,9 @@ const I={
  download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
  filter:'<path d="M3 5h18l-7 8v6l-4 2v-8Z"/>',
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
- moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>'
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+ plug:'<path d="M9 2v5M15 2v5M7 7h10v4a5 5 0 0 1-10 0Z"/><path d="M12 16v6"/>',
+ cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5Z"/>'
 };
 const ic=(n,s)=>{s=s||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>'};
 
@@ -1581,8 +1604,8 @@ function dictate(){
 function send(){
   const text=inp.value.trim();if((!text&&!pending.length)||busy)return;
   if(!cur.model||!avail().includes(cur.model)){
-    toast(avail().length?'Выберите модель':'Добавьте API ключ в настройках');
-    if(avail().length)openPicker();else openSettings();return;
+    if(avail().length){toast('Выберите модель');openPicker()}else openConn();
+    return;
   }
   const atts=pending.splice(0).map(a=>({id:a.id,name:a.name,type:a.type,size:a.size}));
   renderAtts();
@@ -1649,7 +1672,7 @@ async function generate(){
   while(chat.messages.length&&chat.messages[chat.messages.length-1].role==='assistant')chat.messages.pop();
   if(!chat.messages.length)return;
   const pm=splitM(chat.model),pid=pm[0],model=pm[1];
-  if(!pid||!isAvail(pid)){toast('Добавьте API ключ в настройках');openSettings();return}
+  if(!pid||!isAvail(pid)){if(avail().length){toast('Выберите модель');openPicker()}else openConn();return}
   const p=PROV[pid],c=S.providers[pid];
   const hist=chat.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
   const msg={role:'assistant',content:'',model:chat.model};
@@ -1789,6 +1812,49 @@ function dialog(o){
     };
     const i=$('#dIn');if(i){i.focus();i.select()}
   });
+}
+
+/* ---------- окно «Подключение API» ---------- */
+let connOpen=false;
+function closeConn(){
+  if(!connOpen)return;connOpen=false;
+  const d=$('#dlg');d.classList.remove('on');d.innerHTML='';d.onclick=null;popLayer(closeConn);
+}
+function openConn(view){
+  const d=$('#dlg');
+  if(!connOpen){connOpen=true;pushLayer(closeConn);try{inp.blur()}catch(e){}}
+  d.classList.remove('context');
+  d.innerHTML=view==='help'
+    ?'<div class="dcard cn"><h4 style="font-size:20px;font-weight:700;margin:0 0 12px">Как получить API-ключ?</h4>'+
+       '<p class="cn-p" style="text-align:left;margin:0 0 6px">Вы можете использовать бесплатные и сторонние AI-провайдеры. Например:</p>'+
+       '<div class="cn-prov"><span class="cn-logo">Gq</span><span>Groq</span><span class="cn-chip">Есть бесплатный тариф</span></div>'+
+       '<div class="cn-prov"><span class="cn-logo">OR</span><span>OpenRouter</span><span class="cn-chip">Есть бесплатные модели</span></div>'+
+       '<div class="cn-prov"><span style="width:34px;flex:none;display:grid;place-items:center;color:var(--muted)">'+ic('cloud',26)+'</span><span>Другие сторонние провайдеры</span></div>'+
+       '<div class="cn-sep"></div>'+
+       '<h4 style="font-size:18px;font-weight:700;margin:0">Всего 4 простых шага:</h4>'+
+       '<ol class="cn-steps"><li>Выберите AI-провайдера, например Groq или OpenRouter.</li>'+
+       '<li>Перейдите на его официальный сайт и зарегистрируйтесь.</li>'+
+       '<li>Перейдите в раздел API Keys и создайте новый API-ключ.</li>'+
+       '<li>Скопируйте ключ, вернитесь в приложение, добавьте его в настройках и выберите модель.</li></ol>'+
+       '<p class="cn-note">Условия бесплатного использования зависят от провайдера и выбранной модели. Некоторые сервисы требуют пополнения баланса.</p>'+
+       '<button class="btn pri cn-b" data-cn="back">Понятно</button></div>'
+    :'<div class="dcard cn"><div class="cn-h"><h4>Подключение API</h4><span class="cn-st">Не подключено</span></div>'+
+       '<div class="cn-ic">'+ic('plug',30)+'</div>'+
+       '<div class="cn-t">Для начала работы подключите API</div>'+
+       '<p class="cn-p">Чтобы ассистент мог отвечать на ваши сообщения, необходимо добавить собственный API-ключ и выбрать модель нейросети.</p>'+
+       '<button class="btn pri cn-b" data-cn="have">У меня есть API-ключ</button>'+
+       '<button class="cn-l" data-cn="help">Как получить API-ключ?</button>'+
+       '<div class="cn-f">Подключение занимает всего несколько минут</div></div>';
+  d.classList.add('on');
+  const card=d.querySelector('.dcard');if(card)card.scrollTop=0;
+  d.onclick=e=>{
+    if(e.target===d)return closeConn();
+    const b=e.target.closest('[data-cn]');if(!b)return;
+    const a=b.dataset.cn;
+    if(a==='have'){closeConn();openSettings()}
+    else if(a==='help')openConn('help');
+    else if(a==='back')openConn();
+  };
 }
 
 /* ---------- drawer ---------- */
