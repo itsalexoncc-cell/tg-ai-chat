@@ -650,7 +650,7 @@ svg{display:block}
 .m.a .b .md-table tr:last-child td{border-bottom:0}
 .m.a .b .md-table td b,.m.a .b .md-table td strong{font-weight:700}
 
-/* ---- Управление обновлениями (админ) ---- */
+/* ---- Панель управления (админ) ---- */
 #upd{position:absolute;inset:0;background:var(--bg);z-index:35;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
 #upd.open{transform:none}
 #updBody{flex:1;overflow-y:auto;padding:4px 16px max(30px,env(safe-area-inset-bottom));overscroll-behavior:contain}
@@ -678,6 +678,9 @@ svg{display:block}
 :root[data-theme="light"] .tgt a{color:#1769c2}
 :root[data-theme="light"] .tgt code{background:#eef0f3}
 .uc .btns{margin-top:10px}
+.attach-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;margin:12px 0 4px;border:1.5px dashed var(--border);border-radius:14px;color:var(--muted);font-size:15px;font-weight:500;transition:background .15s,color .15s,border-color .15s}
+.attach-btn small{font-size:12px;opacity:.7;font-weight:400}
+.attach-btn:active{background:rgba(127,127,127,.12);color:var(--text);border-color:var(--muted)}
 </style>
 </head>
 <body>
@@ -719,7 +722,7 @@ svg{display:block}
   </section>
 
   <section id="upd">
-    <div class="sh"><button class="ib" id="updBack" aria-label="Назад"></button><h2>Обновления</h2></div>
+    <div class="sh"><button class="ib" id="updBack" aria-label="Назад"></button><h2>Панель управления</h2></div>
     <div id="updBody"></div>
   </section>
 
@@ -1982,10 +1985,7 @@ function renderSettings(){
 }
 function adminHtml(){
   if(!isAdmin)return '';
-  return '<h3>Администратор</h3><div class="gb"><button class="btn pri" data-act="openupd" style="width:100%;margin-bottom:6px">Управление обновлениями</button><label>Базовый промпт для всех пользователей</label>'+
-    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта">'+esc(remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM)+'</textarea>'+
-    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
-    '<div class="btns one"><button class="btn pri" data-act="adminsave">Сохранить</button><button class="btn" data-act="adminreset">Восстановить</button></div></div>';
+  return '<h3>Администратор</h3><div class="gb" style="padding:14px"><button class="btn pri" data-act="openupd" style="display:block;width:100%;text-align:center">Панель управления</button></div>';
 }
 async function adminRequest(method,text){
   const res=await fetch(CLOUD_API+'/admin/system-prompt',{method:method,
@@ -2117,15 +2117,6 @@ $('#setBody').addEventListener('click',async e=>{
   }
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
-  else if(a==='adminsave'||a==='adminreset'){
-    if(!isAdmin||!tg||!tg.initData)return;
-    b.disabled=true;
-    try{
-      if(a==='adminsave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t;toast('Промпт сохранён для всех')}
-      else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value='';toast('Промпт очищен')}
-    }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
-    b.disabled=false;
-  }
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
@@ -2343,11 +2334,16 @@ async function upRun(id){
 function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
-   '<h3>Новое уведомление</h3><div class="gb"><label>Заголовок</label><input id="uTitle" maxlength="200" placeholder="🚀 Вышло новое обновление!" autocomplete="off">'+
-   '<label>Текст</label><textarea id="uText" rows="9" placeholder="Версия 1.5&#10;&#10;Что нового:&#10;• Добавлена новая функция&#10;• Улучшена скорость работы&#10;• Исправлены ошибки&#10;&#10;Спасибо, что пользуетесь нашим ботом! ❤️"></textarea>'+
-   '<p class="hint" style="margin:6px 0 0">Форматирование: **жирный**, *курсив*, `код`, [ссылка](https://…)</p>'+
+   '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
+   '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
+   '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
+   '<div class="btns one"><button class="btn pri" data-u="syssave">Сохранить</button><button class="btn" data-u="sysreset">Восстановить</button></div></div>'+
+   '<h3>Новое уведомление</h3><div class="gb">'+
+   '<button class="attach-btn" data-u="attach">'+ic('plus',18)+'<span>Фото или видео</span><small>до 10</small></button>'+
    '<div class="atts" id="uAtts"></div>'+
-   '<div class="btns"><button class="btn" data-u="attach">'+ic('plus',16)+' Фото / видео (до 10)</button></div></div>'+
+   '<label>Заголовок</label><input id="uTitle" maxlength="200" placeholder="🚀 Вышло новое обновление!" autocomplete="off">'+
+   '<label>Текст</label><textarea id="uText" rows="9" placeholder="Версия 1.5&#10;&#10;Что нового:&#10;• Добавлена новая функция&#10;• Улучшена скорость работы&#10;• Исправлены ошибки&#10;&#10;Спасибо, что пользуетесь нашим ботом! ❤️"></textarea>'+
+   '<p class="hint" style="margin:6px 0 0">Форматирование: **жирный**, *курсив*, `код`, [ссылка](https://…)</p></div>'+
    '<h3>Предпросмотр</h3><div id="uPrev"></div>'+
    '<p class="hint" id="uCount"></p>'+
    '<div class="btns one"><button class="btn" data-u="test">Тест себе</button><button class="btn pri" data-u="send">Разослать всем</button></div>'+
@@ -2357,7 +2353,9 @@ function buildUpd(){
 }
 function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
-  buildUpd();$('#upd').classList.add('open');pushLayer(closeUpd);upLoad();
+  buildUpd();
+  $('#adminSys').value=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
+  $('#upd').classList.add('open');pushLayer(closeUpd);upLoad();
 }
 function closeUpd(){
   if(!$('#upd').classList.contains('open'))return;
@@ -2386,6 +2384,15 @@ $('#updBody').addEventListener('click',async e=>{
   else if(a==='send'){b.disabled=true;await upSend();b.disabled=false}
   else if(a==='pause'){UP.stop=true;b.disabled=true}
   else if(a==='resume')upRun(b.dataset.id);
+  else if(a==='syssave'||a==='sysreset'){
+    if(!isAdmin||!tg||!tg.initData)return;
+    b.disabled=true;
+    try{
+      if(a==='syssave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t;toast('Промпт сохранён для всех')}
+      else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value='';toast('Промпт очищен')}
+    }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
+    b.disabled=false;
+  }
   else if(a==='cancel'){
     const ok=await dialog({title:'Отменить рассылку?',text:'Недоставленные сообщения отправлены не будут.',ok:'Отменить рассылку',danger:true});
     if(!ok)return;
