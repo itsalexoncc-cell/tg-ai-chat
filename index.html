@@ -251,15 +251,15 @@ svg{display:block}
 /* LIGHT THEME */
 :root[data-theme="light"]{
   color-scheme:light;
-  --bg:#f5f5f7;
-  --surface:#ffffff;
-  --card:#e9e9ed;
-  --card2:#ffffff;
-  --border:#d8d8de;
-  --text:#1c1c1e;
-  --muted:#77777f;
-  --danger:#d9363e;
-  --ok:#269b58;
+  --bg:#ffffff;
+  --surface:#f4f4f7;
+  --card:#ebebf0;
+  --card2:#f4f4f7;
+  --border:#c9c9d2;
+  --text:#0d0d10;
+  --muted:#575761;
+  --danger:#c62828;
+  --ok:#1f8a4c;
 }
 
 :root[data-theme="light"] body,
@@ -318,7 +318,7 @@ svg{display:block}
 
 :root[data-theme="light"] input::placeholder,
 :root[data-theme="light"] textarea::placeholder{
-  color:#92929a;
+  color:#686872;
 }
 
 :root[data-theme="light"] .btn{
@@ -346,7 +346,7 @@ svg{display:block}
 }
 
 :root[data-theme="light"] .ib{
-  color:#555;
+  color:#2e2e35;
 }
 
 :root[data-theme="light"] .ib:active,
@@ -379,7 +379,7 @@ svg{display:block}
 }
 
 :root[data-theme="light"] .ul{
-  color:#666;
+  color:#44444c;
 }
 
 :root[data-theme="light"] .ul em{
@@ -443,7 +443,7 @@ svg{display:block}
 }
 
 :root[data-theme="light"] .dcard p{
-  color:#666;
+  color:#44444c;
 }
 
 :root[data-theme="light"] #toast{
@@ -585,6 +585,24 @@ svg{display:block}
 #viewer .ib:active{background:rgba(255,255,255,.28)}
 .vnav{position:absolute;top:50%;z-index:2;margin-top:-20px}
 #vPrev{left:10px}#vNext{right:10px}
+
+/* Таблицы: растягиваются вправо за экран, прокручиваются, слова не рвутся по буквам */
+.tbl-wrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.md-table{width:max-content;min-width:100%}
+.md-table th,.md-table td{min-width:110px;max-width:340px;word-break:normal;overflow-wrap:normal;hyphens:none}
+.ul.sub{color:#8a8a8a}
+#msgs{overflow-anchor:none}
+
+:root[data-theme="light"] .ul.sub{color:#575761}
+:root[data-theme="light"] .m.a .b{color:var(--text)}
+:root[data-theme="light"] .m.u .b{background:#e8e8ee;border:1px solid #d3d3dc}
+:root[data-theme="light"] .composer{background:#f4f4f7;border-color:#c0c0ca}
+:root[data-theme="light"] #drawer{background:#fafafc}
+:root[data-theme="light"] .pcard,:root[data-theme="light"] .dcard{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+:root[data-theme="light"] .sc{background:#f4f4f7;border-color:#c9c9d2}
+:root[data-theme="light"] .md-table th{background:#e8e8ee}
+:root[data-theme="light"] .md-table td,:root[data-theme="light"] .md-table th{border-color:#c9c9d2}
+:root[data-theme="light"] .tbl-wrap{border-color:#c9c9d2}
 </style>
 </head>
 <body>
@@ -718,7 +736,7 @@ try{currentTheme=localStorage.getItem(THEME_KEY)==='light'?'light':'dark'}catch(
 
 function applyTheme(){
   document.documentElement.dataset.theme=currentTheme;
-  const color=currentTheme==='light'?'#f5f5f7':'#121212';
+  const color=currentTheme==='light'?'#ffffff':'#121212';
   const sw=document.getElementById('themeToggle');
   if(sw){sw.setAttribute('aria-checked',String(currentTheme!=='light'));sw.setAttribute('aria-label',currentTheme==='light'?'Светлая тема':'Тёмная тема')}
   try{
@@ -785,7 +803,8 @@ function fit(){
   const h=(tg&&tg.viewportHeight)||(v&&v.height)||window.innerHeight;
   document.documentElement.style.setProperty('--h',h+'px');
   window.scrollTo(0,0);
-  if(stick)box.scrollTop=box.scrollHeight;
+  if(busy&&anchored)anchorLast();
+  else if(stick&&!busy)box.scrollTop=box.scrollHeight;
 }
 const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+'M':n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+'k':String(Math.round(n));
 function copyText(t){
@@ -893,6 +912,32 @@ function md(src){
 const box=$('#msgs');let stick=true;
 box.addEventListener('scroll',()=>{stick=box.scrollHeight-box.scrollTop-box.clientHeight<90});
 const scrollDown=f=>{if(f||stick)box.scrollTop=box.scrollHeight};
+/* Пока идёт ответ, отправленное сообщение закреплено у верхнего края. Закрепление держится, пока пользователь сам не прокрутил чат,
+   и переустанавливается при любом изменении размеров (закрылась клавиатура, изменилась высота поля ввода и т.п.) */
+let anchored=false;
+function anchorLast(){
+  const users=box.querySelectorAll('.m.u'),lu=users[users.length-1];
+  if(!lu)return;
+  const top=lu.getBoundingClientRect().top-box.getBoundingClientRect().top;
+  if(Math.abs(top-16)>1)box.scrollTop+=top-16;
+}
+function anchorSoon(){
+  anchorLast();
+  requestAnimationFrame(anchorLast);
+  [120,400,800].forEach(ms=>setTimeout(()=>{if(busy&&anchored)anchorLast()},ms));
+}
+['touchstart','wheel','pointerdown'].forEach(n=>box.addEventListener(n,()=>{anchored=false},{passive:true}));
+/* любая «чужая» прокрутка во время ответа (инерция, браузерный scroll anchoring, клавиатура) возвращается на место */
+let anchorQ=false;
+box.addEventListener('scroll',()=>{
+  if(!busy||!anchored||anchorQ)return;
+  anchorQ=true;
+  requestAnimationFrame(()=>{anchorQ=false;if(busy&&anchored)anchorLast()});
+},{passive:true});
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(()=>{if(busy&&anchored)anchorLast()});
+  ro.observe(box);ro.observe($('#bottom'));
+}
 
 function renderMsgs(){
   const c=cur;
@@ -924,13 +969,7 @@ function renderMsgs(){
 
   hydrateAtts();
   if(busy){
-    const users=box.querySelectorAll('.m.u');
-    const lastUser=users[users.length-1];
-
-    if(lastUser){
-      const top=lastUser.getBoundingClientRect().top-box.getBoundingClientRect().top;
-      box.scrollTop+=top-16;
-    }
+    anchorLast();
   }else{
     if(stick)scrollDown(true);
   }
@@ -1509,7 +1548,7 @@ async function generate(){
   const abort=new AbortController();
   const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,
     got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
-  G=g;busy=true;abortC=abort;errMsg='';stick=true;renderAll();
+  G=g;busy=true;abortC=abort;errMsg='';stick=true;anchored=true;renderAll();anchorSoon();
   const signal=abort.signal;
   const base=(c.base||p.base).replace(/\/+$/,'');
   let uIn=0,uOut=0,got=false;
@@ -1844,7 +1883,7 @@ function renderUsage(){
       bar='<div class="bar"><i class="'+(pc<15?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>';
     }
     const top=Object.keys(c.by).sort((a,b)=>(c.by[b].in+c.by[b].out)-(c.by[a].in+c.by[a].out)).slice(0,4)
-      .map(m=>'<div class="ul" style="color:#8a8a8a">'+esc(m)+' — '+fmt(c.by[m].in+c.by[m].out)+'</div>').join('');
+      .map(m=>'<div class="ul sub">'+esc(m)+' — '+fmt(c.by[m].in+c.by[m].out)+'</div>').join('');
     return '<div class="uc" data-pid="'+p.id+'"><div class="uh"><b>'+esc(provName(p.id))+'</b>'+(p.balance&&c.key?'<button class="ib" data-act="bal" aria-label="Обновить">'+ic('refresh',18)+'</button>':'')+'</div>'+
       '<div class="ul">Вход: <em>'+fmt(c.used.in)+'</em> · Выход: <em>'+fmt(c.used.out)+'</em> · Всего: <em>'+fmt(tot)+'</em></div>'+line+bar+top+'</div>';
   }).join('');
