@@ -741,6 +741,9 @@ const PROVIDERS=[
  {id:'custom4',name:'Свой endpoint 4',type:'oai',base:'',models:[],custom:true}
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
+/* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
+const DEFAULT_SYSTEM='Отвечай кратко и по делу, отвечай подробно только при прямом запросе';
+const sysPrompt=()=>{const u=(S.system||'').trim();return DEFAULT_SYSTEM+(u?'\n\n'+u:'')};
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
 
 async function cloudKeyRequest(method,provider,key){
@@ -1515,7 +1518,7 @@ function send(){
   inp.value='';autosize();errMsg='';hap();
   generate();
 }
-function est(hist){let n=(S.system||'').length;hist.forEach(m=>n+=m.content.length);return Math.ceil(n/3.5)}
+function est(hist){let n=sysPrompt().length;hist.forEach(m=>n+=m.content.length);return Math.ceil(n/3.5)}
 function b64(blob){
   return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
 }
@@ -1590,7 +1593,7 @@ async function generate(){
             :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
         :{role:m.role,content:m.text});
       if(signal.aborted)return;
-      const body={model:model,messages:(S.system?[{role:'system',content:S.system}]:[]).concat(wh),stream:true};
+      const body={model:model,messages:[{role:'system',content:sysPrompt()}].concat(wh),stream:true};
       if(p.usage)body.stream_options={include_usage:true};
       const res=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
         headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
@@ -1607,7 +1610,7 @@ async function generate(){
         :{role:m.role,content:m.text});
       if(signal.aborted)return;
       const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
-      if(S.system)body.system=S.system;
+      body.system=sysPrompt();
       const res=await fetch(base+'/v1/messages',{method:'POST',signal:signal,
         headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
@@ -1623,7 +1626,7 @@ async function generate(){
       const body={contents:wh.map(m=>({role:m.role==='assistant'?'model':'user',
           parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
-      if(S.system)body.systemInstruction={parts:[{text:S.system}]};
+      body.systemInstruction={parts:[{text:sysPrompt()}]};
       const res=await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
         {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
@@ -1892,7 +1895,8 @@ function renderSettings(){
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
    '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
-   '<h3>Общее</h3><div class="gb"><label>Системный промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай кратко и по делу">'+esc(S.system)+'</textarea>'+
+   '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
+   '<p class="hint" style="margin:6px 0 0">Всегда действует базовое правило: «'+esc(DEFAULT_SYSTEM)+'». Ваш текст добавляется после него и может его уточнить — например, «всегда отвечай подробно».</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>';
 
