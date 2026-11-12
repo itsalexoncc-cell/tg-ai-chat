@@ -1918,7 +1918,7 @@ function openConn(view){
     if(e.target===d){if(hasSetup())closeConn();return}
     const b=e.target.closest('[data-cn]');if(!b)return;
     const a=b.dataset.cn;
-    if(a==='have'){closeConn();openSettings();openManual()}
+    if(a==='have'){closeConn();openSettings();openManual(true)}
     else if(a==='help')openConn('help');
     else if(a==='back')openConn();
     else if(a==='redeem'){
@@ -2141,8 +2141,10 @@ function renderSettings(){
   const ch=$('#manChev');if(ch)ch.innerHTML=ic('next',18);
 }
 /* ---------- страница «Ручная настройка API» ---------- */
-function openManual(){
+let manualFromConn=false;
+function openManual(fromConn){
   if($('#manual').classList.contains('open'))return;
+  manualFromConn=fromConn===true;
   $('#manBody').innerHTML='<div id="provs"></div>'+
    '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>';
   renderProvs();
@@ -2155,6 +2157,8 @@ function closeManual(){
   const a=avail();
   if(!cur.model||!a.includes(cur.model))cur.model=a.includes(S.lastModel)?S.lastModel:(a[0]||'');
   save();renderTop();renderUsageSafe();
+  /* пришли из окна «Подключение API» и ничего не настроили — возвращаемся к нему, минуя обычные настройки */
+  if(manualFromConn){manualFromConn=false;if(!hasSetup())closeSettings()}
 }
 $('#manBack').innerHTML=ic('back',24);
 $('#manBack').addEventListener('click',closeManual);
