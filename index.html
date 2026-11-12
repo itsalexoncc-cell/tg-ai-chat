@@ -2670,16 +2670,18 @@ function kbFix(){
     kbLast=pad+'|'+mh;
     d.style.paddingBottom=pad;
     if(card)card.style.maxHeight=mh;
+    requestAnimationFrame(kbScroll);
   });
 }
 function kbScroll(){
   const d=$('#dlg'),a=document.activeElement,card=d.querySelector('.dcard');
   if(!d.classList.contains('on')||!card||!a||!card.contains(a)||!/^(INPUT|TEXTAREA)$/.test(a.tagName))return;
+  if(card.classList.contains('cn')){card.scrollTop=card.scrollHeight;return}   // окно подключения: до самого низа, к кнопке «Применить код»
   const r=a.getBoundingClientRect(),c=card.getBoundingClientRect();
   if(r.bottom>c.bottom-8)card.scrollTop+=r.bottom-c.bottom+16;
   else if(r.top<c.top+8)card.scrollTop-=c.top-r.top+16;
 }
-$('#dlg').addEventListener('focusin',()=>{kbFix();setTimeout(kbFix,250);setTimeout(()=>{kbFix();kbScroll()},420)});
+$('#dlg').addEventListener('focusin',()=>{kbFix();setTimeout(kbFix,250);setTimeout(()=>{kbFix();kbScroll()},420);setTimeout(kbScroll,750)});
 $('#dlg').addEventListener('focusout',()=>{setTimeout(kbFix,120);setTimeout(kbFix,420)});
 if(window.visualViewport)window.visualViewport.addEventListener('resize',kbFix);
 try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
