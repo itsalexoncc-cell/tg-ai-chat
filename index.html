@@ -894,7 +894,7 @@ async function saveCloudKey(provider,key){
   try{
     if(key)await cloudKeyRequest('PUT',provider,key);
     else await cloudKeyRequest('DELETE',provider);
-    toast('API ключ сохранён в облаке');
+    toast(key?'API ключ сохранён в облаке':'API ключ удалён из облака');
   }catch(e){toast('Ошибка сохранения ключа: '+e.message)}
 }
 async function loadCloudKeys(){
@@ -2138,7 +2138,7 @@ function renderProvs(){
       '<div class="lf"><label>Лимит</label><input inputmode="numeric" data-f="limit" value="'+(c.limit||'')+'" placeholder="0"></div></div>'+
       '<label>Base URL'+(p.custom?' (обязательно)':' (необязательно)')+'</label><input data-f="base" autocapitalize="off" spellcheck="false" placeholder="'+esc(p.base||'https://example.com/v1')+'" value="'+esc(c.base)+'">'+
       modelsHtml(p)+
-      '<div class="btns">'+(p.balance?'<button class="btn" data-act="bal">Проверить баланс</button>':'')+'<button class="btn ghost" data-act="resetu">Сбросить счётчик</button></div></div>':'')+'</div>';
+      '<div class="btns">'+(p.balance?'<button class="btn sm" data-act="bal" style="padding:7px 10px">Проверить баланс</button>':'')+'<button class="btn ghost sm" data-act="resetu" style="padding:7px 10px">Сбросить счётчик</button><button class="btn dan sm" data-act="clearkey" aria-label="Очистить поля ключа" style="margin-left:auto;padding:0;width:36px;height:36px;display:grid;place-items:center">'+ic('trash',18)+'</button></div></div>':'')+'</div>';
   }).join('');
 }
 function updModelCount(pv,pid){
@@ -2215,6 +2215,14 @@ $('#setBody').addEventListener('click',async e=>{
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
   else if(a==='bal'){fetchBal(pid,false)}
+  else if(a==='clearkey'){
+    const ok=await dialog({title:'Очистить поля?',text:'Ключ, лимит и адрес для «'+provName(pid)+'» будут стёрты, ключ удалится и из облака. Список моделей и счётчик токенов останутся.',ok:'Очистить',danger:true});
+    if(!ok)return;
+    const c=S.providers[pid];
+    c.key='';c.base='';c.limit=0;if(PROV[pid].custom)c.name='';
+    delete c.bal;
+    save();saveCloudKey(pid,'');renderProvs();renderUsage();
+  }
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
   else if(a==='clearchats'){const ok=await dialog({title:'Удалить все чаты?',text:'Это действие нельзя отменить.',ok:'Удалить',danger:true});if(ok){stopGen();S.chats.forEach(c=>fileDel(chatFileIds(c)));S.chats=[];save();newChat();toast('Чаты удалены')}}
@@ -2642,6 +2650,24 @@ fit();
 window.addEventListener('resize',fit);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
 inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
+/* окна поверх чата (подключение API, переименование и т.п.) поднимаются вместе с клавиатурой */
+function kbFix(){
+  const d=$('#dlg');
+  if(!d.classList.contains('on')||d.classList.contains('context')){d.style.paddingBottom='';return}
+  const v=window.visualViewport,appH=$('#app').getBoundingClientRect().height;
+  const vh=v?v.height:appH,kb=Math.max(0,appH-vh-(v?v.offsetTop:0));
+  d.style.paddingBottom=(24+kb)+'px';
+  const card=d.querySelector('.dcard');
+  if(card){
+    card.style.maxHeight=Math.max(200,Math.min(appH,vh)-48)+'px';
+    const a=document.activeElement;
+    if(a&&card.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))a.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+}
+$('#dlg').addEventListener('focusin',()=>{[0,150,350,700].forEach(ms=>setTimeout(kbFix,ms))});
+$('#dlg').addEventListener('focusout',()=>{setTimeout(kbFix,150);setTimeout(kbFix,500)});
+if(window.visualViewport){window.visualViewport.addEventListener('resize',kbFix);window.visualViewport.addEventListener('scroll',kbFix)}
+try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
 (async()=>{
   let failed=0;
   try{failed=await loadCloudKeys()||0}catch(e){failed=1}
