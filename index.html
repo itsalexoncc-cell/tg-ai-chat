@@ -2436,15 +2436,15 @@ async function qLoad(){
     el.innerHTML=j.items.map(x=>{
       const dead=x.revoked||x.uses>=x.max_uses||x.expires_at<Date.now();
       const st=x.revoked?'отозван':x.uses>=x.max_uses?'использован':x.expires_at<Date.now()?'истёк':'ждёт активации';
-      return '<div class="uc" style="display:flex;flex-direction:row-reverse;align-items:center;gap:12px">'+
-        '<div style="flex:none;display:flex;align-items:center;gap:8px">'+
-          (dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+
-          '<button class="btn dan sm" data-u="qdel" data-id="'+esc(x.code)+'" aria-label="Удалить запись" style="padding:0;width:36px;height:36px;display:grid;place-items:center">'+ic('trash',18)+'</button></div>'+
+      return '<div class="uc" style="display:flex;flex-direction:row-reverse;align-items:center;gap:10px;padding:8px 12px;margin-bottom:6px">'+
+        '<div style="flex:none;display:flex;align-items:center;gap:6px">'+
+          (dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'" style="padding:0 10px;height:32px">Отозвать</button>')+
+          '<button class="btn dan sm" data-u="qdel" data-id="'+esc(x.code)+'" aria-label="Удалить запись" style="padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button></div>'+
         '<div style="flex:1;min-width:0">'+
-          (x.note?'<div style="font-size:18px;font-weight:500;line-height:1.3;word-break:break-word">'+esc(x.note)+'</div>':'')+
-          '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><b style="font-size:16px">'+esc(x.code)+'</b>'+
-            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'">Копировать</button>')+'</div>'+
-          '<div class="ul sub">'+esc(x.provider)+' · '+st+' ('+x.uses+'/'+x.max_uses+')</div></div></div>';
+          (x.note?'<div style="font-size:17px;font-weight:500;line-height:1.2;word-break:break-word">'+esc(x.note)+'</div>':'')+
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:2px"><b style="font-size:15px;line-height:1.2">'+esc(x.code)+'</b>'+
+            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Копировать</button>')+'</div>'+
+          '<div class="ul sub" style="margin-top:2px;font-size:12.5px;line-height:1.25">'+esc(x.provider)+' · '+st+' ('+x.uses+'/'+x.max_uses+')</div></div></div>';
     }).join('')||'<div class="hint">Кодов пока нет.</div>';
   }catch(e){}
 }
