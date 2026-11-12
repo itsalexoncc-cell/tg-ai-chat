@@ -2216,10 +2216,10 @@ $('#setBody').addEventListener('click',async e=>{
   else if(a==='openupd'){openUpd()}
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='clearkey'){
-    const ok=await dialog({title:'Очистить поля?',text:'Ключ, лимит и адрес для «'+provName(pid)+'» будут стёрты, ключ удалится и из облака. Список моделей и счётчик токенов останутся.',ok:'Очистить',danger:true});
+    const ok=await dialog({title:'Очистить поля?',text:'Ключ, лимит, адрес и список моделей для «'+provName(pid)+'» будут стёрты, ключ удалится и из облака. Счётчик токенов останется.',ok:'Очистить',danger:true});
     if(!ok)return;
     const c=S.providers[pid];
-    c.key='';c.base='';c.limit=0;if(PROV[pid].custom)c.name='';
+    c.key='';c.base='';c.limit=0;delete c.models;delete c.enabled;if(PROV[pid].custom)c.name='';
     delete c.bal;
     save();saveCloudKey(pid,'');renderProvs();renderUsage();
   }
