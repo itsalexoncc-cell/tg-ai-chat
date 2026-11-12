@@ -699,6 +699,11 @@ svg{display:block}
 .cn-note{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 14px}
 :root[data-theme="light"] .cn-st{background:#fbe0e0;color:#b42318}
 :root[data-theme="light"] .cn-chip{background:#dff3e4;color:#1f7a3a}
+.gb select{width:100%;background:#181818;border:1px solid #363636;border-radius:12px;padding:11px 12px;font-size:16px;color:var(--text)}
+:root[data-theme="light"] .gb select{background:#f2f2f5;border-color:var(--border)}
+.qcode{font-size:22px;font-weight:700;letter-spacing:.06em;text-align:center;margin:12px 0 6px}
+.cn-code{margin-top:4px}
+.cn-code input{margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -819,6 +824,7 @@ const PROVIDERS=[
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
+const APP_LINK='https://t.me/Ghataimodel_bot';   // если у Mini App есть короткое имя: https://t.me/Ghataimodel_bot/ИМЯ_APP
 /* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
 const DEFAULT_SYSTEM='';   // по умолчанию базового промпта нет; его задаёт администратор на сервере
 let remoteSystem=null,isAdmin=false;   // базовый промпт с сервера и признак администратора (определяет сервер, а не приложение)
@@ -890,7 +896,7 @@ async function saveCloudKey(provider,key){
   }catch(e){toast('Ошибка сохранения ключа: '+e.message)}
 }
 async function loadCloudKeys(){
-  if(!tg||!tg.initData){toast('Откройте приложение через Telegram');return}
+  if(!tg||!tg.initData){toast('Откройте приложение через Telegram');return 1}
   let migrated=0,loaded=0,failed=0;
   await Promise.all(PROVIDERS.map(async p=>{
     const c=S.providers[p.id];
@@ -902,6 +908,7 @@ async function loadCloudKeys(){
   save();
   if(failed)toast('Не удалось синхронизировать '+failed+' ключ(а). Проверьте Telegram и соединение.');
   else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
+  return failed;
 }
 
 const allModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
@@ -1844,16 +1851,26 @@ function openConn(view){
        '<p class="cn-p">Чтобы ассистент мог отвечать на ваши сообщения, необходимо добавить собственный API-ключ и выбрать модель нейросети.</p>'+
        '<button class="btn pri cn-b" data-cn="have">У меня есть API-ключ</button>'+
        '<button class="cn-l" data-cn="help">Как получить API-ключ?</button>'+
+       '<div class="cn-sep"></div>'+
+       '<div class="cn-code"><input id="cnCode" placeholder="Код или ссылка быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+       '<button class="btn cn-b" data-cn="redeem">Применить код</button></div>'+
        '<div class="cn-f">Подключение занимает всего несколько минут</div></div>';
   d.classList.add('on');
   const card=d.querySelector('.dcard');if(card)card.scrollTop=0;
-  d.onclick=e=>{
+  d.onclick=async e=>{
     if(e.target===d)return closeConn();
     const b=e.target.closest('[data-cn]');if(!b)return;
     const a=b.dataset.cn;
     if(a==='have'){closeConn();openSettings()}
     else if(a==='help')openConn('help');
     else if(a==='back')openConn();
+    else if(a==='redeem'){
+      const ci=$('#cnCode'),v=ci?ci.value.trim():'';
+      if(!v){toast('Вставьте код или ссылку');return}
+      b.disabled=true;
+      try{await redeemCode(v);closeConn();toast('Готово! API подключён')}
+      catch(err){toast(err.message);b.disabled=false}
+    }
   };
 }
 
@@ -2409,9 +2426,41 @@ async function upRun(id){
   await upLoad();
   if(UP.cur&&UP.cur.status==='done'){hap('medium');toast('Рассылка завершена')}
 }
+/* ---------- быстрая настройка (генератор кодов) ---------- */
+async function qLoad(){
+  const el=$('#qList');if(!el)return;
+  try{
+    const j=await upApi('GET','/admin/setup-codes');
+    el.innerHTML=j.items.map(x=>{
+      const dead=x.revoked||x.uses>=x.max_uses||x.expires_at<Date.now();
+      return '<div class="uc"><div class="uh"><b>'+esc(x.code)+'</b>'+(dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+'</div>'+
+        '<div class="ul sub">'+esc(x.provider)+(x.note?' · '+esc(x.note):'')+' · использован '+x.uses+'/'+x.max_uses+(x.revoked?' · отозван':x.expires_at<Date.now()?' · истёк':'')+'</div></div>';
+    }).join('')||'<div class="hint">Кодов пока нет.</div>';
+  }catch(e){}
+}
+async function qGen(){
+  const body={provider:$('#qProv').value,key:$('#qKey').value.trim(),base:$('#qBase').value.trim(),
+    limit:parseInt($('#qLimit').value)||0,models:$('#qModels').value.split(/[\s,]+/).filter(Boolean),
+    max_uses:parseInt($('#qUses').value)||1,days:parseInt($('#qDays').value)||7,note:$('#qNote').value.trim()};
+  const j=await upApi('POST','/admin/setup-codes',body);
+  const link=APP_LINK+'?startapp='+j.code;
+  $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div><div class="btns one"><button class="btn" data-u="qcopy" data-t="'+esc(j.code)+'">Копировать код</button><button class="btn pri" data-u="qcopy" data-t="'+esc(link)+'">Копировать ссылку</button></div>';
+  qLoad();
+}
 function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
+   '<h3>Быстрая настройка</h3><div class="gb">'+
+   '<label>Провайдер</label><select id="qProv">'+PROVIDERS.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
+   '<label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+   '<label>Base URL (для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
+   '<label>Лимит токенов</label><input id="qLimit" inputmode="numeric" placeholder="0">'+
+   '<label>Модели (через запятую, пусто — по умолчанию)</label><input id="qModels" autocapitalize="off" spellcheck="false">'+
+   '<label>Сколько человек могут использовать код</label><input id="qUses" inputmode="numeric" value="1">'+
+   '<label>Срок действия, дней</label><input id="qDays" inputmode="numeric" value="7">'+
+   '<label>Заметка (для кого)</label><input id="qNote" maxlength="60" autocomplete="off">'+
+   '<div class="btns one"><button class="btn pri" data-u="qgen">Сформировать</button></div>'+
+   '<div id="qRes"></div></div><div id="qList" style="margin-top:12px"></div>'+
    '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
@@ -2433,7 +2482,7 @@ function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
   buildUpd();
   $('#adminSys').value=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
-  $('#upd').classList.add('open');pushLayer(closeUpd);upLoad();
+  $('#upd').classList.add('open');pushLayer(closeUpd);upLoad();qLoad();
 }
 function closeUpd(){
   if(!$('#upd').classList.contains('open'))return;
@@ -2471,6 +2520,9 @@ $('#updBody').addEventListener('click',async e=>{
     }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
     b.disabled=false;
   }
+  else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){toast(err.message)}b.disabled=false}
+  else if(a==='qcopy'){copyText(b.dataset.t)}
+  else if(a==='qrev'){try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id);qLoad()}catch(err){toast(err.message)}}
   else if(a==='cancel'){
     const ok=await dialog({title:'Отменить рассылку?',text:'Недоставленные сообщения отправлены не будут.',ok:'Отменить рассылку',danger:true});
     if(!ok)return;
@@ -2478,6 +2530,31 @@ $('#updBody').addEventListener('click',async e=>{
     catch(err){toast(err.message)}
   }
 });
+
+/* ---------- быстрая настройка по коду или ссылке ---------- */
+function applySetup(d){
+  const pid=d.provider;if(!PROV[pid])throw new Error('Неизвестный провайдер');
+  const c=S.providers[pid];
+  if(d.key){c.key=d.key;saveCloudKey(pid,d.key)}
+  if(d.base)c.base=d.base;
+  if(d.name)c.name=d.name;
+  if(d.limit>0)c.limit=d.limit;
+  if(d.models&&d.models.length){c.models=d.models.slice();c.enabled=d.models.slice()}
+  const first=getModels(pid)[0];
+  if(first){cur.model=pid+'|'+first;S.lastModel=cur.model}
+  save();renderTop();
+}
+async function redeemCode(raw){
+  const m=String(raw||'').match(/startapp=([\w-]+)/i);
+  const d=await upApi('POST','/setup/redeem',{code:(m?m[1]:String(raw||'')).trim()});
+  applySetup(d);
+  const pid=d.provider;
+  if(!getModels(pid).length){
+    await loadModels(pid);
+    const c=S.providers[pid],list=allModels(pid).slice(0,20);
+    if(list.length){c.enabled=list;cur.model=pid+'|'+list[0];S.lastModel=cur.model;save();renderTop()}
+  }
+}
 
 /* ---------- init ---------- */
 try{
@@ -2492,7 +2569,18 @@ fit();
 window.addEventListener('resize',fit);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
 inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
-loadCloudKeys().finally(()=>newChat());
+(async()=>{
+  let failed=0;
+  try{failed=await loadCloudKeys()||0}catch(e){failed=1}
+  newChat();
+  if(failed)return;   // не удалось связаться с облаком — не считаем пользователя новым
+  const hasSetup=()=>PROVIDERS.some(p=>isAvail(p.id));
+  const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+  if(sp&&!hasSetup()){
+    try{await redeemCode(sp);toast('Настройка применена')}catch(e){toast(e.message)}
+  }
+  if(!hasSetup())openConn();
+})();
 gcFiles();
 })();
 </script>
