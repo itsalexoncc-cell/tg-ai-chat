@@ -2125,14 +2125,14 @@ $('#setBack').addEventListener('click',closeSettings);
 
 function renderSettings(){
   $('#setBody').innerHTML=
-   '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
-   '<p class="hint" style="margin:8px 0 0">Данные из кода сохраняются в защищённое системное подключение и нигде не отображаются. Новый код заменяет прежний: приложение спросит подтверждение перед перезаписью.</p></div>'+
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
    '<p class="hint">OpenAI, Anthropic, Gemini, DeepSeek и другие провайдеры, а также свои endpoint-ы: ключи, модели и лимиты.</p>'+
-   '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
+      '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
+   '<p class="hint" style="margin:8px 0 0">Данные из кода сохраняются в защищённое системное подключение и нигде не отображаются. Новый код заменяет прежний: приложение спросит подтверждение перед перезаписью.</p></div>'+
+'<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
    '<p class="hint" style="margin:6px 0 0">Этот текст добавляется ко всем вашим запросам.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>'+adminHtml();
