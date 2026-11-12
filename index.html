@@ -704,6 +704,8 @@ svg{display:block}
 .qcode{font-size:22px;font-weight:700;letter-spacing:.06em;text-align:center;margin:12px 0 6px}
 .cn-code{margin-top:4px}
 .cn-code input{margin-bottom:10px}
+.gb .mfilter input{width:auto;max-width:70%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
+:root[data-theme="light"] .gb .mfilter input{color:var(--text)}
 </style>
 </head>
 <body>
@@ -2440,27 +2442,61 @@ async function qLoad(){
 }
 async function qGen(){
   const body={provider:$('#qProv').value,key:$('#qKey').value.trim(),base:$('#qBase').value.trim(),
-    limit:parseInt($('#qLimit').value)||0,models:$('#qModels').value.split(/[\s,]+/).filter(Boolean),
-    max_uses:parseInt($('#qUses').value)||1,days:parseInt($('#qDays').value)||7,note:$('#qNote').value.trim()};
+    limit:parseInt($('#qLimit').value)||0,models:QM.all.filter(m=>QM.on.has(m)),note:$('#qNote').value.trim()};
   const j=await upApi('POST','/admin/setup-codes',body);
   const link=APP_LINK+'?startapp='+j.code;
   $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div><div class="btns one"><button class="btn" data-u="qcopy" data-t="'+esc(j.code)+'">Копировать код</button><button class="btn pri" data-u="qcopy" data-t="'+esc(link)+'">Копировать ссылку</button></div>';
   qLoad();
 }
+/* модели в генераторе: тот же вид, что в настройках у «Свой endpoint» */
+const QM={all:[],on:new Set()};
+function qModelsRender(){
+  const el=$('#qModels');if(!el)return;
+  const rows=QM.all.map(m=>'<div class="mrow'+(QM.on.has(m)?' on':'')+'" data-u="qmtog" data-m="'+esc(m)+'" role="checkbox" aria-checked="'+QM.on.has(m)+'">'+
+    '<span class="cb">'+ic('check',14)+'</span><span class="mt">'+esc(m)+'</span>'+
+    '<button class="mx" data-u="qmdel" data-m="'+esc(m)+'" aria-label="Убрать из списка">'+ic('x',14)+'</button></div>').join('');
+  el.innerHTML='<div class="mbox">'+
+    '<div class="mtop"><button class="btn" data-u="qload" aria-label="Загрузить список моделей">'+ic('download',18)+'<span>Модели</span></button>'+
+      '<input id="qNew" placeholder="Своя модель" autocapitalize="off" autocomplete="off" spellcheck="false">'+
+      '<button class="btn plus" data-u="qmadd" aria-label="Добавить модель">'+ic('plus',20)+'</button></div>'+
+    (QM.all.length
+      ?'<div class="mfilter">'+ic('filter',16)+'<input id="qFilter" size="6" placeholder="Фильтр" autocapitalize="off" autocomplete="off" spellcheck="false"></div><div class="mlist">'+rows+'</div>'
+      :'<div class="mempty">Список пуст. Введите ключ и нажмите «Модели», чтобы загрузить, или добавьте свою. Если оставить пустым, у друга подставится список по умолчанию.</div>')+
+    '</div>';
+}
+function qModelAdd(){
+  const ni=$('#qNew'),v=ni?ni.value.trim():'';if(!v)return;
+  if(QM.all.indexOf(v)<0)QM.all.push(v);
+  QM.on.add(v);qModelsRender();toast('Модель добавлена');
+}
+async function qLoadModels(){
+  const pid=$('#qProv').value,p=PROV[pid],key=$('#qKey').value.trim();
+  const base=($('#qBase').value.trim()||p.base).replace(/\/+$/,'');
+  if(!base){toast('Сначала укажите Base URL');return}
+  if(!key&&!p.custom){toast('Сначала введите API ключ');return}
+  try{
+    let list=[];
+    if(p.type==='oai'){
+      const r=await fetch(base+'/models',{headers:key?{Authorization:'Bearer '+key}:{}});
+      if(!r.ok)throw await apiErr(r);const j=await r.json();list=(j.data||[]).map(m=>m.id);
+    }else if(p.type==='anthropic'){
+      const r=await fetch(base+'/v1/models?limit=100',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});
+      if(!r.ok)throw await apiErr(r);const j=await r.json();list=(j.data||[]).map(m=>m.id);
+    }else{
+      const r=await fetch(base+'/models?pageSize=200&key='+encodeURIComponent(key));
+      if(!r.ok)throw await apiErr(r);const j=await r.json();
+      list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace(/^models\//,''));
+    }
+    list=Array.from(new Set(list.filter(Boolean))).sort();
+    if(!list.length){toast('Список пуст');return}
+    const prev=new Set(QM.on),extra=Array.from(prev).filter(m=>list.indexOf(m)<0);
+    QM.all=list.concat(extra).sort();QM.on=prev;
+    toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
+  }catch(e){toast('Не удалось загрузить: '+(e instanceof TypeError?'нет связи с сервисом':e.message))}
+}
 function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
-   '<h3>Быстрая настройка</h3><div class="gb">'+
-   '<label>Провайдер</label><select id="qProv">'+PROVIDERS.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
-   '<label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-   '<label>Base URL (для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
-   '<label>Лимит токенов</label><input id="qLimit" inputmode="numeric" placeholder="0">'+
-   '<label>Модели (через запятую, пусто — по умолчанию)</label><input id="qModels" autocapitalize="off" spellcheck="false">'+
-   '<label>Сколько человек могут использовать код</label><input id="qUses" inputmode="numeric" value="1">'+
-   '<label>Срок действия, дней</label><input id="qDays" inputmode="numeric" value="7">'+
-   '<label>Заметка (для кого)</label><input id="qNote" maxlength="60" autocomplete="off">'+
-   '<div class="btns one"><button class="btn pri" data-u="qgen">Сформировать</button></div>'+
-   '<div id="qRes"></div></div><div id="qList" style="margin-top:12px"></div>'+
    '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
    '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
@@ -2475,8 +2511,17 @@ function buildUpd(){
    '<p class="hint" id="uCount"></p>'+
    '<div class="btns one"><button class="btn" data-u="test">Тест себе</button><button class="btn pri" data-u="send">Разослать всем</button></div>'+
    '<div id="uProg" style="margin-top:14px"></div>'+
-   '<h3>История рассылок</h3><div id="uHist"></div>';
-  upPrev();upProgress();upHist();
+   '<h3>История рассылок</h3><div id="uHist"></div>'+
+   '<h3>Быстрая настройка</h3><div class="gb">'+
+   '<label>Провайдер</label><select id="qProv">'+PROVIDERS.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
+   '<div class="kl"><div class="kf"><label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
+   '<div class="lf"><label>Лимит</label><input id="qLimit" inputmode="numeric" maxlength="10" placeholder="0"></div></div>'+
+   '<label>Base URL (обязательно для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
+   '<div id="qModels"></div>'+
+   '<label>Заметка (для кого)</label><input id="qNote" maxlength="60" autocomplete="off">'+
+   '<div class="btns one"><button class="btn pri" data-u="qgen">Сформировать</button></div>'+
+   '<div id="qRes"></div></div><div id="qList" style="margin-top:12px"></div>';
+  upPrev();upProgress();upHist();qModelsRender();
 }
 function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
@@ -2490,6 +2535,14 @@ function closeUpd(){
 }
 $('#updBack').innerHTML=ic('back',24);
 $('#updBack').addEventListener('click',closeUpd);
+$('#updBody').addEventListener('input',e=>{
+  if(e.target.id!=='qFilter')return;
+  const t=e.target,q=t.value.trim().toLowerCase();
+  t.size=Math.max(6,t.value.length+1);
+  document.querySelectorAll('#qModels .mrow').forEach(r=>{r.hidden=!!q&&r.dataset.m.toLowerCase().indexOf(q)<0});
+});
+$('#updBody').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='qNew'){e.preventDefault();qModelAdd()}});
+$('#updBody').addEventListener('change',e=>{if(e.target.id==='qProv'){QM.all=[];QM.on=new Set();qModelsRender()}});
 $('#upFile').addEventListener('change',e=>{
   const list=Array.prototype.slice.call(e.target.files||[]);e.target.value='';
   if(list.length)upAdd(list);
@@ -2520,6 +2573,10 @@ $('#updBody').addEventListener('click',async e=>{
     }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
     b.disabled=false;
   }
+  else if(a==='qload'){b.disabled=true;const sp=b.querySelector('span');if(sp)sp.textContent='Загрузка…';await qLoadModels();qModelsRender()}
+  else if(a==='qmtog'){const m=b.dataset.m;if(QM.on.has(m))QM.on.delete(m);else QM.on.add(m);b.classList.toggle('on',QM.on.has(m));b.setAttribute('aria-checked',String(QM.on.has(m)));hap()}
+  else if(a==='qmdel'){const m=b.dataset.m;QM.all=QM.all.filter(x=>x!==m);QM.on.delete(m);const row=b.closest('.mrow');if(row)row.remove()}
+  else if(a==='qmadd')qModelAdd();
   else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){toast(err.message)}b.disabled=false}
   else if(a==='qcopy'){copyText(b.dataset.t)}
   else if(a==='qrev'){try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id);qLoad()}catch(err){toast(err.message)}}
