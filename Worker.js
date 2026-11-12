@@ -153,7 +153,8 @@ async function ensureSchema(env) {
     env.DB.prepare("CREATE TABLE IF NOT EXISTS users (telegram_user_id TEXT PRIMARY KEY, first_name TEXT, username TEXT, language_code TEXT, blocked INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT CURRENT_TIMESTAMP, last_seen TEXT DEFAULT CURRENT_TIMESTAMP)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS broadcasts (id TEXT PRIMARY KEY, client_token TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', text TEXT NOT NULL DEFAULT '', media TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'sending', total INTEGER NOT NULL DEFAULT 0, sent INTEGER NOT NULL DEFAULT 0, failed INTEGER NOT NULL DEFAULT 0, blocked INTEGER NOT NULL DEFAULT 0, lock_until INTEGER NOT NULL DEFAULT 0, last_error TEXT, created_at INTEGER NOT NULL, finished_at INTEGER)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS broadcast_recipients (broadcast_id TEXT NOT NULL, user_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', PRIMARY KEY (broadcast_id, user_id))"),
-    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_recipients_status ON broadcast_recipients (broadcast_id, status)")
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_recipients_status ON broadcast_recipients (broadcast_id, status)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS setup_codes (code TEXT PRIMARY KEY, payload TEXT NOT NULL, iv TEXT NOT NULL, provider TEXT, note TEXT, max_uses INTEGER NOT NULL DEFAULT 1, uses INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)")
   ]);
   // однократный перенос уже существующих пользователей (у кого сохранены ключи)
   try {
@@ -592,6 +593,83 @@ async function handleWebhook(request, env) {
   return new Response("ok");
 }
 
+/* =====================================================================
+   БЫСТРАЯ НАСТРОЙКА (коды)
+   ===================================================================== */
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function genCode() {
+  const b = crypto.getRandomValues(new Uint8Array(10));
+  let s = "";
+  for (const x of b) s += CODE_ALPHABET[x % 32];
+  return s.slice(0, 5) + "-" + s.slice(5);
+}
+function normCode(v) {
+  const s = String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return s.length === 10 ? s.slice(0, 5) + "-" + s.slice(5) : "";
+}
+
+async function handleSetup(request, env, url) {
+  try {
+    const a = await authUser(request, env);
+    if (a.error) return a.error;
+    await ensureSchema(env);
+    const p = url.pathname, m = request.method;
+
+    // погашение кода — любой пользователь приложения
+    if (p === "/setup/redeem" && m === "POST") {
+      const code = normCode((await request.json()).code);
+      if (!code) return response({ error: "Неверный код" }, 400);
+      const r = await env.DB.prepare(
+        "UPDATE setup_codes SET uses = uses + 1 WHERE code = ? AND revoked = 0 AND uses < max_uses AND expires_at > ?"
+      ).bind(code, Date.now()).run();
+      if (!r.meta || !r.meta.changes) return response({ error: "Код недействителен, уже использован или истёк" }, 400);
+      const row = await env.DB.prepare("SELECT payload, iv FROM setup_codes WHERE code = ?").bind(code).first();
+      return response(JSON.parse(await decryptKey(row.payload, row.iv, env.ENCRYPTION_SECRET)));
+    }
+
+    if (!a.isAdmin) return response({ error: "Forbidden" }, 403);
+
+    if (p === "/admin/setup-codes" && m === "POST") {
+      const b = await request.json();
+      if (!validProvider(b.provider)) return response({ error: "Неверный провайдер" }, 400);
+      const key = typeof b.key === "string" ? b.key.trim() : "";
+      if (key.length > 10000) return response({ error: "Ключ слишком длинный" }, 400);
+      const payload = {
+        provider: b.provider,
+        key,
+        base: typeof b.base === "string" ? b.base.trim().slice(0, 300) : "",
+        name: typeof b.name === "string" ? b.name.trim().slice(0, 40) : "",
+        limit: Math.max(0, parseInt(b.limit) || 0),
+        models: (Array.isArray(b.models) ? b.models : []).filter(x => typeof x === "string" && x.length < 120).slice(0, 100)
+      };
+      const maxUses = Math.min(100, Math.max(1, parseInt(b.max_uses) || 1));
+      const days = Math.min(90, Math.max(1, parseInt(b.days) || 7));
+      const enc = await encryptKey(JSON.stringify(payload), env.ENCRYPTION_SECRET);
+      const code = genCode(), now = Date.now();
+      await env.DB.prepare(
+        "INSERT INTO setup_codes (code, payload, iv, provider, note, max_uses, created_at, expires_at) VALUES (?,?,?,?,?,?,?,?)"
+      ).bind(code, enc.encrypted_key, enc.iv, b.provider, String(b.note || "").slice(0, 60), maxUses, now, now + days * 864e5).run();
+      return response({ code });
+    }
+
+    if (p === "/admin/setup-codes" && m === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT code, provider, note, max_uses, uses, revoked, expires_at FROM setup_codes ORDER BY created_at DESC LIMIT 30"
+      ).all();
+      return response({ items: results });
+    }
+
+    const mm = p.match(/^\/admin\/setup-codes\/([A-Z0-9-]{11})$/);
+    if (mm && m === "DELETE") {
+      await env.DB.prepare("UPDATE setup_codes SET revoked = 1 WHERE code = ?").bind(mm[1]).run();
+      return response({ ok: true });
+    }
+    return response({ error: "Not found" }, 404);
+  } catch (e) {
+    return response({ error: "Server error" }, 500);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
@@ -632,6 +710,10 @@ export default {
 
     if (url.pathname === "/admin/media" || url.pathname.startsWith("/admin/broadcasts")) {
       return handleAdmin(request, env, url);
+    }
+
+    if (url.pathname === "/setup/redeem" || url.pathname.startsWith("/admin/setup-codes")) {
+      return handleSetup(request, env, url);
     }
 
     if (url.pathname !== "/keys") {
