@@ -2435,8 +2435,12 @@ async function qLoad(){
     const j=await upApi('GET','/admin/setup-codes');
     el.innerHTML=j.items.map(x=>{
       const dead=x.revoked||x.uses>=x.max_uses||x.expires_at<Date.now();
-      return '<div class="uc"><div class="uh"><b>'+esc(x.code)+'</b>'+(dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+'</div>'+
-        '<div class="ul sub">'+esc(x.provider)+(x.note?' · '+esc(x.note):'')+' · использован '+x.uses+'/'+x.max_uses+(x.revoked?' · отозван':x.expires_at<Date.now()?' · истёк':'')+'</div></div>';
+      const st=x.revoked?'отозван':x.uses>=x.max_uses?'использован':x.expires_at<Date.now()?'истёк':'ждёт активации';
+      return '<div class="uc"><div class="uh"><div style="display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap"><b>'+esc(x.code)+'</b>'+
+          (x.note?'<span style="font-size:18px;font-weight:500;word-break:break-word">'+esc(x.note)+'</span>':'')+'</div>'+
+          (dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+'</div>'+
+        (dead?'':'<div class="btns"><button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'">Копировать код</button></div>')+
+        '<div class="ul sub">'+esc(x.provider)+' · '+st+' ('+x.uses+'/'+x.max_uses+')</div></div>';
     }).join('')||'<div class="hint">Кодов пока нет.</div>';
   }catch(e){}
 }
@@ -2446,6 +2450,8 @@ async function qGen(){
   const j=await upApi('POST','/admin/setup-codes',body);
   const link=APP_LINK+'?startapp='+j.code;
   $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div><div class="btns one"><button class="btn" data-u="qcopy" data-t="'+esc(j.code)+'">Копировать код</button><button class="btn pri" data-u="qcopy" data-t="'+esc(link)+'">Копировать ссылку</button></div>';
+  ['qKey','qLimit','qBase','qNote'].forEach(id=>{const e=$('#'+id);if(e)e.value=''});
+  QM.all=[];QM.on=new Set();qModelsRender();
   qLoad();
 }
 /* модели в генераторе: тот же вид, что в настройках у «Свой endpoint» */
