@@ -579,7 +579,8 @@ svg{display:block}
 #vimg{display:block;max-width:100%;max-height:100%;transform-origin:center;will-change:transform;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;-webkit-touch-callout:none;touch-action:none;transition:opacity .15s}
 .vtop{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 12px;color:#fff;pointer-events:none;background:linear-gradient(rgba(0,0,0,.55),transparent)}
 .vtop span{font-size:15px;font-weight:500;padding-left:8px}
-#viewer .ib{pointer-events:auto;color:#fff;background:rgba(255,255,255,.16)}
+#viewer .ib{color:#fff;background:rgba(255,255,255,.16)}
+#viewer.on .ib{pointer-events:auto}
 #viewer .ib:active{background:rgba(255,255,255,.28)}
 .vnav{position:absolute;top:50%;z-index:2;margin-top:-20px}
 #vPrev{left:10px}#vNext{right:10px}
