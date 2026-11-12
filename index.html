@@ -2436,7 +2436,7 @@ async function qLoad(){
     el.innerHTML=j.items.map(x=>{
       const dead=x.revoked||x.uses>=x.max_uses||x.expires_at<Date.now();
       const st=x.revoked?'отозван':x.uses>=x.max_uses?'использован':x.expires_at<Date.now()?'истёк':'ждёт активации';
-      return '<div class="uc" style="display:flex;align-items:center;gap:12px">'+
+      return '<div class="uc" style="display:flex;flex-direction:row-reverse;align-items:center;gap:12px">'+
         '<div style="flex:none;display:flex;align-items:center;gap:8px">'+
           (dead?'':'<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+
           '<button class="btn dan sm" data-u="qdel" data-id="'+esc(x.code)+'" aria-label="Удалить запись" style="padding:0;width:36px;height:36px;display:grid;place-items:center">'+ic('trash',18)+'</button></div>'+
