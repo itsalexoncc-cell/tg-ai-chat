@@ -661,7 +661,11 @@ async function handleSetup(request, env, url) {
 
     const mm = p.match(/^\/admin\/setup-codes\/([A-Z0-9-]{11})$/);
     if (mm && m === "DELETE") {
-      await env.DB.prepare("UPDATE setup_codes SET revoked = 1 WHERE code = ?").bind(mm[1]).run();
+      if (url.searchParams.get("purge") === "1") {
+        await env.DB.prepare("DELETE FROM setup_codes WHERE code = ?").bind(mm[1]).run();
+      } else {
+        await env.DB.prepare("UPDATE setup_codes SET revoked = 1 WHERE code = ?").bind(mm[1]).run();
+      }
       return response({ ok: true });
     }
     return response({ error: "Not found" }, 404);
