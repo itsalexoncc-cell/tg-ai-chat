@@ -154,7 +154,9 @@ async function ensureSchema(env) {
     env.DB.prepare("CREATE TABLE IF NOT EXISTS broadcasts (id TEXT PRIMARY KEY, client_token TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', text TEXT NOT NULL DEFAULT '', media TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'sending', total INTEGER NOT NULL DEFAULT 0, sent INTEGER NOT NULL DEFAULT 0, failed INTEGER NOT NULL DEFAULT 0, blocked INTEGER NOT NULL DEFAULT 0, lock_until INTEGER NOT NULL DEFAULT 0, last_error TEXT, created_at INTEGER NOT NULL, finished_at INTEGER)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS broadcast_recipients (broadcast_id TEXT NOT NULL, user_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', PRIMARY KEY (broadcast_id, user_id))"),
     env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_recipients_status ON broadcast_recipients (broadcast_id, status)"),
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS setup_codes (code TEXT PRIMARY KEY, payload TEXT NOT NULL, iv TEXT NOT NULL, provider TEXT, note TEXT, max_uses INTEGER NOT NULL DEFAULT 1, uses INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)")
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS setup_codes (code TEXT PRIMARY KEY, payload TEXT NOT NULL, iv TEXT NOT NULL, provider TEXT, note TEXT, max_uses INTEGER NOT NULL DEFAULT 1, uses INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS user_managed (telegram_user_id TEXT PRIMARY KEY, code TEXT, payload TEXT NOT NULL, iv TEXT NOT NULL, updated_at INTEGER NOT NULL)"),
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_managed_code ON user_managed (code)")
   ]);
   // однократный перенос уже существующих пользователей (у кого сохранены ключи)
   try {
@@ -608,6 +610,106 @@ function normCode(v) {
   return s.length === 10 ? s.slice(0, 5) + "-" + s.slice(5) : "";
 }
 
+/* =====================================================================
+   СКРЫТОЕ СИСТЕМНОЕ ПОДКЛЮЧЕНИЕ (ключ никогда не уходит в браузер)
+   ===================================================================== */
+const PROVIDER_META = {
+  openai:     { type: "oai",       base: "https://api.openai.com/v1" },
+  anthropic:  { type: "anthropic", base: "https://api.anthropic.com" },
+  gemini:     { type: "gemini",    base: "https://generativelanguage.googleapis.com/v1beta" },
+  deepseek:   { type: "oai",       base: "https://api.deepseek.com" },
+  openrouter: { type: "oai",       base: "https://openrouter.ai/api/v1" },
+  xai:        { type: "oai",       base: "https://api.x.ai/v1" },
+  mistral:    { type: "oai",       base: "https://api.mistral.ai/v1" },
+  groq:       { type: "oai",       base: "https://api.groq.com/openai/v1" }
+};
+const PROXY_MAX_BODY = 30 * 1024 * 1024;
+
+/* то, что можно показать клиенту: без ключа и без адреса */
+function managedMeta(d) {
+  return {
+    provider: d.provider,
+    name: d.name || "",
+    limit: d.limit || 0,
+    models: Array.isArray(d.models) ? d.models : []
+  };
+}
+
+async function loadManaged(env, userId) {
+  const row = await env.DB.prepare(
+    "SELECT payload, iv FROM user_managed WHERE telegram_user_id = ?"
+  ).bind(userId).first();
+  if (!row) return null;
+  try {
+    return JSON.parse(await decryptKey(row.payload, row.iv, env.ENCRYPTION_SECRET));
+  } catch {
+    return null;
+  }
+}
+
+async function managedProxy(request, env, userId, url) {
+  const d = await loadManaged(env, userId);
+  if (!d) return response({ error: "Системное подключение не настроено" }, 404);
+
+  const meta = PROVIDER_META[d.provider] || { type: "oai", base: "" };
+  const base = String(d.base || meta.base || "").replace(/\/+$/, "");
+  if (!/^https:\/\//i.test(base)) return response({ error: "Некорректный адрес провайдера" }, 500);
+
+  const op = url.searchParams.get("op");
+  const model = url.searchParams.get("model") || "";
+  let target, init;
+
+  if (op === "models") {
+    if (meta.type === "anthropic") {
+      target = base + "/v1/models?limit=100";
+      init = { method: "GET", headers: { "x-api-key": d.key, "anthropic-version": "2023-06-01" } };
+    } else if (meta.type === "gemini") {
+      target = base + "/models?pageSize=200";
+      init = { method: "GET", headers: { "x-goog-api-key": d.key } };
+    } else {
+      target = base + "/models";
+      init = { method: "GET", headers: d.key ? { Authorization: "Bearer " + d.key } : {} };
+    }
+  } else if (op === "chat") {
+    const len = parseInt(request.headers.get("Content-Length") || "0");
+    if (len > PROXY_MAX_BODY) return response({ error: "Запрос слишком большой" }, 413);
+    const headers = { "Content-Type": "application/json" };
+    if (meta.type === "anthropic") {
+      target = base + "/v1/messages";
+      headers["x-api-key"] = d.key;
+      headers["anthropic-version"] = "2023-06-01";
+    } else if (meta.type === "gemini") {
+      if (!/^[\w.\-]{1,100}$/.test(model)) return response({ error: "Некорректная модель" }, 400);
+      target = base + "/models/" + encodeURIComponent(model) + ":streamGenerateContent?alt=sse";
+      headers["x-goog-api-key"] = d.key;
+    } else {
+      target = base + "/chat/completions";
+      if (d.key) headers.Authorization = "Bearer " + d.key;
+    }
+    init = { method: "POST", headers, body: request.body };
+  } else {
+    return response({ error: "Неизвестная операция" }, 400);
+  }
+
+  let up;
+  try {
+    up = await fetch(target, init);
+  } catch {
+    return response({ error: "Провайдер недоступен" }, 502);
+  }
+  return new Response(up.body, {
+    status: up.status,
+    headers: {
+      "Content-Type": up.headers.get("Content-Type") || "application/json",
+      "Cache-Control": "no-store",
+      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+      "Access-Control-Allow-Methods": CORS_METHODS,
+      "Access-Control-Allow-Headers": "Content-Type, X-Telegram-Init-Data",
+      "Vary": "Origin"
+    }
+  });
+}
+
 async function handleSetup(request, env, url) {
   try {
     const a = await authUser(request, env);
@@ -615,7 +717,19 @@ async function handleSetup(request, env, url) {
     await ensureSchema(env);
     const p = url.pathname, m = request.method;
 
-    // погашение кода — любой пользователь приложения
+    // проверка кода без списания: есть ли уже системное подключение (нужно для подтверждения перезаписи)
+    if (p === "/setup/check" && m === "POST") {
+      const code = normCode((await request.json()).code);
+      if (!code) return response({ error: "Неверный код" }, 400);
+      const row = await env.DB.prepare(
+        "SELECT provider FROM setup_codes WHERE code = ? AND revoked = 0 AND uses < max_uses AND expires_at > ?"
+      ).bind(code, Date.now()).first();
+      if (!row) return response({ error: "Код недействителен, уже использован или истёк" }, 400);
+      const ex = await env.DB.prepare("SELECT 1 AS x FROM user_managed WHERE telegram_user_id = ?").bind(a.userId).first();
+      return response({ provider: row.provider, existing: !!ex });
+    }
+
+    // погашение кода: данные (в том числе ключ) остаются на сервере и НЕ возвращаются клиенту
     if (p === "/setup/redeem" && m === "POST") {
       const code = normCode((await request.json()).code);
       if (!code) return response({ error: "Неверный код" }, 400);
@@ -623,9 +737,30 @@ async function handleSetup(request, env, url) {
         "UPDATE setup_codes SET uses = uses + 1 WHERE code = ? AND revoked = 0 AND uses < max_uses AND expires_at > ?"
       ).bind(code, Date.now()).run();
       if (!r.meta || !r.meta.changes) return response({ error: "Код недействителен, уже использован или истёк" }, 400);
-      const row = await env.DB.prepare("SELECT payload, iv FROM setup_codes WHERE code = ?").bind(code).first();
-      return response(JSON.parse(await decryptKey(row.payload, row.iv, env.ENCRYPTION_SECRET)));
+      try {
+        const row = await env.DB.prepare("SELECT payload, iv FROM setup_codes WHERE code = ?").bind(code).first();
+        // перешифровываем тем же секретом и кладём в единственный скрытый слот пользователя (перезапись)
+        await env.DB.prepare(`
+          INSERT INTO user_managed (telegram_user_id, code, payload, iv, updated_at) VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(telegram_user_id) DO UPDATE SET code = excluded.code, payload = excluded.payload, iv = excluded.iv, updated_at = excluded.updated_at
+        `).bind(a.userId, code, row.payload, row.iv, Date.now()).run();
+        const d = JSON.parse(await decryptKey(row.payload, row.iv, env.ENCRYPTION_SECRET));
+        return response(managedMeta(d));
+      } catch (err) {
+        // не удалось сохранить — возвращаем использование кода
+        await env.DB.prepare("UPDATE setup_codes SET uses = MAX(0, uses - 1) WHERE code = ?").bind(code).run();
+        return response({ error: "Не удалось применить код" }, 500);
+      }
     }
+
+    // статус системного подключения (без ключа и адреса)
+    if (p === "/managed" && m === "GET") {
+      const d = await loadManaged(env, a.userId);
+      return response(d ? Object.assign({ active: true }, managedMeta(d)) : { active: false });
+    }
+
+    // проксирование запроса к провайдеру: ключ подставляется на сервере
+    if (p === "/managed/proxy" && m === "POST") return await managedProxy(request, env, a.userId, url);
 
     if (!a.isAdmin) return response({ error: "Forbidden" }, 403);
 
@@ -661,11 +796,14 @@ async function handleSetup(request, env, url) {
 
     const mm = p.match(/^\/admin\/setup-codes\/([A-Z0-9-]{11})$/);
     if (mm && m === "DELETE") {
+      // отзыв / удаление кода отключает и всех, кто его уже активировал
+      const ops = [env.DB.prepare("DELETE FROM user_managed WHERE code = ?").bind(mm[1])];
       if (url.searchParams.get("purge") === "1") {
-        await env.DB.prepare("DELETE FROM setup_codes WHERE code = ?").bind(mm[1]).run();
+        ops.push(env.DB.prepare("DELETE FROM setup_codes WHERE code = ?").bind(mm[1]));
       } else {
-        await env.DB.prepare("UPDATE setup_codes SET revoked = 1 WHERE code = ?").bind(mm[1]).run();
+        ops.push(env.DB.prepare("UPDATE setup_codes SET revoked = 1 WHERE code = ?").bind(mm[1]));
       }
+      await env.DB.batch(ops);
       return response({ ok: true });
     }
     return response({ error: "Not found" }, 404);
@@ -716,7 +854,7 @@ export default {
       return handleAdmin(request, env, url);
     }
 
-    if (url.pathname === "/setup/redeem" || url.pathname.startsWith("/admin/setup-codes")) {
+    if (url.pathname.startsWith("/setup/") || url.pathname.startsWith("/managed") || url.pathname.startsWith("/admin/setup-codes")) {
       return handleSetup(request, env, url);
     }
 
