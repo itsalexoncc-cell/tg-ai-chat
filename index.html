@@ -2073,6 +2073,9 @@ $('#setBack').addEventListener('click',closeSettings);
 
 function renderSettings(){
   $('#setBody').innerHTML=
+   '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
+   '<p class="hint" style="margin:8px 0 0">Подходит и для замены ключа, если закончились токены: приложение спросит, перезаписать ли текущие данные.</p></div>'+
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
    '<h3>API ключи и модели</h3><div id="provs"></div>'+
@@ -2219,6 +2222,14 @@ $('#setBody').addEventListener('click',async e=>{
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
   else if(a==='bal'){fetchBal(pid,false)}
+  else if(a==='setredeem'){
+    const i=$('#setCode'),v=i?i.value.trim():'';
+    if(!v){toast('Вставьте код или ссылку');return}
+    b.disabled=true;
+    try{if(await redeemCode(v,true)){toast('Готово! Настройки обновлены');renderSettings()}}
+    catch(err){toast(err.message)}
+    b.disabled=false;
+  }
   else if(a==='clearkey'){
     const ok=await dialog({title:'Очистить поля?',text:'Удалятся ключ и Base URL, лимит сбросится.',ok:'Очистить',danger:true});
     if(!ok)return;
@@ -2619,19 +2630,29 @@ $('#updBody').addEventListener('click',async e=>{
 /* ---------- быстрая настройка по коду или ссылке ---------- */
 function applySetup(d){
   const pid=d.provider;if(!PROV[pid])throw new Error('Неизвестный провайдер');
-  const c=S.providers[pid];
-  if(d.key){c.key=d.key;saveCloudKey(pid,d.key)}
-  if(d.base)c.base=d.base;
-  if(d.name)c.name=d.name;
-  if(d.limit>0)c.limit=d.limit;
+  const c=S.providers[pid],hadKey=!!c.key;
+  /* полная перезапись данных провайдера */
+  c.key=d.key||'';c.base=d.base||'';c.name=d.name||'';c.limit=d.limit>0?d.limit:0;
+  c.used={in:0,out:0};c.by={};delete c.bal;
+  delete c.models;delete c.enabled;
   if(d.models&&d.models.length){c.models=d.models.slice();c.enabled=d.models.slice()}
+  if(d.key||hadKey)saveCloudKey(pid,c.key);
   const first=getModels(pid)[0];
   if(first){cur.model=pid+'|'+first;S.lastModel=cur.model}
   save();renderTop();
 }
-async function redeemCode(raw){
+/* ask=true: если для этого провайдера уже есть настройка, сначала спрашиваем про перезапись (код при этом не списывается). Возвращает false, если пользователь отказался */
+async function redeemCode(raw,ask){
   const m=String(raw||'').match(/startapp=([\w-]+)/i);
-  const d=await upApi('POST','/setup/redeem',{code:(m?m[1]:String(raw||'')).trim()});
+  const code=(m?m[1]:String(raw||'')).trim();
+  if(ask){
+    const info=await upApi('POST','/setup/check',{code:code});
+    if(PROV[info.provider]&&isAvail(info.provider)){
+      const ok=await dialog({title:'Перезаписать настройки?',text:'Для «'+provName(info.provider)+'» уже указан ключ. Все данные будут заменены данными из кода, счётчик токенов обнулится.',ok:'Перезаписать'});
+      if(!ok)return false;
+    }
+  }
+  const d=await upApi('POST','/setup/redeem',{code:code});
   applySetup(d);
   const pid=d.provider;
   if(!getModels(pid).length){
@@ -2639,6 +2660,7 @@ async function redeemCode(raw){
     const c=S.providers[pid],list=allModels(pid).slice(0,20);
     if(list.length){c.enabled=list;cur.model=pid+'|'+list[0];S.lastModel=cur.model;save();renderTop()}
   }
+  return true;
 }
 
 /* ---------- init ---------- */
@@ -2691,8 +2713,11 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
   newChat();
   if(failed)return;   // не удалось связаться с облаком — не считаем пользователя новым
   const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
-  if(sp&&!hasSetup()){
-    try{await redeemCode(sp);toast('Настройка применена')}catch(e){toast(e.message)}
+  if(sp){
+    try{
+      if(!hasSetup()){await redeemCode(sp);toast('Настройка применена')}
+      else if(await redeemCode(sp,true))toast('Настройка обновлена');
+    }catch(e){if(!hasSetup())toast(e.message)}
   }
   if(!hasSetup())openConn();
 })();
