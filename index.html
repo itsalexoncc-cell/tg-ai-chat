@@ -24,8 +24,8 @@ svg{display:block}
 /* header */
 #top{display:flex;justify-content:space-between;align-items:center;
   padding:max(12px,env(safe-area-inset-top)) 16px 8px;flex:none}
-.circle{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;background:transparent}
-.pill{height:40px;padding:0 14px 0 18px;border-radius:999px;background:#fff;color:#121212;font-size:16px;font-weight:500;
+.circle{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;background:transparent}
+.pill{height:36px;padding:0 12px 0 16px;border-radius:30px;background:#fff;color:#121212;font-size:15px;font-weight:500;
   display:flex;align-items:center;gap:6px;max-width:62vw}
 .pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -113,14 +113,14 @@ svg{display:block}
 
 /* bottom */
 #bottom{flex:none;padding:0 16px max(14px,env(safe-area-inset-bottom))}
-.sugg{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;padding:0;scrollbar-width:none}
+.sugg{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;padding:0;scrollbar-width:none}
 .sugg::-webkit-scrollbar{display:none}
 .sugg.hide{display:none}
-.sc{flex:none;width:min(78vw,300px);scroll-snap-align:start;display:flex;align-items:center;gap:14px;padding:12px 14px;
-  background:var(--card);border:1px solid #3d3d3d;border-radius:24px;text-align:left}
-.sc .tile{width:50px;height:50px;border-radius:16px;background:#181818;display:grid;place-items:center;flex:none}
-.sc b{display:block;font-size:17px;font-weight:600}
-.sc small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.sc{flex:none;width:min(68vw,250px);scroll-snap-align:start;display:flex;align-items:center;gap:10px;padding:7px 14px 7px 8px;
+  background:var(--card);border:1px solid #3d3d3d;border-radius:30px;text-align:left}
+.sc .tile{width:38px;height:38px;border-radius:50%;background:#181818;display:grid;place-items:center;flex:none}
+.sc b{display:block;font-size:15px;font-weight:600}
+.sc small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
 .composer{background:var(--surface);border:1px solid #3a3a3a;border-radius:30px;padding:7px 9px}
 #inp{display:block;flex:1;min-width:0;width:100%;background:none;border:0;resize:none;font-size:17px;line-height:1.4;min-height:40px;max-height:120px;padding:9px 4px}
 #inp::placeholder{color:#a5a5a5}
@@ -1495,7 +1495,7 @@ $('#themeSw').addEventListener('click',e=>{
     ['lang','Переведи текст','На любой язык','Переведи на английский: '],
     ['pen','Напиши текст','Письма, посты, идеи','Напиши текст: ']
   ];
-  $('#sugg').innerHTML=cards.map((c,i)=>'<button class="sc" data-i="'+i+'"><span class="tile">'+ic(c[0],26)+'</span><span><b>'+c[1]+'</b><small>'+c[2]+'</small></span></button>').join('');
+  $('#sugg').innerHTML=cards.map((c,i)=>'<button class="sc" data-i="'+i+'"><span class="tile">'+ic(c[0],20)+'</span><span><b>'+c[1]+'</b><small>'+c[2]+'</small></span></button>').join('');
   $('#sugg').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b)return;const inp=$('#inp');inp.value=cards[+b.dataset.i][3];autosize();inp.focus();updateComposer()});
 })();
 const user=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;
