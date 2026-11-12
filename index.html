@@ -704,6 +704,7 @@ svg{display:block}
 .qcode{font-size:22px;font-weight:700;letter-spacing:.06em;text-align:center;margin:12px 0 6px}
 .cn-code{margin-top:4px}
 .cn-code input{margin-bottom:10px}
+#dlg{transition:padding-bottom .18s ease-out}
 .gb .mfilter input{width:auto;max-width:70%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
 :root[data-theme="light"] .gb .mfilter input{color:var(--text)}
 </style>
@@ -918,6 +919,7 @@ const allModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.
 const getModels=pid=>{const c=S.providers[pid],all=allModels(pid);return Array.isArray(c.enabled)?all.filter(m=>c.enabled.indexOf(m)>=0):all};
 const provName=pid=>{const c=S.providers[pid];return (PROV[pid].custom&&c&&c.name)||PROV[pid].name};
 const isAvail=pid=>{const p=PROV[pid],c=S.providers[pid];return p.custom?!!c.base:!!c.key};
+const hasSetup=()=>PROVIDERS.some(p=>isAvail(p.id));
 const avail=()=>{const r=[];PROVIDERS.forEach(p=>{if(isAvail(p.id))getModels(p.id).forEach(m=>r.push(p.id+'|'+m))});return r};
 const splitM=s=>{const i=(s||'').indexOf('|');return i<0?['','']:[s.slice(0,i),s.slice(i+1)]};
 const modelLabel=s=>{const m=splitM(s)[1];if(!m)return 'Выбрать модель';const t=m.split('/').pop();return t.length>20?t.slice(0,19)+'…':t};
@@ -1827,11 +1829,12 @@ function dialog(o){
 let connOpen=false;
 function closeConn(){
   if(!connOpen)return;connOpen=false;
-  const d=$('#dlg');d.classList.remove('on');d.innerHTML='';d.onclick=null;popLayer(closeConn);
+  const d=$('#dlg');d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(connBack);
 }
+const connBack=()=>{if(hasSetup())closeConn()};
 function openConn(view){
   const d=$('#dlg');
-  if(!connOpen){connOpen=true;pushLayer(closeConn);try{inp.blur()}catch(e){}}
+  if(!connOpen){connOpen=true;if(hasSetup())pushLayer(connBack);try{inp.blur()}catch(e){}}
   d.classList.remove('context');
   d.innerHTML=view==='help'
     ?'<div class="dcard cn"><h4 style="font-size:20px;font-weight:700;margin:0 0 12px">Как получить API-ключ?</h4>'+
@@ -1860,7 +1863,7 @@ function openConn(view){
   d.classList.add('on');
   const card=d.querySelector('.dcard');if(card)card.scrollTop=0;
   d.onclick=async e=>{
-    if(e.target===d)return closeConn();
+    if(e.target===d){if(hasSetup())closeConn();return}
     const b=e.target.closest('[data-cn]');if(!b)return;
     const a=b.dataset.cn;
     if(a==='have'){closeConn();openSettings()}
@@ -2064,6 +2067,7 @@ function closeSettings(){
   if(cur.model&&!avail().includes(cur.model)){const a=avail();cur.model=a.includes(S.lastModel)?S.lastModel:(a[0]||'')}
   else if(!cur.model){const a=avail();cur.model=a.includes(S.lastModel)?S.lastModel:(a[0]||'')}
   save();renderTop();
+  if(!hasSetup())openConn();
 }
 $('#setBack').addEventListener('click',closeSettings);
 
@@ -2216,7 +2220,7 @@ $('#setBody').addEventListener('click',async e=>{
   else if(a==='openupd'){openUpd()}
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='clearkey'){
-    const ok=await dialog({title:'Очистить поля?',text:'Ключ, лимит, адрес и список моделей для «'+provName(pid)+'» будут стёрты, ключ удалится и из облака. Счётчик токенов останется.',ok:'Очистить',danger:true});
+    const ok=await dialog({title:'Очистить поля?',text:'Удалятся ключ и Base URL, лимит сбросится.',ok:'Очистить',danger:true});
     if(!ok)return;
     const c=S.providers[pid];
     c.key='';c.base='';c.limit=0;delete c.models;delete c.enabled;if(PROV[pid].custom)c.name='';
@@ -2650,30 +2654,40 @@ fit();
 window.addEventListener('resize',fit);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
 inp.addEventListener('focus',()=>{setTimeout(fit,60);setTimeout(fit,320)});
-/* окна поверх чата (подключение API, переименование и т.п.) поднимаются вместе с клавиатурой */
+/* окна поверх чата поднимаются вместе с клавиатурой (одно обновление за кадр, без лишних записей) */
+let kbRaf=0,kbLast='';
 function kbFix(){
-  const d=$('#dlg');
-  if(!d.classList.contains('on')||d.classList.contains('context')){d.style.paddingBottom='';return}
-  const v=window.visualViewport,appH=$('#app').getBoundingClientRect().height;
-  const vh=v?v.height:appH,kb=Math.max(0,appH-vh-(v?v.offsetTop:0));
-  d.style.paddingBottom=(24+kb)+'px';
-  const card=d.querySelector('.dcard');
-  if(card){
-    card.style.maxHeight=Math.max(200,Math.min(appH,vh)-48)+'px';
-    const a=document.activeElement;
-    if(a&&card.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))a.scrollIntoView({block:'center',behavior:'smooth'});
-  }
+  if(kbRaf)return;
+  kbRaf=requestAnimationFrame(()=>{
+    kbRaf=0;
+    const d=$('#dlg');
+    if(!d.classList.contains('on')||d.classList.contains('context')){if(d.style.paddingBottom)d.style.paddingBottom='';kbLast='';return}
+    const v=window.visualViewport,appH=$('#app').getBoundingClientRect().height;
+    const vh=v?v.height:appH,kb=Math.max(0,Math.round(appH-vh-(v?v.offsetTop:0)));
+    const pad=(24+kb)+'px',mh=Math.max(200,Math.round(Math.min(appH,vh)-48))+'px';
+    const card=d.querySelector('.dcard');
+    if(kbLast===pad+'|'+mh&&card&&card.style.maxHeight===mh)return;
+    kbLast=pad+'|'+mh;
+    d.style.paddingBottom=pad;
+    if(card)card.style.maxHeight=mh;
+  });
 }
-$('#dlg').addEventListener('focusin',()=>{[0,150,350,700].forEach(ms=>setTimeout(kbFix,ms))});
-$('#dlg').addEventListener('focusout',()=>{setTimeout(kbFix,150);setTimeout(kbFix,500)});
-if(window.visualViewport){window.visualViewport.addEventListener('resize',kbFix);window.visualViewport.addEventListener('scroll',kbFix)}
+function kbScroll(){
+  const d=$('#dlg'),a=document.activeElement,card=d.querySelector('.dcard');
+  if(!d.classList.contains('on')||!card||!a||!card.contains(a)||!/^(INPUT|TEXTAREA)$/.test(a.tagName))return;
+  const r=a.getBoundingClientRect(),c=card.getBoundingClientRect();
+  if(r.bottom>c.bottom-8)card.scrollTop+=r.bottom-c.bottom+16;
+  else if(r.top<c.top+8)card.scrollTop-=c.top-r.top+16;
+}
+$('#dlg').addEventListener('focusin',()=>{kbFix();setTimeout(kbFix,250);setTimeout(()=>{kbFix();kbScroll()},420)});
+$('#dlg').addEventListener('focusout',()=>{setTimeout(kbFix,120);setTimeout(kbFix,420)});
+if(window.visualViewport)window.visualViewport.addEventListener('resize',kbFix);
 try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
 (async()=>{
   let failed=0;
   try{failed=await loadCloudKeys()||0}catch(e){failed=1}
   newChat();
   if(failed)return;   // не удалось связаться с облаком — не считаем пользователя новым
-  const hasSetup=()=>PROVIDERS.some(p=>isAvail(p.id));
   const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
   if(sp&&!hasSetup()){
     try{await redeemCode(sp);toast('Настройка применена')}catch(e){toast(e.message)}
