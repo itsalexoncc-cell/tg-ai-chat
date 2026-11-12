@@ -678,6 +678,13 @@ svg{display:block}
 .attach-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;margin:12px 0 4px;border:1.5px dashed var(--border);border-radius:14px;color:var(--muted);font-size:15px;font-weight:500;transition:background .15s,color .15s,border-color .15s}
 .attach-btn small{font-size:12px;opacity:.7;font-weight:400}
 .attach-btn:active{background:rgba(127,127,127,.12);color:var(--text);border-color:var(--muted)}
+/* ---- Страница ручной настройки API ---- */
+#manual{position:absolute;inset:0;background:var(--bg);z-index:32;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+#manual.open{transform:none}
+#manBody{flex:1;overflow-y:auto;padding:4px 16px max(30px,env(safe-area-inset-bottom));overscroll-behavior:contain}
+.manbtn{display:flex;align-items:center;gap:10px;width:100%;padding:14px;border-radius:16px;background:var(--card2);border:1px solid #303030;font-size:16px;font-weight:500;text-align:left}
+.manbtn .chev{margin-left:auto;color:var(--muted)}
+:root[data-theme="light"] .manbtn{border-color:var(--border)}
 /* ---- Окно «Подключение API» и мини-инструкция ---- */
 .dcard.cn{width:min(100%,380px);max-height:100%;overflow-y:auto;padding:22px 20px 20px;border-radius:26px}
 .cn-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -745,6 +752,11 @@ svg{display:block}
   <section id="settings">
     <div class="sh"><button class="ib" id="setBack" aria-label="Назад"></button><h2>Настройки</h2><div class="tsw" id="themeSw"><span class="ico sun" id="icSun" aria-label="Светлая тема"></span><button class="sw" id="themeToggle" role="switch" aria-checked="true" aria-label="Тёмная тема"><i></i></button><span class="ico moon" id="icMoon" aria-label="Тёмная тема"></span></div></div>
     <div id="setBody"></div>
+  </section>
+
+  <section id="manual">
+    <div class="sh"><button class="ib" id="manBack" aria-label="Назад"></button><h2>Ручная настройка API</h2></div>
+    <div id="manBody"></div>
   </section>
 
   <section id="upd">
@@ -823,9 +835,14 @@ const PROVIDERS=[
  {id:'custom',name:'Свой endpoint 1',type:'oai',base:'',models:[],custom:true},
  {id:'custom2',name:'Свой endpoint 2',type:'oai',base:'',models:[],custom:true},
  {id:'custom3',name:'Свой endpoint 3',type:'oai',base:'',models:[],custom:true},
- {id:'custom4',name:'Свой endpoint 4',type:'oai',base:'',models:[],custom:true}
+ {id:'custom4',name:'Свой endpoint 4',type:'oai',base:'',models:[],custom:true},
+ /* скрытый системный слот: заполняется только кодом быстрой настройки, ключ хранится на сервере и в браузер не попадает */
+ {id:'managed',name:'Системный',type:'oai',base:'',models:[],hidden:true,managed:true}
 ];
 const PROV={};PROVIDERS.forEach(p=>PROV[p.id]=p);
+const VISIBLE=PROVIDERS.filter(p=>!p.hidden);
+/* реальное описание провайдера: для системного слота берём тип/флаги того провайдера, что указан в коде */
+const provOf=pid=>{if(pid==='managed'){const m=S.providers.managed.meta;return (m&&PROV[m.provider])||PROV.managed}return PROV[pid]};
 const CLOUD_API='https://tg-ai-api.itsalexoncc.workers.dev';
 const APP_LINK='https://t.me/Ghataimodel_bot';   // если у Mini App есть короткое имя: https://t.me/Ghataimodel_bot/ИМЯ_APP
 /* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
@@ -898,16 +915,50 @@ async function saveCloudKey(provider,key){
     toast(key?'API ключ сохранён в облаке':'API ключ удалён из облака');
   }catch(e){toast('Ошибка сохранения ключа: '+e.message)}
 }
+/* статус системного подключения с сервера (только имя, лимит и список моделей — без ключа и адреса) */
+function setManagedMeta(d){
+  const c=S.providers.managed,prev=c.meta;
+  c.meta={provider:d.provider,name:d.name||'',limit:d.limit||0};
+  if(!prev||prev.provider!==d.provider||(d.models&&d.models.length&&JSON.stringify(d.models)!==JSON.stringify(c.models))){
+    delete c.models;delete c.enabled;
+    if(d.models&&d.models.length){c.models=d.models.slice();c.enabled=d.models.slice()}
+  }
+  c.limit=d.limit>0?d.limit:0;
+}
+async function syncManaged(){
+  const d=await cloudJson('GET','/managed');
+  const c=S.providers.managed;
+  if(d.active)setManagedMeta(d);
+  else if(c.meta){c.meta=null;delete c.models;delete c.enabled}
+}
+async function cloudJson(method,path,body){
+  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  const h={'X-Telegram-Init-Data':tg.initData};
+  if(body!==undefined)h['Content-Type']='application/json';
+  const res=await fetch(CLOUD_API+path,{method:method,headers:h,body:body!==undefined?JSON.stringify(body):undefined});
+  let j={};try{j=await res.json()}catch(e){}
+  if(!res.ok)throw new Error(j.error||('Ошибка '+res.status));
+  return j;
+}
+/* запрос к провайдеру через воркер: ключ подставляется на сервере */
+function managedFetch(op,model,body,signal){
+  if(!tg||!tg.initData)return Promise.reject(new Error('Откройте приложение через Telegram'));
+  const h={'X-Telegram-Init-Data':tg.initData};
+  if(op==='chat')h['Content-Type']='application/json';
+  return fetch(CLOUD_API+'/managed/proxy?op='+op+(model?'&model='+encodeURIComponent(model):''),
+    {method:'POST',signal:signal,headers:h,body:op==='chat'?body:undefined});
+}
 async function loadCloudKeys(){
   if(!tg||!tg.initData){toast('Откройте приложение через Telegram');return 1}
   let migrated=0,loaded=0,failed=0;
-  await Promise.all(PROVIDERS.map(async p=>{
+  await Promise.all(VISIBLE.map(async p=>{
     const c=S.providers[p.id];
     try{
       if(c.key){await cloudKeyRequest('PUT',p.id,c.key);migrated++}
       else{const data=await cloudKeyRequest('GET',p.id);if(data.key){c.key=data.key;loaded++}}
     }catch(e){failed++}
   }));
+  try{await syncManaged()}catch(e){failed++}
   save();
   if(failed)toast('Не удалось синхронизировать '+failed+' ключ(а). Проверьте Telegram и соединение.');
   else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
@@ -917,8 +968,8 @@ async function loadCloudKeys(){
 const allModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
 /* модели, отмеченные галочкой (доступны на главном экране); если галочки ещё не трогали — доступны все */
 const getModels=pid=>{const c=S.providers[pid],all=allModels(pid);return Array.isArray(c.enabled)?all.filter(m=>c.enabled.indexOf(m)>=0):all};
-const provName=pid=>{const c=S.providers[pid];return (PROV[pid].custom&&c&&c.name)||PROV[pid].name};
-const isAvail=pid=>{const p=PROV[pid],c=S.providers[pid];return p.custom?!!c.base:!!c.key};
+const provName=pid=>{const c=S.providers[pid];if(pid==='managed')return (c.meta&&(c.meta.name||PROV[c.meta.provider].name))||'Системный';return (PROV[pid].custom&&c&&c.name)||PROV[pid].name};
+const isAvail=pid=>{const p=PROV[pid],c=S.providers[pid];return p.managed?!!c.meta:p.custom?!!c.base:!!c.key};
 const hasSetup=()=>PROVIDERS.some(p=>isAvail(p.id));
 const avail=()=>{const r=[];PROVIDERS.forEach(p=>{if(isAvail(p.id))getModels(p.id).forEach(m=>r.push(p.id+'|'+m))});return r};
 const splitM=s=>{const i=(s||'').indexOf('|');return i<0?['','']:[s.slice(0,i),s.slice(i+1)]};
@@ -1684,7 +1735,7 @@ async function generate(){
   if(!chat.messages.length)return;
   const pm=splitM(chat.model),pid=pm[0],model=pm[1];
   if(!pid||!isAvail(pid)){if(avail().length){toast('Выберите модель');openPicker()}else openConn();return}
-  const p=PROV[pid],c=S.providers[pid];
+  const p=provOf(pid),c=S.providers[pid],mg=pid==='managed';
   const hist=chat.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
   const msg={role:'assistant',content:'',model:chat.model};
   chat.messages.push(msg);
@@ -1693,7 +1744,7 @@ async function generate(){
     got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
   G=g;busy=true;abortC=abort;errMsg='';stick=true;anchored=true;renderAll();anchorSoon();
   const signal=abort.signal;
-  const base=(c.base||p.base).replace(/\/+$/,'');
+  const base=mg?'':(c.base||p.base).replace(/\/+$/,'');
   let uIn=0,uOut=0,got=false;
   const push=d=>{if(g.stopped)return;msg.content+=d;paint()};
   try{
@@ -1712,6 +1763,7 @@ async function generate(){
       const send=textOnly=>{
         const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(mkMsgs(textOnly)),stream:true};
         if(p.usage)body.stream_options={include_usage:true};
+        if(mg)return managedFetch('chat',model,JSON.stringify(body),signal);
         return fetch(base+'/chat/completions',{method:'POST',signal:signal,
           headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
       };
@@ -1738,7 +1790,7 @@ async function generate(){
       if(signal.aborted)return;
       const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
       if(sysPrompt())body.system=sysPrompt();
-      const res=await fetch(base+'/v1/messages',{method:'POST',signal:signal,
+      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/v1/messages',{method:'POST',signal:signal,
         headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
       await sse(res,j=>{
@@ -1754,7 +1806,7 @@ async function generate(){
           parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
       if(sysPrompt())body.systemInstruction={parts:[{text:sysPrompt()}]};
-      const res=await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
+      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
         {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
       await sse(res,j=>{
@@ -1866,14 +1918,14 @@ function openConn(view){
     if(e.target===d){if(hasSetup())closeConn();return}
     const b=e.target.closest('[data-cn]');if(!b)return;
     const a=b.dataset.cn;
-    if(a==='have'){closeConn();openSettings()}
+    if(a==='have'){closeConn();openSettings();openManual()}
     else if(a==='help')openConn('help');
     else if(a==='back')openConn();
     else if(a==='redeem'){
       const ci=$('#cnCode'),v=ci?ci.value.trim():'';
       if(!v){toast('Вставьте код или ссылку');return}
       b.disabled=true;
-      try{await redeemCode(v);closeConn();toast('Готово! API подключён')}
+      try{if(await redeemCode(v)){closeConn();toast('Готово! API подключён')}else b.disabled=false}
       catch(err){toast(err.message);b.disabled=false}
     }
   };
@@ -2059,7 +2111,7 @@ const openProv=new Set();
 function openSettings(){
   if($('#settings').classList.contains('open'))return;
   renderSettings();$('#settings').classList.add('open');pushLayer(closeSettings);
-  PROVIDERS.forEach(p=>{if(p.balance&&S.providers[p.id].key)fetchBal(p.id,true)});
+  VISIBLE.forEach(p=>{if(p.balance&&S.providers[p.id].key)fetchBal(p.id,true)});
 }
 function closeSettings(){
   if(!$('#settings').classList.contains('open'))return;
@@ -2075,18 +2127,37 @@ function renderSettings(){
   $('#setBody').innerHTML=
    '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
    '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
-   '<p class="hint" style="margin:8px 0 0">Подходит и для замены ключа, если закончились токены: приложение спросит, перезаписать ли текущие данные.</p></div>'+
+   '<p class="hint" style="margin:8px 0 0">Данные из кода сохраняются в защищённое системное подключение и нигде не отображаются. Новый код заменяет прежний: приложение спросит подтверждение перед перезаписью.</p></div>'+
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
    '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
-   '<h3>API ключи и модели</h3><div id="provs"></div>'+
-   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>'+
+   '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
+   '<p class="hint">OpenAI, Anthropic, Gemini, DeepSeek и другие провайдеры, а также свои endpoint-ы: ключи, модели и лимиты.</p>'+
    '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
    '<p class="hint" style="margin:6px 0 0">Этот текст добавляется ко всем вашим запросам.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>'+adminHtml();
 
-  renderUsage();renderProvs();
+  renderUsage();
+  const ch=$('#manChev');if(ch)ch.innerHTML=ic('next',18);
 }
+/* ---------- страница «Ручная настройка API» ---------- */
+function openManual(){
+  if($('#manual').classList.contains('open'))return;
+  $('#manBody').innerHTML='<div id="provs"></div>'+
+   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>';
+  renderProvs();
+  $('#manual').classList.add('open');pushLayer(closeManual);
+  VISIBLE.forEach(p=>{if(p.balance&&S.providers[p.id].key)fetchBal(p.id,true)});
+}
+function closeManual(){
+  if(!$('#manual').classList.contains('open'))return;
+  $('#manual').classList.remove('open');popLayer(closeManual);
+  const a=avail();
+  if(!cur.model||!a.includes(cur.model))cur.model=a.includes(S.lastModel)?S.lastModel:(a[0]||'');
+  save();renderTop();renderUsageSafe();
+}
+$('#manBack').innerHTML=ic('back',24);
+$('#manBack').addEventListener('click',closeManual);
 function adminHtml(){
   if(!isAdmin)return '';
   return '<h3>Администратор</h3><div class="gb" style="padding:14px"><button class="btn pri" data-act="openupd" style="display:block;width:100%;text-align:center">Панель управления</button></div>';
@@ -2136,7 +2207,7 @@ function modelsHtml(p){
 }
 function renderProvs(){
   const el=$('#provs');if(!el)return;
-  el.innerHTML=PROVIDERS.map(p=>{
+  el.innerHTML=VISIBLE.map(p=>{
     const c=S.providers[p.id],open=openProv.has(p.id);
     return '<div class="pv'+(open?' open':'')+'" data-pv="'+p.id+'"><button class="pvh" data-act="tog"><span class="dot'+(isAvail(p.id)?' on':'')+'"></span><span class="pvn">'+esc(provName(p.id))+'</span><span class="chev">'+ic('chev',18)+'</span></button>'+
     (open?'<div class="pvb">'+
@@ -2161,7 +2232,8 @@ function addModel(pv,pid){
   c.models=all;c.enabled=all.filter(x=>en.has(x));
   save();renderProvs();toast('Модель добавлена');
 }
-$('#setBody').addEventListener('input',e=>{
+const onSet=(ev,fn)=>[$('#setBody'),$('#manBody')].forEach(h=>h.addEventListener(ev,fn));
+onSet('input',e=>{
   const t=e.target;
   if(t.dataset.g){
     if(t.dataset.g==='maxTokens')S.maxTokens=Math.max(0,parseInt(t.value)||4096);else S[t.dataset.g]=t.value;
@@ -2184,12 +2256,12 @@ $('#setBody').addEventListener('input',e=>{
   const d=pv.querySelector('.dot');if(d)d.classList.toggle('on',isAvail(pid));
   renderUsage();
 });
-$('#setBody').addEventListener('keydown',e=>{
+onSet('keydown',e=>{
   if(e.key!=='Enter')return;
   const t=e.target;
   if(t.dataset&&t.dataset.f==='newmodel'){e.preventDefault();const pv=t.closest('[data-pv]');if(pv)addModel(pv,pv.dataset.pv)}
 });
-$('#setBody').addEventListener('change',e=>{
+onSet('change',e=>{
   const t=e.target;if(t.dataset.f!=='key')return;
   const pv=t.closest('[data-pv]');if(!pv)return;
   const pid=pv.dataset.pv,key=t.value.trim();
@@ -2198,7 +2270,7 @@ $('#setBody').addEventListener('change',e=>{
   const d=pv.querySelector('.dot');if(d)d.classList.toggle('on',isAvail(pid));
   renderUsage();
 });
-$('#setBody').addEventListener('click',async e=>{
+onSet('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const a=b.dataset.act,pv=b.closest('[data-pv]'),pu=b.closest('[data-pid]');
   const pid=pv?pv.dataset.pv:(pu?pu.dataset.pid:'');
@@ -2221,12 +2293,13 @@ $('#setBody').addEventListener('click',async e=>{
   }
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
+  else if(a==='openmanual'){openManual()}
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='setredeem'){
     const i=$('#setCode'),v=i?i.value.trim():'';
     if(!v){toast('Вставьте код или ссылку');return}
     b.disabled=true;
-    try{if(await redeemCode(v,true)){toast('Готово! Настройки обновлены');renderSettings()}}
+    try{if(await redeemCode(v)){toast('Готово! Системное подключение обновлено');renderSettings()}}
     catch(err){toast(err.message)}
     b.disabled=false;
   }
@@ -2266,12 +2339,18 @@ async function fetchBal(pid,silent){
   renderUsage();
 }
 async function loadModels(pid){
-  const p=PROV[pid],c=S.providers[pid];
+  const p=provOf(pid),c=S.providers[pid],mg=pid==='managed';
   if(!isAvail(pid)){toast('Сначала укажите '+(p.custom?'Base URL':'API ключ'));return}
-  const base=(c.base||p.base).replace(/\/+$/,'');
+  const base=mg?'':(c.base||p.base).replace(/\/+$/,'');
   try{
     let list=[];
-    if(p.type==='oai'){
+    if(mg){
+      const r=await managedFetch('models');
+      if(!r.ok)throw await apiErr(r);const j=await r.json();
+      list=p.type==='gemini'
+        ?(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace(/^models\//,''))
+        :(j.data||[]).map(m=>m.id);
+    }else if(p.type==='oai'){
       const r=await fetch(base+'/models',{headers:c.key?{Authorization:'Bearer '+c.key}:{}});
       if(!r.ok)throw await apiErr(r);const j=await r.json();list=(j.data||[]).map(m=>m.id);
     }else if(p.type==='anthropic'){
@@ -2546,7 +2625,7 @@ function buildUpd(){
    '<div id="uProg" style="margin-top:14px"></div>'+
    '<h3>История рассылок</h3><div id="uHist"></div>'+
    '<h3>Быстрая настройка</h3><div class="gb">'+
-   '<label>Провайдер</label><select id="qProv">'+PROVIDERS.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
+   '<label>Провайдер</label><select id="qProv">'+VISIBLE.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
    '<div class="kl"><div class="kf"><label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
    '<div class="lf"><label>Лимит</label><input id="qLimit" inputmode="numeric" maxlength="10" placeholder="0"></div></div>'+
    '<label>Base URL (обязательно для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
@@ -2614,7 +2693,7 @@ $('#updBody').addEventListener('click',async e=>{
   else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){toast(err.message)}b.disabled=false}
   else if(a==='qcopy'){copyText(b.dataset.t)}
   else if(a==='qdel'){
-    const ok=await dialog({title:'Удалить запись?',text:'Код '+b.dataset.id+' пропадёт из списка и перестанет работать.',ok:'Удалить',danger:true});
+    const ok=await dialog({title:'Удалить запись?',text:'Код '+b.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
     if(!ok)return;
     try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id+'?purge=1');qLoad()}catch(err){toast(err.message)}
   }
@@ -2628,37 +2707,32 @@ $('#updBody').addEventListener('click',async e=>{
 });
 
 /* ---------- быстрая настройка по коду или ссылке ---------- */
+/* сервер возвращает только имя, лимит и модели: ключ и адрес остаются на сервере в скрытом системном слоте */
 function applySetup(d){
-  const pid=d.provider;if(!PROV[pid])throw new Error('Неизвестный провайдер');
-  const c=S.providers[pid],hadKey=!!c.key;
-  /* полная перезапись данных провайдера */
-  c.key=d.key||'';c.base=d.base||'';c.name=d.name||'';c.limit=d.limit>0?d.limit:0;
+  if(!PROV[d.provider]||PROV[d.provider].hidden)throw new Error('Неизвестный провайдер');
+  const c=S.providers.managed;
+  c.key='';c.base='';c.name='';
   c.used={in:0,out:0};c.by={};delete c.bal;
-  delete c.models;delete c.enabled;
-  if(d.models&&d.models.length){c.models=d.models.slice();c.enabled=d.models.slice()}
-  if(d.key||hadKey)saveCloudKey(pid,c.key);
-  const first=getModels(pid)[0];
-  if(first){cur.model=pid+'|'+first;S.lastModel=cur.model}
+  c.meta=null;setManagedMeta(d);
+  const first=getModels('managed')[0];
+  if(first){cur.model='managed|'+first;S.lastModel=cur.model}
   save();renderTop();
 }
-/* ask=true: если для этого провайдера уже есть настройка, сначала спрашиваем про перезапись (код при этом не списывается). Возвращает false, если пользователь отказался */
-async function redeemCode(raw,ask){
+/* Возвращает false, если пользователь отказался от перезаписи (код при этом не списывается) */
+async function redeemCode(raw){
   const m=String(raw||'').match(/startapp=([\w-]+)/i);
   const code=(m?m[1]:String(raw||'')).trim();
-  if(ask){
-    const info=await upApi('POST','/setup/check',{code:code});
-    if(PROV[info.provider]&&isAvail(info.provider)){
-      const ok=await dialog({title:'Перезаписать настройки?',text:'Для «'+provName(info.provider)+'» уже указан ключ. Все данные будут заменены данными из кода, счётчик токенов обнулится.',ok:'Перезаписать'});
-      if(!ok)return false;
-    }
+  const info=await cloudJson('POST','/setup/check',{code:code});
+  if(info.existing){
+    const ok=await dialog({title:'Перезаписать подключение?',text:'Системное подключение уже настроено. Оно будет заменено данными из нового кода, счётчик токенов обнулится.',ok:'Перезаписать'});
+    if(!ok)return false;
   }
-  const d=await upApi('POST','/setup/redeem',{code:code});
+  const d=await cloudJson('POST','/setup/redeem',{code:code});
   applySetup(d);
-  const pid=d.provider;
-  if(!getModels(pid).length){
-    await loadModels(pid);
-    const c=S.providers[pid],list=allModels(pid).slice(0,20);
-    if(list.length){c.enabled=list;cur.model=pid+'|'+list[0];S.lastModel=cur.model;save();renderTop()}
+  if(!getModels('managed').length){
+    await loadModels('managed');
+    const c=S.providers.managed,list=allModels('managed').slice(0,20);
+    if(list.length){c.enabled=list;cur.model='managed|'+list[0];S.lastModel=cur.model;save();renderTop()}
   }
   return true;
 }
@@ -2716,7 +2790,7 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
   if(sp){
     try{
       if(!hasSetup()){await redeemCode(sp);toast('Настройка применена')}
-      else if(await redeemCode(sp,true))toast('Настройка обновлена');
+      else if(await redeemCode(sp))toast('Настройка обновлена');
     }catch(e){if(!hasSetup())toast(e.message)}
   }
   if(!hasSetup())openConn();
