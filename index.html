@@ -109,7 +109,7 @@ svg{display:block}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
 @keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
 .err{margin:10px 0;padding:12px 14px;border:1px solid #5a2b2b;background:#2a1717;border-radius:14px;color:#ffb4b4;font-size:14px;line-height:1.45}
-.err button{display:block;margin-top:8px;color:#fff;background:#4a2323;padding:6px 12px;border-radius:10px;font-size:14px}
+.err button{display:block;margin-top:8px;color:#fff;background:#4a2323;padding:7px 14px;border-radius:10px;font-size:14px}
 
 /* bottom */
 #bottom{flex:none;padding:0 16px max(14px,env(safe-area-inset-bottom))}
@@ -172,7 +172,7 @@ svg{display:block}
 /* popover / dialog */
 #pop,#dlg{position:absolute;inset:0;z-index:40;display:none}
 #pop.on,#dlg.on{display:block}
-#dlg{background:rgba(0,0,0,.6);z-index:50}
+#dlg{background:rgba(0,0,0,.6);z-index:90}
 #dlg.on{display:grid;place-items:center;padding:24px}
 .pcard{position:absolute;top:max(60px,calc(env(safe-area-inset-top) + 52px));right:12px;width:min(88vw,330px);max-height:64vh;overflow-y:auto;
   background:#242424;border:1px solid #363636;border-radius:20px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
@@ -244,7 +244,7 @@ svg{display:block}
 .gb{background:var(--card2);border:1px solid #303030;border-radius:16px;padding:4px 14px 14px}
 
 #toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:10px 16px;border-radius:14px;
-  font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:86vw;text-align:center}
+  font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:110;max-width:86vw;text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%)}
 /* LIGHT THEME */
 :root[data-theme="light"]{
@@ -715,6 +715,59 @@ svg{display:block}
 #dlg{transition:padding-bottom .18s ease-out}
 .gb .mfilter input{width:auto;max-width:70%;background:transparent!important;border:0!important;padding:6px 0!important;border-radius:0;color:var(--muted);font-size:15px;text-align:left}
 :root[data-theme="light"] .gb .mfilter input{color:var(--text)}
+
+/* ---- Окна-уведомления (понятные диалоги вместо системных ошибок) ---- */
+#dlg2{position:absolute;inset:0;z-index:100;display:none;background:rgba(0,0,0,.6)}
+#dlg2.on{display:grid;place-items:center;padding:20px}
+.dcard.nt{width:min(100%,380px);max-height:100%;overflow-y:auto;padding:24px 20px 18px;border-radius:26px;-webkit-overflow-scrolling:touch;animation:ntIn .16s ease-out}
+@keyframes ntIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.nt-ic{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:rgba(127,127,127,.16);color:var(--muted)}
+.nt-ic.error,.nt-ic.warn{background:rgba(255,107,107,.15);color:#ff7a7a}
+.nt-ic.info,.nt-ic.file,.nt-ic.img,.nt-ic.bot{background:rgba(96,165,250,.16);color:#7db4ff}
+.nt-ic.net,.nt-ic.lock{background:rgba(251,191,36,.16);color:#f5b942}
+.nt-ic.ok{background:rgba(74,222,128,.16);color:#4ade80}
+.dcard.nt h4{margin:0 0 10px;font-size:19px;line-height:1.3;text-align:center}
+.dcard.nt .nt-p{margin:0 0 10px;text-align:center;color:var(--muted);font-size:15px;line-height:1.45;word-break:break-word}
+.nt-list,.nt-tips{margin:6px 0 10px;padding-left:20px;font-size:14.5px;line-height:1.45;color:var(--muted)}
+.nt-list li,.nt-tips li{margin:5px 0;word-break:break-word}
+.nt-tips{padding:10px 12px 10px 30px;border-radius:14px;background:rgba(127,127,127,.12);color:var(--text)}
+.nt-det{margin:4px 0 6px;font-size:13px;color:var(--muted)}
+.nt-det summary{cursor:pointer;padding:6px 0;text-align:center;list-style:none}
+.nt-det summary::-webkit-details-marker{display:none}
+.nt-det pre{margin:6px 0 8px;padding:10px;border-radius:12px;background:rgba(127,127,127,.12);white-space:pre-wrap;word-break:break-word;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;max-height:160px;overflow:auto;user-select:text;-webkit-user-select:text}
+.nt-btns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.nt-btns .btn{width:100%;min-height:48px;border-radius:999px;font-size:16px;text-align:center}
+:root[data-theme="light"] #dlg2{background:rgba(0,0,0,.35)}
+:root[data-theme="light"] .nt-ic.warn,:root[data-theme="light"] .nt-ic.error{background:#fde8e8;color:#c62828}
+:root[data-theme="light"] .nt-ic.info,:root[data-theme="light"] .nt-ic.file,:root[data-theme="light"] .nt-ic.img,:root[data-theme="light"] .nt-ic.bot{background:#e3efff;color:#1769c2}
+:root[data-theme="light"] .nt-ic.net,:root[data-theme="light"] .nt-ic.lock{background:#fff1d6;color:#a86a00}
+:root[data-theme="light"] .nt-ic.ok{background:#dff3e4;color:#1f7a3a}
+:root[data-theme="light"] .nt-tips{background:#f0f0f3}
+:root[data-theme="light"] .nt-det pre{background:#f0f0f3}
+
+/* ---- Ошибка в чате ---- */
+.err{display:block}
+.err .err-t{font-weight:600;font-size:15px}
+.err .err-h{margin-top:4px;opacity:.9}
+.err .err-b{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.err .err-b button{display:inline-block;margin:0}
+
+/* ---- Вложения: файлы и документы ---- */
+.att.pdf .an{min-width:0;display:flex;flex-direction:column;gap:1px}
+.att.pdf .an small{font-size:11px;opacity:.65}
+.att.up img{opacity:.5}
+button.ufile{background:rgba(127,127,127,.14);border-radius:12px;padding:8px 12px;color:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button.ufile:active{opacity:.7}
+button.ufile small{flex:none;opacity:.6;font-size:12px}
+.afiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.aimg{display:block;max-width:min(100%,360px);max-height:420px;border-radius:14px;cursor:zoom-in;background:rgba(127,127,127,.12)}
+.m.a button.ufile{max-width:100%}
+.code .ch .chb{display:flex;gap:16px}
+.pi.row{justify-content:flex-start;gap:12px;word-break:normal}
+.pi.row span{flex:1}
+#app.drop::after{content:"Отпустите файлы, чтобы добавить";position:absolute;inset:8px;z-index:95;display:grid;place-items:center;border:2px dashed var(--muted);border-radius:22px;background:rgba(0,0,0,.55);color:#fff;font-size:18px;font-weight:600;pointer-events:none}
+.vbtns{display:flex;gap:8px}
+.uatts{align-items:flex-start}
 </style>
 </head>
 <body>
@@ -767,8 +820,9 @@ svg{display:block}
 
   <div id="pop"><div class="pcard" id="pcard"></div></div>
   <div id="dlg"></div>
+  <div id="dlg2"></div>
   <div id="viewer">
-    <div class="vtop"><span id="vcount"></span><button class="ib" id="vClose" aria-label="Закрыть"></button></div>
+    <div class="vtop"><span id="vcount"></span><span class="vbtns"><button class="ib" id="vSave" aria-label="Сохранить"></button><button class="ib" id="vClose" aria-label="Закрыть"></button></span></div>
     <div id="vstage"><img id="vimg" alt="" draggable="false"></div>
     <button class="ib vnav" id="vPrev" aria-label="Предыдущее"></button>
     <button class="ib vnav" id="vNext" aria-label="Следующее"></button>
@@ -776,7 +830,8 @@ svg{display:block}
   <div id="toast"></div>
 </div>
 <input type="file" id="upFile" hidden multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4">
-<input type="file" id="file" hidden multiple accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.log,.java,.c,.cpp,.go,.rs,.sql,text/*,.pdf,application/pdf,image/jpeg,image/png,image/webp,image/gif">
+<input type="file" id="file" hidden multiple>
+<input type="file" id="fileImg" hidden multiple accept="image/*">
 
 <script>
 (()=>{
@@ -796,7 +851,6 @@ const I={
  wave:'<path d="M5 10v4M8.5 7v10M12 4v16M15.5 8v8M19 10.5v3"/>',
  up:'<path d="M12 19V5M5 12l7-7 7 7"/>',
  stop:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
- menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
  set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
@@ -819,7 +873,14 @@ const I={
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
  plug:'<path d="M9 2v5M15 2v5M7 7h10v4a5 5 0 0 1-10 0Z"/><path d="M12 16v6"/>',
- cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5Z"/>'
+ cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5Z"/>',
+ warn:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+ okc:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ net:'<path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16.2a5 5 0 0 1 7 0M12 20h.01"/><path d="M4 4l16 16"/>',
+ lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ img:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.7"/><path d="m21 16-5-5-9 9"/>',
+ send:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/>'
 };
 const ic=(n,s)=>{s=s||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>'};
 
@@ -866,7 +927,7 @@ const configP=(async function(){
 })();
 
 async function cloudKeyRequest(method,provider,key){
-  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  if(!tg||!tg.initData)throw needTg();
   const query=(method==='GET'||method==='DELETE')?'?provider='+encodeURIComponent(provider):'';
   const options={method,headers:{'X-Telegram-Init-Data':tg.initData}};
   if(method==='PUT'){
@@ -874,8 +935,8 @@ async function cloudKeyRequest(method,provider,key){
     options.body=JSON.stringify({provider,key});
   }
   const res=await fetch(CLOUD_API+'/keys'+query,options);
-  const data=await res.json();
-  if(!res.ok)throw new Error(data.error||'Ошибка сервера');
+  let data={};try{data=await res.json()}catch(e){}
+  if(!res.ok)throw cloudErr(res,data);
   return data;
 }
 
@@ -906,7 +967,8 @@ function setTheme(t){
 }
 let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
-S=Object.assign({providers:{},chats:[],system:'',maxTokens:4096,lastModel:''},S||{});
+S=Object.assign({providers:{},chats:[],system:'',maxTokens:4096,lastModel:'',caps:{}},S||{});
+if(!S.caps||typeof S.caps!=='object')S.caps={};
 PROVIDERS.forEach(p=>{S.providers[p.id]=Object.assign({key:'',base:'',name:'',limit:0,used:{in:0,out:0},by:{}},S.providers[p.id]||{})});
 let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{const stored=JSON.parse(JSON.stringify(S));PROVIDERS.forEach(p=>{if(stored.providers[p.id])stored.providers[p.id].key=''});localStorage.setItem(KEY,JSON.stringify(stored))}catch(e){}},150)};
 async function saveCloudKey(provider,key){
@@ -914,7 +976,7 @@ async function saveCloudKey(provider,key){
     if(key)await cloudKeyRequest('PUT',provider,key);
     else await cloudKeyRequest('DELETE',provider);
     toast(key?'API ключ сохранён в облаке':'API ключ удалён из облака');
-  }catch(e){toast('Ошибка сохранения ключа: '+e.message)}
+  }catch(e){showError(e,{where:'cloud',title:'Не удалось сохранить ключ',retry:true}).then(a=>{if(a==='retry')saveCloudKey(provider,key)})}
 }
 /* статус системного подключения с сервера (только имя, лимит и список моделей — без ключа и адреса) */
 function setManagedMeta(d){
@@ -933,24 +995,24 @@ async function syncManaged(){
   else if(c.meta){c.meta=null;delete c.models;delete c.enabled}
 }
 async function cloudJson(method,path,body){
-  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  if(!tg||!tg.initData)throw needTg();
   const h={'X-Telegram-Init-Data':tg.initData};
   if(body!==undefined)h['Content-Type']='application/json';
   const res=await fetch(CLOUD_API+path,{method:method,headers:h,body:body!==undefined?JSON.stringify(body):undefined});
   let j={};try{j=await res.json()}catch(e){}
-  if(!res.ok)throw new Error(j.error||('Ошибка '+res.status));
+  if(!res.ok)throw cloudErr(res,j);
   return j;
 }
 /* запрос к провайдеру через воркер: ключ подставляется на сервере */
 function managedFetch(op,model,body,signal){
-  if(!tg||!tg.initData)return Promise.reject(new Error('Откройте приложение через Telegram'));
+  if(!tg||!tg.initData)return Promise.reject(needTg());
   const h={'X-Telegram-Init-Data':tg.initData};
   if(op==='chat')h['Content-Type']='application/json';
   return fetch(CLOUD_API+'/managed/proxy?op='+op+(model?'&model='+encodeURIComponent(model):''),
     {method:'POST',signal:signal,headers:h,body:op==='chat'?body:undefined});
 }
 async function loadCloudKeys(){
-  if(!tg||!tg.initData){toast('Откройте приложение через Telegram');return 1}
+  if(!tg||!tg.initData){showError(needTg(),{where:'cloud'});return 1}
   let migrated=0,loaded=0,failed=0;
   await Promise.all(VISIBLE.map(async p=>{
     const c=S.providers[p.id];
@@ -961,9 +1023,23 @@ async function loadCloudKeys(){
   }));
   try{await syncManaged()}catch(e){failed++}
   save();
-  if(failed)toast('Не удалось синхронизировать '+failed+' ключ(а). Проверьте Telegram и соединение.');
+  if(failed)syncFailedNotice();
   else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
   return failed;
+}
+function syncFailedNotice(){
+  notice({icon:'net',title:'Не удалось загрузить ваши ключи',
+    text:'Приложение не смогло связаться со своим сервером, поэтому сохранённые API-ключи пока недоступны.',
+    tips:['Проверьте интернет.','Когда соединение появится, нажмите «Повторить».'],
+    actions:[{id:'retry',label:'Повторить',kind:'pri'},{id:'close',label:'Закрыть',kind:'ghost'}],dismiss:'close'
+  }).then(async a=>{
+    if(a!=='retry')return;
+    const f=await loadCloudKeys();
+    const av=avail();
+    if(cur&&(!cur.model||av.indexOf(cur.model)<0))cur.model=av.indexOf(S.lastModel)>=0?S.lastModel:(av[0]||'');
+    if(!f&&hasSetup())closeConn();
+    renderTop();
+  });
 }
 
 const allModels=pid=>{const c=S.providers[pid];return Array.isArray(c.models)?c.models:PROV[pid].models};
@@ -976,7 +1052,7 @@ const avail=()=>{const r=[];PROVIDERS.forEach(p=>{if(isAvail(p.id))getModels(p.i
 const splitM=s=>{const i=(s||'').indexOf('|');return i<0?['','']:[s.slice(0,i),s.slice(i+1)]};
 const modelLabel=s=>{const m=splitM(s)[1];if(!m)return 'Выбрать модель';const t=m.split('/').pop();return t.length>20?t.slice(0,19)+'…':t};
 
-let cur=null,busy=false,abortC=null,errMsg='',rec=null;
+let cur=null,busy=false,abortC=null,errMsg='',errData=null,lastErrG=null,rec=null;
 function newChat(){
   const a=avail();
   cur={id:uid(),title:'Новый чат',model:a.includes(S.lastModel)?S.lastModel:(a[0]||''),messages:[],updated:Date.now()};
@@ -997,6 +1073,338 @@ const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+'M':n>=1e3?(n/1e3).toFixed(n>=1e
 function copyText(t){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('Скопировано'),()=>fb())}else fb();
   function fb(){const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Скопировано')}catch(e){toast('Не удалось скопировать')}a.remove()}
+}
+
+/* ---------- единицы измерения ---------- */
+const KB=1024,MB=1024*KB;
+const fmtSize=n=>{n=+n||0;return n>=MB?(n/MB).toFixed(n>=10*MB?0:1).replace('.',',')+' МБ':n>=KB?Math.round(n/KB)+' КБ':n+' Б'};
+
+/* ---------- диалоги-уведомления (вместо исчезающих тостов и сырых ошибок) ----------
+   notice({icon,title,text,list,tips,details,actions:[{id,label,kind}],dismiss}) → Promise<id | dismiss>
+   Окна показываются по очереди, поверх любых других окон; закрываются кнопкой, тапом по фону или кнопкой «назад» Telegram. */
+const NT_ICON={error:'warn',warn:'warn',info:'info',ok:'okc',net:'net',lock:'lock',img:'img',file:'file',bot:'send'};
+let ntQ=Promise.resolve();
+function notice(o){
+  const p=ntQ.then(()=>ntShow(o));
+  ntQ=p.then(()=>{},()=>{});
+  return p;
+}
+function ntShow(o){
+  return new Promise(res=>{
+    const d=$('#dlg2');
+    const acts=(o.actions&&o.actions.length)?o.actions:[{id:'ok',label:'Понятно',kind:'pri'}];
+    const para=(o.text?String(o.text).split(/\n{2,}/):[]).map(t=>'<p class="nt-p">'+esc(t)+'</p>').join('');
+    const ico=o.icon||'info';
+    d.innerHTML='<div class="dcard nt" role="alertdialog" aria-modal="true">'+
+      '<div class="nt-ic '+esc(ico)+'">'+ic(NT_ICON[ico]||'info',30)+'</div>'+
+      '<h4>'+esc(o.title||'')+'</h4>'+para+
+      (o.list&&o.list.length?'<ul class="nt-list">'+o.list.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'')+
+      (o.tips&&o.tips.filter(Boolean).length?'<ul class="nt-tips">'+o.tips.filter(Boolean).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'')+
+      (o.details?'<details class="nt-det"><summary>Технические подробности</summary><pre>'+esc(o.details)+'</pre><button class="btn sm" data-nt="__copy">Скопировать</button></details>':'')+
+      '<div class="nt-btns">'+acts.map(a=>'<button class="btn '+esc(a.kind||'')+'" data-nt="'+esc(a.id)+'">'+esc(a.label)+'</button>').join('')+'</div></div>';
+    d.classList.add('on');
+    try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}
+    const done=v=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;popLayer(cancel);res(v)};
+    const cancel=()=>done(o.dismiss!==undefined?o.dismiss:null);
+    pushLayer(cancel);
+    d.onclick=e=>{
+      if(e.target===d){cancel();return}
+      const b=e.target.closest('[data-nt]');if(!b)return;
+      if(b.dataset.nt==='__copy'){copyText(o.details||'');return}
+      done(b.dataset.nt);
+    };
+  });
+}
+const warnBox=(title,text,o)=>notice(Object.assign({icon:'warn',title:title,text:text},o||{}));
+const infoBox=(title,text,o)=>notice(Object.assign({icon:'info',title:title,text:text},o||{}));
+
+/* ---------- разбор ответа с ошибкой от провайдера ---------- */
+/* Достаёт читаемый текст из разных форматов ошибок (OpenAI, Anthropic, Gemini, Mistral, OpenRouter и др.) */
+function pickMsg(j){
+  if(j==null)return '';
+  if(typeof j==='string')return j;
+  if(Array.isArray(j))return j.map(pickMsg).filter(Boolean).join('; ');
+  if(typeof j!=='object')return String(j);
+  const e=j.error!==undefined?j.error:j;
+  if(typeof e==='string')return e;
+  if(e&&typeof e==='object'){
+    const m=e.message!==undefined?e.message:(e.detail!==undefined?e.detail:(e.msg!==undefined?e.msg:''));
+    let t=typeof m==='string'?m:pickMsg(m);
+    if(t&&e.metadata&&e.metadata.raw)t+=' ('+pickMsg(e.metadata.raw)+')';
+    if(t)return t;
+    try{return JSON.stringify(e).slice(0,300)}catch(_){return ''}
+  }
+  return '';
+}
+async function apiErr(res){
+  let raw='',body=null;
+  try{raw=await res.text();try{body=JSON.parse(raw)}catch(e){}}catch(e){}
+  const msg=body?pickMsg(body):String(raw||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
+  const er=new Error((res.status||'')+(msg?': '+msg:''));
+  er.status=res.status;er.raw=msg||res.statusText||'';er.api=true;
+  if(body&&typeof body.code==='string'&&APP_CODES.indexOf(body.code)>=0){er.cloud=true;er.code=body.code}   // ответил наш сервер, а не провайдер ИИ
+  return er;
+}
+const APP_CODES=['session','forbidden','no_managed','upstream','bot_blocked','too_large','bad_request','server'];
+const needTg=()=>{const er=new Error('need telegram');er.cloud=true;er.code='need_telegram';return er};
+/* Ошибка собственного сервера (Worker) */
+function cloudErr(res,j){
+  const er=new Error((j&&j.error)||('Ошибка '+res.status));
+  er.status=res.status;er.code=j&&j.code;er.cloud=true;er.raw=(j&&j.error)||'';
+  return er;
+}
+
+function classify(e,ctx){
+  ctx=ctx||{};
+  if(e&&e.kind)return e.kind;
+  if(e&&e.name==='AbortError')return 'abort';
+  const st=(e&&e.status)||0;
+  if(e instanceof TypeError||(e&&e.net))return 'network';
+  const s=String((e&&(e.raw||e.message))||'').toLowerCase();
+  if(e&&e.cloud){
+    if(e.code==='bot_blocked')return 'botblock';
+    if(e.code==='need_telegram')return 'needtg';
+    if(e.code==='no_managed')return 'nomanaged';
+    if(e.code==='upstream')return 'server';
+    if(st===401)return 'session';
+    if(st===403)return 'forbidden';
+    if(st===413)return 'toolarge';
+    if(st===429)return 'rate';
+    if(st>=500)return 'cloudserver';
+    return 'msg';
+  }
+  const files=!!(ctx.kinds&&ctx.kinds.length);
+  if(/unsupported_country|country, region, or territory|not available in your (country|region)|location is not supported|user location is not supported/.test(s))return 'region';
+  if(st===402||/insufficient[_ ]quota|exceeded your current quota|billing|insufficient (credit|balance|funds)|credit balance|payment required|out of credits|no credits/.test(s))return 'quota';
+  if(st===401||/invalid[_ ]api[_ ]key|incorrect api key|api key not valid|invalid x-api-key|unauthorized|authentication (failed|error)/.test(s))return 'auth';
+  if(st===429||/rate[_ ]?limit|too many requests/.test(s))return 'rate';
+  if(/too many (images|files|attachments|documents)|maximum (number )?of (images|files)|at most \d+ (images|files)|up to \d+ images|limit of \d+ images|max(imum)? \d+ images/.test(s))return 'toomany';
+  if(/context[_ ](length|window)|maximum context|too many tokens|token limit|prompt is too long|input is too long|reduce the length|input token count|tokens? (exceed|limit)|exceeds the.*tokens/.test(s))return 'context';
+  if(st===413||/request[_ ]entity too large|payload too large|request too large|body.*too large|image.*(exceeds|larger than|too big|too large)|(exceeds|larger than).*(\d+ ?mb|size limit)|image size|more than \d+ pages|page limit|content[_ ]length/.test(s))return 'toolarge';
+  if(files&&(st===400||st===404||st===415||st===422||st===500)&&/image|vision|multimodal|multi-modal|modalit|pdf|document|file|attachment|content|must be a string|valid string|expected a string|invalid type|unknown variant|does not support|not support|unsupported|cannot (read|process)|image_url|mime|base64/.test(s))return 'nofiles';
+  if(st===403)return 'auth';
+  if(st===404||/model.*(not found|does not exist|not available|decommissioned|deprecated|no longer)|unknown model|invalid model|no such model|is not a valid model/.test(s))return 'model';
+  if(/safety|content[_ ]policy|content_filter|moderation|prohibited|refus/.test(s))return 'safety';
+  if(st===408||st===504||/timeout|timed out/.test(s))return 'timeout';
+  if(st>=500||/overloaded|temporarily unavailable|service unavailable|internal server error|bad gateway/.test(s))return 'server';
+  if(st===400||st===422)return 'badreq';
+  return 'unknown';
+}
+
+const ACT={
+  retry:{id:'retry',label:'Повторить',kind:'pri'},
+  model:{id:'model',label:'Выбрать другую модель',kind:'pri'},
+  settings:{id:'settings',label:'Открыть настройки',kind:'pri'},
+  text:{id:'text',label:'Отправить без файлов',kind:''},
+  noold:{id:'noold',label:'Без старых вложений',kind:'pri'},
+  newchat:{id:'newchat',label:'Начать новый чат',kind:''},
+  close:{id:'close',label:'Закрыть',kind:'ghost'},
+  ok:{id:'ok',label:'Понятно',kind:'pri'}
+};
+const CHAT_ONLY=['retry','text','noold','newchat'];
+const GENERIC_KINDS=['network','server','timeout','unknown','msg','cloudserver','badreq'];
+
+/* Тексты для людей: что случилось, почему, что делать */
+function copyFor(kind,ctx,e){
+  const prov=ctx.provider||'сервис ИИ',mdl=ctx.model?'«'+ctx.model+'»':'выбранная модель';
+  const files=!!(ctx.kinds&&ctx.kinds.length);
+  const hasImg=files&&ctx.kinds.indexOf('image')>=0,hasPdf=files&&ctx.kinds.indexOf('pdf')>=0;
+  const what=hasImg&&hasPdf?'фото и PDF':hasPdf?'PDF-документ':'фото';
+  switch(kind){
+    case 'network':
+      return (ctx.where==='chat'||ctx.where==='models')?{icon:'net',title:'Нет связи с сервисом ИИ',
+        text:'Запрос не дошёл до «'+prov+'». Скорее всего, пропал интернет или этот сервис недоступен из вашей сети.',
+        tips:[ctx.where==='chat'?'Проверьте интернет и нажмите «Повторить».':'Проверьте интернет и попробуйте ещё раз.','Если сервис заблокирован в вашей стране или сети — включите VPN или укажите адрес прокси (Base URL) в настройках.',files?'Большие файлы иногда не проходят по слабому соединению. Попробуйте отправить без файлов.':null],
+        acts:['retry',files?'text':null,'close']}
+      :{icon:'net',title:'Нет связи с сервером',
+        text:'Приложению не удалось связаться со своим сервером. Скорее всего, пропал интернет или соединение нестабильно.',
+        tips:['Проверьте интернет и повторите попытку.'],acts:['ok']};
+    case 'auth':
+      return {icon:'lock',title:'Сервис не принял ключ доступа',
+        text:'«'+prov+'» отклонил запрос: ключ неверный, отозван или у него нет доступа к этой модели.',
+        tips:ctx.managed?['Это системное подключение — сообщите администратору, что оно перестало работать.']:['Откройте настройки и проверьте API-ключ: в нём не должно быть лишних пробелов.','Убедитесь, что ключ создан именно в сервисе «'+prov+'».'],
+        acts:[ctx.managed?null:'settings','model','close']};
+    case 'quota':
+      return {icon:'warn',title:'На аккаунте закончились средства',
+        text:'Сервис отказал в запросе: на счёте нет денег или исчерпан лимит. Это ограничение самого сервиса, а не приложения.',
+        tips:['Пополните баланс или проверьте лимиты в личном кабинете «'+prov+'».','Либо выберите другую модель или другой сервис.'],acts:['model','close']};
+    case 'rate':
+      return {icon:'warn',title:'Слишком много запросов',
+        text:'Сервис временно ограничил число запросов — так бывает на бесплатных тарифах и при высокой нагрузке.',
+        tips:['Подождите минуту и повторите попытку.'],acts:['retry','model','close']};
+    case 'toomany':
+      return {icon:'file',title:'Слишком много вложений в диалоге',
+        text:'Модель принимает ограниченное число фото и файлов за один запрос, а в этом диалоге их накопилось слишком много. Старые вложения отправляются модели при каждом сообщении.',
+        acts:['noold','newchat','close']};
+    case 'toolarge':
+      if(ctx.where==='file')return {icon:'file',title:'Файл слишком большой для отправки',
+        text:'Сервер приложения принимает для отправки в Telegram файлы только до '+fmtSize(LIM.botSend)+'.',
+        tips:['Сохраните файл поменьше или разделите его на части.'],acts:['ok']};
+      return {icon:'file',title:'Файлы слишком большие',
+        text:'Сервис не принял запрос из-за размера: фото и документы вместе с перепиской получились слишком тяжёлыми.',
+        tips:['Приложите меньше файлов или файлы поменьше.','Начните новый чат: старые вложения тоже отправляются при каждом сообщении.'],
+        acts:[files?'noold':null,files?'text':null,'newchat','close']};
+    case 'context':
+      return {icon:'warn',title:'Диалог слишком длинный для модели',
+        text:'Вся переписка и прикреплённые файлы не помещаются в память этой модели.',
+        tips:['Начните новый чат.','Приложите файл поменьше или выберите модель с большим контекстом.'],acts:['newchat','model','close']};
+    case 'nofiles':
+      return {icon:'img',title:hasImg&&hasPdf?'Эта модель не принимает фото и PDF':hasPdf?'Эта модель не читает PDF':'Эта модель не принимает фото',
+        text:mdl+' не смогла обработать прикреплённое ('+what+'). Скорее всего, она работает только с текстом. Реже причина в том, что файл повреждён.',
+        tips:[hasImg?'Выберите модель с поддержкой изображений: в названии обычно есть vision, vl, 4o, а также Gemini и Claude.':null,hasPdf?'Для PDF подойдут Claude, Gemini и модели OpenAI. Если нужна другая — скопируйте текст из PDF в сообщение.':null,'Или отправьте вопрос без файлов — модель ответит только по тексту.'],
+        acts:['model','text','close']};
+    case 'model':
+      return {icon:'warn',title:'Модель недоступна',
+        text:mdl+' не найдена у «'+prov+'»: её могли убрать, либо у вас нет к ней доступа.',
+        tips:['Выберите другую модель в списке вверху экрана.'],acts:['model','close']};
+    case 'safety':
+      return {icon:'warn',title:'Запрос отклонён фильтром безопасности',
+        text:'Сервис ИИ отказался отвечать на этот запрос из-за своих правил. Попробуйте переформулировать вопрос или выберите другую модель.',acts:['model','close']};
+    case 'region':
+      return {icon:'net',title:'Сервис недоступен в вашей стране',
+        text:'«'+prov+'» не принимает запросы из вашего региона.',
+        tips:['Включите VPN или укажите адрес прокси (Base URL) в настройках.','Либо выберите другой сервис.'],acts:['settings','model','close']};
+    case 'server':
+      return {icon:'warn',title:'Сервис ИИ временно недоступен',
+        text:'У «'+prov+'» сейчас сбой или высокая нагрузка. Это не ошибка приложения.',
+        tips:['Подождите немного и повторите попытку.','Или выберите другую модель.'],acts:['retry','model','close']};
+    case 'timeout':
+      return {icon:'warn',title:'Сервис слишком долго отвечал',
+        text:'Ответ не пришёл вовремя. Так бывает при высокой нагрузке или очень большом запросе.',
+        acts:['retry',files?'text':null,'close']};
+    case 'empty':
+      return {icon:'warn',title:'Модель не дала ответа',
+        text:'Запрос дошёл, но ответ пришёл пустым. Так бывает, когда модель не работает с вложениями, перегружена или сработал фильтр.',
+        tips:['Нажмите «Повторить».',files?'Либо отправьте вопрос без файлов.':null,'Либо выберите другую модель.'],acts:['retry',files?'text':null,'model','close']};
+    case 'badreq':
+      return {icon:'error',title:'Сервис не принял запрос',
+        text:'«'+prov+'» не смог обработать запрос'+(files?' — возможно, из-за вложений':'')+'.',
+        tips:[files?'Попробуйте отправить без файлов.':null,'Если ошибка повторяется, выберите другую модель.'],acts:['retry',files?'text':null,'model','close']};
+    case 'session':
+      return {icon:'lock',title:'Сессия Telegram устарела',
+        text:'Приложение не смогло подтвердить, что это вы. Закройте его и откройте заново из чата с ботом.',acts:['ok']};
+    case 'forbidden':
+      return {icon:'lock',title:'Недостаточно прав',text:'Это действие доступно только администратору.',acts:['ok']};
+    case 'needtg':
+      return {icon:'bot',title:'Откройте приложение в Telegram',
+        text:'Ключи, чаты и отправка файлов привязаны к вашему аккаунту Telegram, поэтому работают только внутри Telegram. Откройте бота и запустите приложение кнопкой меню.',acts:['ok']};
+    case 'botblock':
+      return {icon:'bot',title:'Бот не может написать вам',
+        text:'Telegram не разрешил боту отправить файл в ваш чат.',
+        tips:['Откройте чат с ботом и нажмите «Запустить» (или отправьте /start).','Если вы блокировали бота — разблокируйте его.','Затем вернитесь сюда и повторите.'],acts:['retry','ok']};
+    case 'nomanaged':
+      return {icon:'lock',title:'Системное подключение отключено',
+        text:'Код быстрой настройки, по которому подключён ассистент, больше не действует: администратор мог его отозвать или удалить.',
+        tips:['Подключите свой API-ключ в настройках или запросите у администратора новый код.'],acts:['settings','close']};
+    case 'cloudserver':
+      return {icon:'warn',title:'Сервер приложения временно недоступен',text:'Это сбой на стороне приложения, не ваш. Повторите попытку чуть позже.',acts:['ok']};
+    case 'msg': {
+      const t=String((e&&e.message)||'');
+      return {icon:'error',title:'Не получилось',text:/[А-Яа-яЁё]/.test(t)?t:'Сервер не принял запрос. Попробуйте ещё раз.',acts:['ok']};
+    }
+    default:
+      return {icon:'error',title:'Что-то пошло не так',
+        text:'Не удалось выполнить действие. Попробуйте ещё раз. Если ошибка повторяется, отправьте технические подробности разработчику.',acts:['retry','close']};
+  }
+}
+
+/* ctx: {where:'chat'|'cloud'|'file'|..., title, provider, model, kinds:['image','pdf'], managed} */
+function errInfo(e,ctx){
+  ctx=ctx||{};
+  const kind=classify(e,ctx),C=copyFor(kind,ctx,e);
+  let title=C.title;
+  if(ctx.title&&GENERIC_KINDS.indexOf(kind)>=0)title=ctx.title;
+  const lines=[];
+  if(e&&e.status)lines.push('Код ответа: '+e.status);
+  if(e&&e.code)lines.push('Код ошибки: '+e.code);
+  if(ctx.provider)lines.push('Сервис: '+ctx.provider);
+  if(ctx.model)lines.push('Модель: '+ctx.model);
+  if(ctx.kinds&&ctx.kinds.length)lines.push('Вложения: '+ctx.kinds.join(', '));
+  const raw=String((e&&(e.raw||e.message))||'').slice(0,600);
+  if(raw)lines.push('Ответ сервера: '+raw);
+  lines.push('Тип: '+kind+' · '+new Date().toLocaleString('ru-RU'));
+  const chat=ctx.where==='chat';
+  let acts=(C.acts||['ok']).filter(Boolean).filter(id=>chat||(id==='retry'?!!ctx.retry:CHAT_ONLY.indexOf(id)<0));
+  if(ctx.noNav)acts=acts.filter(id=>id!=='model'&&id!=='settings'&&id!=='newchat');
+  if(!chat)acts=acts.map(id=>id==='close'?'ok':id);
+  if(ctx.retry&&!chat&&kind!=='needtg'&&kind!=='toolarge'&&acts.indexOf('retry')<0)acts.unshift('retry');   // «Повторить» вне чата (например, при сохранении файла)
+  if(ctx.retry&&!chat)acts=acts.map(id=>id==='ok'?'close':id);
+  acts=acts.filter((id,i)=>acts.indexOf(id)===i);
+  if(!acts.length)acts=['ok'];
+  return {kind:kind,title:title,short:title,
+    dialog:{icon:C.icon||'error',title:title,text:C.text,tips:C.tips,details:lines.join('\n'),
+      actions:acts.map(id=>ACT[id]),dismiss:'close'}};
+}
+/* Показывает окно ошибки; «Выбрать модель», «Настройки», «Новый чат» выполняются сразу, остальное возвращается вызывающему коду */
+async function showError(e,ctx){
+  if(e&&e.name==='AbortError')return null;
+  const info=errInfo(e,ctx);
+  const act=await notice(info.dialog);
+  if(act==='model')openPicker();
+  else if(act==='settings')openSettings();
+  else if(act==='newchat')startNew();
+  return act;
+}
+
+/* ---------- что умеет модель: фото и PDF ----------
+   Значения: true — умеет, false — не умеет, null — неизвестно (пробуем и смотрим на ответ).
+   Сначала смотрим на то, что приложение выяснило само (S.caps), затем на название модели. */
+const NOVIS_RE=/(gpt-3\.5|gpt-4(-0\d{3}|-32k|-base)?$|o1-mini|o1-preview|text-davinci|babbage|embedding|whisper|tts|dall-e|moderation|claude-(2|instant)|deepseek-(chat|reasoner|coder|v[23]|r1)|mixtral|codestral|llama-?3(\.[013])?-(?!.*vision)|llama3-|llama-2|gemma-?[12]\b|grok-3|grok-code)/i;
+const VIS_RE=/(gpt-4o|gpt-4\.1|gpt-4\.5|gpt-5|gpt-4-turbo|gpt-4-vision|chatgpt-4o|(^|[\/:-])o1($|[^-])|(^|[\/:-])o3|(^|[\/:-])o4|claude|gemini|pixtral|llava|vision|[-_]vl([-_\d.]|$)|qwen.*vl|internvl|minicpm-v|llama-?4|llama-3\.2-(11|90)b|grok-(4|2-vision|vision)|mistral-(medium|small)|mistral-large-(2512|3)|molmo|nova-(lite|pro|premier)|glm-4\.?\dv|kimi-vl|phi-4-multimodal)/i;
+function guessCaps(p,model){
+  const id=String(model||'').toLowerCase(),real=p&&p.id,t=p&&p.type;
+  let img=null,pdf=null;
+  if(t==='anthropic'){img=/claude-(2|instant)/.test(id)?false:true;pdf=img}
+  else if(t==='gemini'){img=/gemma-?[12]\b|embedding|aqa/.test(id)?false:true;pdf=img}
+  else{
+    if(NOVIS_RE.test(id))img=false;else if(VIS_RE.test(id))img=true;
+    if(real==='deepseek'){img=false}
+    if(real==='openai')pdf=img===true?true:(img===false?false:null);
+    else if(real==='openrouter')pdf=true;           // OpenRouter сам извлекает текст из PDF для любой модели
+    else if(real==='groq'||real==='xai'||real==='mistral'||real==='deepseek')pdf=false;
+    else pdf=img===false?false:null;
+  }
+  return {img:img,pdf:pdf};
+}
+const capKey=(pid,model)=>pid+'|'+model;
+function capsFor(pid,model){
+  const L=(S.caps&&S.caps[capKey(pid,model)])||{},g=guessCaps(provOf(pid),model);
+  return {img:L.img!=null?L.img:g.img,pdf:L.pdf!=null?L.pdf:g.pdf};
+}
+function capSet(pid,model,kinds,val){
+  if(!S.caps)S.caps={};
+  const k=capKey(pid,model),c=S.caps[k]||(S.caps[k]={});
+  kinds.forEach(x=>{if(x==='image')c.img=val;else if(x==='pdf')c.pdf=val});
+  save();
+}
+/* Окно «модель не умеет читать это»: возвращает 'model' | 'text' | 'force' | null */
+function unsupportedDialog(kinds,pid,model){
+  const img=kinds.indexOf('image')>=0,pdf=kinds.indexOf('pdf')>=0;
+  const what=img&&pdf?'фото и PDF':pdf?'PDF-документы':'фото';
+  return notice({icon:'img',
+    title:img&&pdf?'Модель, скорее всего, не примет фото и PDF':pdf?'Модель, скорее всего, не читает PDF':'Модель, скорее всего, не видит фото',
+    text:'«'+model+'» ('+provName(pid)+') похоже, работает только с текстом и не сможет прочитать ваши '+what+'. Что сделать?',
+    actions:[{id:'model',label:'Выбрать другую модель',kind:'pri'},{id:'text',label:'Отправить без '+(img&&pdf?'файлов':pdf?'PDF':'фото')},{id:'force',label:'Всё равно отправить',kind:'ghost'}],
+    dismiss:null});
+}
+/* Проверка перед отправкой: что приложено → поддерживает ли модель. Возвращает 'stop' или параметры отправки */
+async function mediaCheck(pid,model,atts){
+  const caps=capsFor(pid,model);
+  const kinds=[];(atts||[]).forEach(a=>{const k=kindOf(a);if(k!=='text'&&kinds.indexOf(k)<0)kinds.push(k)});
+  const bad=kinds.filter(k=>k==='image'?caps.img===false:caps.pdf===false);
+  if(!bad.length)return {};
+  const act=await unsupportedDialog(bad,pid,model);
+  if(act==='model'){openPicker();return 'stop'}
+  if(act==='text')return {noMedia:true};
+  if(act==='force')return {force:true};
+  return 'stop';
+}
+async function needModel(){
+  if(!avail().length){openConn();return}
+  const a=await notice({icon:'info',title:'Сначала выберите модель',
+    text:'Нажмите на название модели вверху экрана и выберите ту, с которой хотите общаться.',
+    actions:[{id:'pick',label:'Выбрать модель',kind:'pri'},{id:'close',label:'Закрыть',kind:'ghost'}],dismiss:'close'});
+  if(a==='pick')openPicker();
 }
 
 /* layers (back button) */
@@ -1071,7 +1479,7 @@ function md(src){
     else if((m=line.match(/^\u0000(\d+)\u0000$/))){
       close();
       const b=blocks[+m[1]];
-      out.push('<div class="code"><div class="ch"><span>'+esc(b.l||'код')+'</span><button data-copy>Копировать</button></div><pre><code>'+esc(b.c)+'</code></pre></div>');
+      out.push('<div class="code"><div class="ch"><span>'+esc(b.l||'код')+'</span><span class="chb"><button data-dlcode data-lang="'+esc(b.l||'')+'">Скачать</button><button data-copy>Копировать</button></span></div><pre><code>'+esc(b.c)+'</code></pre></div>');
     }
     else if((m=line.match(/^(#{1,4})\s+(.*)/))){
       close();out.push('<h3>'+inline(m[2])+'</h3>');
@@ -1126,6 +1534,19 @@ if(window.ResizeObserver){
   ro.observe(box);ro.observe($('#bottom'));
 }
 
+/* кнопки под ответом: копировать, скачать, повторить */
+function actHtml(m,last){
+  return '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button>'+
+    (m&&m.content?'<button data-act="dl" aria-label="Скачать ответ">'+ic('download',18)+'</button>':'')+
+    (last?'<button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button>':'')+'</div>';
+}
+/* ошибка генерации прямо в чате; подробности — в окне по кнопке */
+function errHtml(){
+  if(!errMsg)return '';
+  const h=errData&&errData.hint;
+  return '<div class="err"><div class="err-t">'+esc(errMsg)+'</div>'+(h?'<div class="err-h">'+esc(h)+'</div>':'')+
+    '<div class="err-b"><button data-act="retry">Повторить</button>'+(lastErrG?'<button data-act="errinfo">Что случилось?</button>':'')+'</div></div>';
+}
 function renderMsgs(){
   const c=cur;
 
@@ -1150,10 +1571,10 @@ function renderMsgs(){
 }
 
     const last=i===c.messages.length-1;
-    const act=(busy&&last)?'':'<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button>'+(last?'<button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button>':'')+'</div>';
+    const act=(busy&&last)?'':actHtml(m,last);
 
-    return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):'<span class="dots"><i></i><i></i><i></i></span>')+'</div>'+act+'</div>';
-  }).join('')+(errMsg?'<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>':'')+(busy?'<div class="send-space"></div>':'');
+    return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):((m.files&&m.files.length)?'':'<span class="dots"><i></i><i></i><i></i></span>'))+'</div>'+filesHtml(m)+act+'</div>';
+  }).join('')+errHtml()+(busy?'<div class="send-space"></div>':'');
 
   hydrateAtts();
   if(busy){
@@ -1228,19 +1649,24 @@ function paint(){
   requestAnimationFrame(step);
 }
 
-/* Завершает генерацию (один раз): учёт токенов, сохранение, кнопки под ответом */
+/* Завершает генерацию (один раз): учёт токенов, сохранение, кнопки под ответом, окно с ошибкой */
 function finishGen(g){
   if(g.done)return;
   g.done=true;
-  const chat=g.chat,msg=g.msg;
+  const chat=g.chat,msg=g.msg,hasFiles=!!(msg.files&&msg.files.length);
 
   if(!g.got){g.uIn=est(g.hist);g.uOut=Math.ceil(msg.content.length/3.5)}
-  if(g.uIn||g.uOut)addUsage(g.pid,g.model,g.uIn,g.uOut);
+  if((g.uIn||g.uOut)&&!(g.err&&!g.got&&!msg.content&&!hasFiles))addUsage(g.pid,g.model,g.uIn,g.uOut);   // запрос, который не дошёл, токены не тратит
 
   let removed=false;
-  if(!msg.content){
+  if(!msg.content&&!hasFiles){
     const k=chat.messages.indexOf(msg);
     if(k>=0){chat.messages.splice(k,1);removed=true}
+  }
+  const failed=!!(g.err&&!g.stopped);
+  if(failed){
+    const info=errInfo(g.err,genCtx(g));
+    errMsg=info.short;errData={hint:info.dialog.text};lastErrG=g;
   }
 
   if(G===g){G=null;busy=false;abortC=null}
@@ -1250,17 +1676,13 @@ function finishGen(g){
   renderTop();
   updateComposer();
   box.querySelector('.send-space')?.remove();
-  if(removed)renderMsgs();
-
-  const last=box.querySelector('.m.a[data-i="'+(chat.messages.length-1)+'"]');
-  if(last&&!last.querySelector('.act')){
-    last.insertAdjacentHTML('beforeend',
-      '<div class="act"><button data-act="copy" aria-label="Копировать">'+ic('copy',18)+'</button><button data-act="regen" aria-label="Повторить">'+ic('refresh',18)+'</button></div>');
+  if(removed||hasFiles)renderMsgs();
+  else{
+    const last=box.querySelector('.m.a[data-i="'+(chat.messages.length-1)+'"]');
+    if(last&&!last.querySelector('.act'))last.insertAdjacentHTML('beforeend',actHtml(msg,true));
+    if(errMsg&&!box.querySelector('.err'))box.insertAdjacentHTML('beforeend',errHtml());
   }
-  if(errMsg&&!box.querySelector('.err')){
-    box.insertAdjacentHTML('beforeend',
-      '<div class="err">'+esc(errMsg)+'<button data-act="retry">Повторить</button></div>');
-  }
+  if(failed)showGenError(g);
 }
 
 /* Остановка в любой момент: и пока идёт запрос, и пока ответ ещё печатается */
@@ -1425,9 +1847,20 @@ box.addEventListener('click',e=>{
     return;
   }
 
+  const dc=e.target.closest('[data-dlcode]');
+  if(dc){
+    const pre=dc.closest('.code').querySelector('pre');
+    saveFlow(new Blob([pre.textContent],{type:'text/plain;charset=utf-8'}),codeFileName(dc.dataset.lang),dc);
+    hap();
+    return;
+  }
+
+  const fb=e.target.closest('[data-file]');
+  if(fb){openFileSheet(fb.dataset.file,fb);return}
+
   const im=e.target.closest('img[data-att]');
   if(im){
-    const row=im.closest('.m.u');
+    const row=im.closest('.m');
     const imgs=Array.prototype.slice.call(row.querySelectorAll('img[data-att]'));
     openViewer(imgs.map(x=>x.dataset.att),Math.max(0,imgs.indexOf(im)));
     return;
@@ -1449,6 +1882,12 @@ box.addEventListener('click',e=>{
   if(a==='copy'){
     const i=+b.closest('.m').dataset.i;
     copyText(cur.messages[i].content);
+  }
+  else if(a==='dl'){
+    answerDownload(+b.closest('.m').dataset.i,b);
+  }
+  else if(a==='errinfo'){
+    if(lastErrG)showGenError(lastErrG);
   }
   else if(a==='regen'||a==='retry'){
     generate();
@@ -1517,15 +1956,42 @@ $('#btnSend').addEventListener('click',()=>{
   if(busy){stopGen();return}
   if(inp.value.trim()||pending.length)send();
 });
-$('#btnAttach').addEventListener('click',()=>$('#file').click());
+$('#btnAttach').addEventListener('click',openAttachMenu);
 
-/* ---------- вложения: фото и PDF (текстовые файлы — как раньше, в поле ввода) ---------- */
-const ATT_MAX=5,ATT_SIZE=8*1024*1024;
-const IMG_TYPES=['image/jpeg','image/png','image/webp','image/gif'];
-const isImg=t=>IMG_TYPES.indexOf(t)>=0;
+/* ---------- вложения: фото, PDF, текстовые файлы и документы Office ----------
+   Всё, что можно прочитать как текст (код, txt, csv, docx, xlsx, pptx), уходит модели обычным текстом — это работает с любой моделью.
+   Фото и PDF уходят как вложения и требуют поддержки модели. */
+const LIM={
+  files:5,                 // файлов в одном сообщении
+  img:30*MB,               // исходное фото (дальше всё равно сжимается)
+  imgKeep:1.5*MB,          // фото меньше этого размера и разрешения не пересжимаем
+  imgDim:2048,             // длинная сторона после сжатия
+  imgOut:3*MB,             // целевой размер сжатого фото
+  gif:2*MB,                // GIF больше этого превращаем в обычную картинку
+  pdf:12*MB,
+  doc:15*MB,               // исходный docx / xlsx / pptx
+  text:300*KB,             // текст одного файла (≈ 100 страниц)
+  total:12*MB,             // фото + PDF в одном сообщении (после сжатия)
+  botSend:25*MB            // файл, отправляемый через бота
+};
+const IMG_MIME={jpg:'image/jpeg',jpeg:'image/jpeg',jpe:'image/jpeg',jfif:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',heic:'image/heic',heif:'image/heif',bmp:'image/bmp',avif:'image/avif',tif:'image/tiff',tiff:'image/tiff'};
+const DIRECT_IMG=['image/jpeg','image/png','image/webp','image/gif'];
+const OFFICE_EXT=new Set(['docx','xlsx','pptx']);
+const LEGACY_EXT=new Set(['doc','xls','ppt','odt','ods','odp','pages','numbers','key','wps']);
+const AV_EXT=new Set(['mp3','wav','ogg','oga','m4a','aac','flac','opus','amr','mp4','mov','avi','mkv','webm','m4v','3gp','wmv']);
+const ARCH_EXT=new Set(['zip','rar','7z','tar','gz','tgz','bz2','xz','apk','exe','dmg','iso','msi','jar']);
+const fext=n=>{const m=/\.([a-z0-9]+)$/i.exec(n||'');return m?m[1].toLowerCase():''};
 const isPdf=t=>t==='application/pdf';
-const pending=[];            // вложения, ещё не отправленные: {id,name,type,size,blob}
-const memFiles=new Map();    // запасное хранилище, если IndexedDB недоступна
+/* вид вложения: image | pdf | text (у старых сообщений поля kind нет — определяем по типу) */
+function kindOf(a){
+  if(a&&a.kind)return a.kind;
+  const t=(a&&a.type)||'';
+  return /^image\//.test(t)?'image':isPdf(t)?'pdf':'text';
+}
+class Rej extends Error{constructor(why,x){super(why);this.why=why;if(x)Object.assign(this,x)}}
+
+const pending=[];            // вложения, ещё не отправленные: {id,name,state:'up'|'ok',kind,type,size,blob,w,h}
+const memFiles=new Map();    // копия в памяти, пока файл не записан в IndexedDB (или если она недоступна)
 const urlCache=new Map();    // id -> object URL для превью
 let dbP=null;
 function idb(){
@@ -1536,21 +2002,31 @@ function idb(){
       r.onupgradeneeded=()=>r.result.createObjectStore('files',{keyPath:'id'});
       r.onsuccess=()=>res(r.result);
       r.onerror=()=>rej(r.error);
+      r.onblocked=()=>rej(new Error('blocked'));
     }catch(e){rej(e)}
   });
   return dbP;
 }
+const readBuf=b=>b.arrayBuffer?b.arrayBuffer():new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsArrayBuffer(b)});
+const blobText=async b=>b.text?b.text():new TextDecoder().decode(await readBuf(b));
+/* В IndexedDB кладём ArrayBuffer, а не Blob: на iOS Blob в IndexedDB бывает нечитаемым после перезапуска */
 async function fileSave(id,blob){
+  memFiles.set(id,blob);
   try{
-    const db=await idb();
-    await new Promise((res,rej)=>{const t=db.transaction('files','readwrite');t.objectStore('files').put({id:id,blob:blob});t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)});
-  }catch(e){memFiles.set(id,blob)}
+    const buf=await readBuf(blob),db=await idb();
+    await new Promise((res,rej)=>{const t=db.transaction('files','readwrite');t.objectStore('files').put({id:id,buf:buf,type:blob.type||''});t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('abort'))});
+    memFiles.delete(id);
+    return true;
+  }catch(e){return false}   // файл остаётся в памяти на время сессии
 }
 async function fileGet(id){
   if(memFiles.has(id))return memFiles.get(id);
   try{
     const db=await idb();
-    return await new Promise((res,rej)=>{const q=db.transaction('files').objectStore('files').get(id);q.onsuccess=()=>res(q.result&&q.result.blob||null);q.onerror=()=>rej(q.error)});
+    const r=await new Promise((res,rej)=>{const q=db.transaction('files').objectStore('files').get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)});
+    if(!r)return null;
+    if(r.buf)return new Blob([r.buf],{type:r.type||''});
+    return r.blob||null;   // записи старого формата
   }catch(e){return null}
 }
 async function fileDel(ids){
@@ -1561,22 +2037,25 @@ async function fileDel(ids){
     await new Promise(res=>{const t=db.transaction('files','readwrite');const st=t.objectStore('files');ids.forEach(id=>st.delete(id));t.oncomplete=res;t.onerror=res;t.onabort=res});
   }catch(e){}
 }
+const msgFileIds=m=>[].concat((m.attachments||[]).map(a=>a.id),(m.files||[]).map(a=>a.id));
 async function gcFiles(){   // удаляет файлы, не привязанные ни к одному сообщению (например, не отправленные)
   try{
     const used=new Set();
-    S.chats.forEach(c=>c.messages.forEach(m=>(m.attachments||[]).forEach(a=>used.add(a.id))));
+    S.chats.forEach(c=>c.messages.forEach(m=>msgFileIds(m).forEach(id=>used.add(id))));
     const db=await idb();
     const keys=await new Promise((res,rej)=>{const q=db.transaction('files').objectStore('files').getAllKeys();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)});
     await fileDel(keys.filter(k=>!used.has(k)));
   }catch(e){}
 }
-const chatFileIds=c=>{const r=[];c.messages.forEach(m=>(m.attachments||[]).forEach(a=>r.push(a.id)));return r};
+const chatFileIds=c=>{const r=[];c.messages.forEach(m=>msgFileIds(m).forEach(id=>r.push(id)));return r};
 function getUrl(id,blob){let u=urlCache.get(id);if(!u){u=URL.createObjectURL(blob);urlCache.set(id,u)}return u}
-function mimeOf(f){
-  const t=(f.type||'').toLowerCase();if(t)return t;
-  const m=/\.([a-z0-9]+)$/i.exec(f.name||'');const e=m?m[1].toLowerCase():'';
-  return {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',pdf:'application/pdf'}[e]||'';
+function findAtt(id){
+  const scan=c=>{for(const m of c.messages){for(const a of msgFiles(m))if(a.id===id)return a}return null};
+  return (cur&&scan(cur))||S.chats.reduce((r,c)=>r||scan(c),null);
 }
+const msgFiles=m=>[].concat(m.attachments||[],m.files||[]);
+
+/* ----- фото ----- */
 function loadImg(blob){
   return new Promise((res,rej)=>{
     const u=URL.createObjectURL(blob),i=new Image();
@@ -1585,46 +2064,262 @@ function loadImg(blob){
     i.src=u;
   });
 }
-async function prepImage(f){   // большие фото уменьшаем, чтобы уложиться в лимиты API (напр. 5 МБ у Anthropic)
-  if(f.type==='image/gif')return f;
+async function decodeImg(blob){
+  if(window.createImageBitmap){try{return await createImageBitmap(blob)}catch(e){}}
+  return loadImg(blob);
+}
+async function prepImageFile(f,mime){
+  const e=fext(f.name);
+  let im;
+  try{im=await decodeImg(f.type===mime?f:new Blob([f],{type:mime}))}catch(err){throw new Rej('decode',{ext:e})}
+  const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,mx=Math.max(w,h);
+  if(!w||!h){if(im.close)im.close();throw new Rej('decode',{ext:e})}
+  const direct=DIRECT_IMG.indexOf(mime)>=0,gif=mime==='image/gif';
+  const needs=!direct||(gif?f.size>LIM.gif:(f.size>LIM.imgKeep||mx>LIM.imgDim));
+  if(!needs){if(im.close)im.close();return {kind:'image',type:mime,blob:f.type===mime?f:new Blob([f],{type:mime}),size:f.size,w:w,h:h}}
+  // сжимаем: длинная сторона до imgDim, JPEG; если вышло тяжело — ещё раз поменьше
+  let k=Math.min(1,LIM.imgDim/mx),q=.86,out=null;
   try{
-    const img=await loadImg(f),w=img.naturalWidth,h=img.naturalHeight,mx=Math.max(w,h);
-    if(f.size<=3*1024*1024&&mx<=2560)return f;
-    const k=Math.min(1,2048/mx),cv=document.createElement('canvas');
-    cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
-    const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
-    const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.88));
-    return b&&b.size<f.size?b:f;
-  }catch(e){return f}
+    for(let i=0;i<3;i++){
+      const cv=document.createElement('canvas');
+      cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
+      const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);
+      out=await new Promise(r=>cv.toBlob(r,'image/jpeg',q));
+      cv.width=cv.height=0;
+      if(!out)throw new Error('toBlob');
+      if(out.size<=LIM.imgOut)break;
+      k*=.75;q-=.08;
+    }
+  }catch(err){if(im.close)im.close();throw new Rej('decode',{ext:e})}
+  if(im.close)im.close();
+  if(direct&&!gif&&mx<=LIM.imgDim&&out.size>=f.size)return {kind:'image',type:mime,blob:f.type===mime?f:new Blob([f],{type:mime}),size:f.size,w:w,h:h};
+  return {kind:'image',type:'image/jpeg',blob:out,size:out.size,w:Math.round(w*k),h:Math.round(h*k)};
 }
-function addTextFile(f){
-  if(f.size>200*1024){toast('Файл больше 200 КБ');return}
-  const r=new FileReader();
-  r.onload=()=>{inp.value+=(inp.value?'\n\n':'')+'Файл «'+f.name+'»:\n```\n'+String(r.result)+'\n```\n';autosize();updateComposer();inp.focus()};
-  r.onerror=()=>toast('Не удалось прочитать файл');
-  r.readAsText(f);
+
+/* ----- текст ----- */
+function looksBinary(u){
+  const n=Math.min(u.length,8192);let ctl=0;
+  for(let i=0;i<n;i++){const b=u[i];if(b===0)return true;if(b<9||(b>13&&b<32&&b!==27))ctl++}
+  return n>0&&ctl/n>0.1;
 }
-async function addFiles(list){
-  for(const f of list){
-    const t=mimeOf(f);
-    if(isPdf(t)||/^image\//.test(t)){
-      if(!isPdf(t)&&!isImg(t)){toast('Формат «'+(f.name||t)+'» не поддерживается. Нужны JPEG, PNG, WebP или GIF');continue}
-      if(pending.length>=ATT_MAX){toast('Не больше '+ATT_MAX+' файлов за раз');break}
-      if(f.size>ATT_SIZE){toast('«'+(f.name||'Файл')+'» больше 8 МБ');continue}
-      let blob=f;
-      if(isImg(t))blob=await prepImage(f.type?f:new Blob([f],{type:t}));
-      if(pending.length>=ATT_MAX){toast('Не больше '+ATT_MAX+' файлов за раз');break}
-      const a={id:uid(),name:f.name||(isPdf(t)?'document.pdf':'image'),type:isPdf(t)?'application/pdf':(blob.type||t),size:blob.size,blob:blob};
-      pending.push(a);
-      fileSave(a.id,blob);
-      renderAtts();
-    }else addTextFile(f);
+const bomOf=u=>(u[0]===0xFF&&u[1]===0xFE)?'utf-16le':(u[0]===0xFE&&u[1]===0xFF)?'utf-16be':'';
+function decodeText(buf){
+  const u=new Uint8Array(buf),bom=bomOf(u);
+  if(bom)return new TextDecoder(bom).decode(u);
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(u)}catch(e){}
+  try{return new TextDecoder('windows-1251').decode(u)}catch(e){}   // старые русские .txt и .csv
+  return new TextDecoder('utf-8').decode(u);
+}
+async function prepText(f){
+  const head=new Uint8Array(await readBuf(f.slice(0,8192)));
+  if(!bomOf(head)&&looksBinary(head))throw new Rej('type');
+  if(f.size>LIM.text)throw new Rej('size',{size:f.size,max:LIM.text});
+  const txt=decodeText(await readBuf(f));
+  if(!txt.trim())throw new Rej('empty');
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  return {kind:'text',type:'text/plain',blob:blob,size:blob.size};
+}
+
+/* ----- документы Office: достаём текст прямо в браузере (docx, xlsx, pptx — это zip с XML) ----- */
+async function inflateRaw(u8){
+  const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();
+  w.write(u8);w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function unzip(buf,want){
+  const u8=new Uint8Array(buf),dv=new DataView(buf),out=new Map();
+  let e=u8.length-22;const min=Math.max(0,u8.length-65557);
+  for(;e>=min;e--)if(dv.getUint32(e,true)===0x06054b50)break;
+  if(e<min)throw new Error('zip');
+  const cnt=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);
+  const td=new TextDecoder();
+  for(let i=0;i<cnt;i++){
+    if(dv.getUint32(p,true)!==0x02014b50)throw new Error('zip');
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),usize=dv.getUint32(p+24,true);
+    const nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    const name=td.decode(u8.subarray(p+46,p+46+nl));
+    p+=46+nl+xl+cl;
+    if(!want(name))continue;
+    if(usize>40*MB)throw new Error('zip bomb');
+    const start=lho+30+dv.getUint16(lho+26,true)+dv.getUint16(lho+28,true),data=u8.subarray(start,start+csize);
+    out.set(name,method===0?data:await inflateRaw(data));
+  }
+  return out;
+}
+const XENT={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};
+const xmlDec=s=>s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(m,g)=>{
+  if(g[0]==='#'){const c=g[1]==='x'||g[1]==='X'?parseInt(g.slice(2),16):parseInt(g.slice(1),10);try{return String.fromCodePoint(c)}catch(e){return ''}}
+  return XENT[g.toLowerCase()]||m;
+});
+function docxText(files){
+  const xml=new TextDecoder().decode(files.get('word/document.xml')||new Uint8Array());
+  let out='';
+  const re=/<\/w:p>|<w:tab\/>|<w:br[^>]*\/>|<\/w:tc>|<\/w:tr>|<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/g;let m;
+  while((m=re.exec(xml))){
+    const s=m[0];
+    if(m[1]!==undefined)out+=xmlDec(m[1]);
+    else if(s==='</w:p>'||s==='</w:tr>'||s.indexOf('<w:br')===0)out+='\n';
+    else out+='\t';
+  }
+  return out.replace(/\n{3,}/g,'\n\n');
+}
+function pptxText(files){
+  const td=new TextDecoder(),names=Array.from(files.keys()).sort((a,b)=>parseInt(a.replace(/\D+/g,''))-parseInt(b.replace(/\D+/g,'')));
+  return names.map((n,i)=>{
+    let t='';const re=/<\/a:p>|<a:t(?:\s[^>]*)?>([^<]*)<\/a:t>/g;let m;const xml=td.decode(files.get(n));
+    while((m=re.exec(xml)))t+=m[1]!==undefined?xmlDec(m[1]):'\n';
+    return '--- Слайд '+(i+1)+' ---\n'+t.replace(/\n{2,}/g,'\n').trim();
+  }).join('\n\n');
+}
+function xlsxText(files){
+  const td=new TextDecoder(),get=n=>files.has(n)?td.decode(files.get(n)):'';
+  const ss=[];
+  for(const m of get('xl/sharedStrings.xml').matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g))
+    ss.push(xmlDec(Array.from(m[1].matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g),x=>x[1]).join('')));
+  const rel={};
+  for(const m of get('xl/_rels/workbook.xml.rels').matchAll(/<Relationship\b[^>]*>/g)){
+    const id=/\bId="([^"]+)"/.exec(m[0]),tg=/\bTarget="([^"]+)"/.exec(m[0]);
+    if(id&&tg)rel[id[1]]=tg[1];
+  }
+  const sheets=[];
+  for(const m of get('xl/workbook.xml').matchAll(/<sheet\b[^>]*>/g)){
+    const n=/\bname="([^"]*)"/.exec(m[0]),r=/\br:id="([^"]+)"/.exec(m[0]);
+    let path=r&&rel[r[1]]?rel[r[1]].replace(/^\//,''):'';
+    if(path&&path.indexOf('xl/')!==0)path='xl/'+path;
+    if(n)sheets.push({name:xmlDec(n[1]),path:path});
+  }
+  if(!sheets.length)Array.from(files.keys()).filter(n=>/^xl\/worksheets\//.test(n)).sort().forEach((n,i)=>sheets.push({name:'Лист '+(i+1),path:n}));
+  const col=s=>{let n=0;for(const ch of s)n=n*26+ch.charCodeAt(0)-64;return n-1};
+  return sheets.map(sh=>{
+    const xml=get(sh.path);if(!xml)return '';
+    const lines=[];
+    for(const rm of xml.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)){
+      const row=[];
+      for(const cm of rm[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+        const at=cm[1],inner=cm[2]||'',ref=/\br="([A-Z]+)\d+"/.exec(at),t=/\bt="(\w+)"/.exec(at),v=/<v>([\s\S]*?)<\/v>/.exec(inner);
+        let val='';
+        if(t&&t[1]==='s'&&v)val=ss[+v[1]]||'';
+        else if(t&&t[1]==='inlineStr')val=xmlDec(Array.from(inner.matchAll(/<t[^>]*>([^<]*)<\/t>/g),x=>x[1]).join(''));
+        else if(t&&t[1]==='b')val=v&&v[1]==='1'?'TRUE':'FALSE';
+        else if(v)val=xmlDec(v[1]);
+        const c=ref?col(ref[1]):row.length;
+        if(c<300)row[c]=val;
+      }
+      const line=Array.from(row,x=>x==null?'':x).join('\t').replace(/\t+$/,'');
+      if(line.trim())lines.push(line);
+    }
+    return lines.length?'## Лист «'+sh.name+'»\n'+lines.join('\n'):'';
+  }).filter(Boolean).join('\n\n');
+}
+async function prepOffice(f,e){
+  if(f.size>LIM.doc)throw new Rej('size',{size:f.size,max:LIM.doc});
+  if(typeof DecompressionStream==='undefined')throw new Rej('nodecomp');
+  let txt;
+  try{
+    const want=e==='docx'?n=>n==='word/document.xml'
+      :e==='xlsx'?n=>/^xl\/(sharedStrings\.xml|workbook\.xml|_rels\/workbook\.xml\.rels|worksheets\/[^/]+\.xml)$/.test(n)
+      :n=>/^ppt\/slides\/slide\d+\.xml$/.test(n);
+    const files=await unzip(await readBuf(f),want);
+    txt=e==='docx'?docxText(files):e==='xlsx'?xlsxText(files):pptxText(files);
+  }catch(err){throw new Rej('office')}
+  txt=txt.replace(/[ \t]+\n/g,'\n').trim();
+  if(!txt)throw new Rej('officeEmpty');
+  let warn='';
+  if(txt.length>LIM.text){txt=txt.slice(0,LIM.text)+'\n\n[…текст обрезан: документ слишком большой]';warn='Документ очень большой: модель получит только его начало (около '+fmtSize(LIM.text)+' текста).'}
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  return {kind:'text',type:'text/plain',blob:blob,size:blob.size,from:e,warn:warn};
+}
+
+/* ----- общий разбор файла ----- */
+async function prepareFile(f){
+  const name=f.name||'',e=fext(name),t=(f.type||'').toLowerCase();
+  if(!f.size)throw new Rej('empty');
+  if((/^image\//.test(t)&&t!=='image/svg+xml')||(IMG_MIME[e]&&(!t||t==='application/octet-stream'))){
+    if(f.size>LIM.img)throw new Rej('size',{size:f.size,max:LIM.img});
+    return prepImageFile(f,(t==='image/jpg'?'image/jpeg':t)||IMG_MIME[e]);
+  }
+  if(t==='application/pdf'||e==='pdf'){
+    if(f.size>LIM.pdf)throw new Rej('size',{size:f.size,max:LIM.pdf});
+    const head=new Uint8Array(await readBuf(f.slice(0,1024)));
+    if(!String.fromCharCode.apply(null,head).includes('%PDF-'))throw new Rej('badpdf');
+    return {kind:'pdf',type:'application/pdf',blob:f.type==='application/pdf'?f:new Blob([f],{type:'application/pdf'}),size:f.size};
+  }
+  if(OFFICE_EXT.has(e))return prepOffice(f,e);
+  if(LEGACY_EXT.has(e))throw new Rej('legacy',{ext:e});
+  if(/^(audio|video)\//.test(t)||AV_EXT.has(e))throw new Rej('media');
+  if(ARCH_EXT.has(e)||/zip|rar|7z|tar|gzip/.test(t))throw new Rej('archive');
+  return prepText(f);
+}
+
+const REJ_TITLE={empty:'Файл пустой',size:'Файл слишком большой',count:'Слишком много файлов',total:'Слишком большой общий размер',legacy:'Этот формат не поддерживается',media:'Аудио и видео не поддерживаются',archive:'Архивы не поддерживаются',type:'Этот файл не поддерживается',badpdf:'Не удалось открыть PDF',decode:'Не удалось открыть фото',office:'Не удалось открыть документ',officeEmpty:'В документе нет текста',nodecomp:'Документ не открывается на этом устройстве',read:'Не удалось прочитать файл'};
+function rejText(r){
+  const n='«'+(r.name||'файл')+'»';
+  switch(r.why){
+    case 'empty':return n+' пустой или ещё не скачан на устройство. Если файл лежит в облаке (Google Диск, iCloud), сначала скачайте его на телефон.';
+    case 'size':return n+' слишком большой: '+fmtSize(r.size)+', а можно до '+fmtSize(r.max)+'.';
+    case 'count':return n+' не добавлен: к одному сообщению можно приложить не больше '+LIM.files+' файлов.';
+    case 'total':return n+' не добавлен: фото и PDF в одном сообщении вместе могут весить не больше '+fmtSize(LIM.total)+'.';
+    case 'legacy':return n+' — старый формат (.'+r.ext+'), его нельзя прочитать. Сохраните файл как .docx, .xlsx, .pptx или PDF.';
+    case 'media':return n+' — аудио и видео пока нельзя отправить модели.';
+    case 'archive':return n+' — архив. Распакуйте его и приложите нужные файлы по отдельности.';
+    case 'type':return n+' — неизвестный или двоичный формат, прочитать его нельзя.';
+    case 'badpdf':return n+' повреждён или это не PDF-документ.';
+    case 'decode':return n+' не удалось открыть: файл повреждён или формат'+(r.ext?' .'+r.ext:'')+' не поддерживается. Попробуйте JPEG или PNG.';
+    case 'office':return n+' не удалось прочитать: файл повреждён или защищён паролем.';
+    case 'officeEmpty':return n+': текст в документе не найден (возможно, там только картинки). Сохраните его как PDF и приложите PDF.';
+    case 'nodecomp':return n+': это устройство не умеет распаковывать документы. Сохраните как PDF или вставьте текст в сообщение.';
+    default:return n+' не удалось прочитать. Если файл лежит в облаке, скачайте его на устройство и попробуйте снова.';
   }
 }
+async function attachProblems(rej,warn){
+  if(rej.length){
+    const one=rej.length===1;
+    const unsupported=rej.some(r=>['type','media','archive','legacy'].indexOf(r.why)>=0);
+    await notice({icon:'file',
+      title:one?(REJ_TITLE[rej[0].why]||'Не удалось добавить файл'):'Не все файлы удалось добавить',
+      text:one?rejText(rej[0]):'Эти файлы не добавлены:',
+      list:one?null:rej.map(rejText),
+      tips:[unsupported?'Подходят: фото (JPEG, PNG, WebP, GIF), PDF, документы Word, Excel и PowerPoint (.docx, .xlsx, .pptx), а также текстовые файлы и код.':null,
+        rej.some(r=>r.why==='size'||r.why==='total')?'Сожмите файл или разделите его на части.':null,
+        rej.some(r=>r.why==='count')?'Отправьте остальные файлы следующим сообщением.':null],
+      actions:[{id:'ok',label:'Понятно',kind:'pri'}]});
+  }
+  for(const w of warn)await infoBox('Файл добавлен с оговоркой','«'+w.name+'»: '+w.msg);
+}
+async function addFiles(list){
+  const rej=[],warn=[];
+  for(const f of Array.from(list)){
+    const nm=f.name||'файл';
+    if(pending.length>=LIM.files){rej.push({name:nm,why:'count'});continue}
+    const slot={id:uid(),name:nm,state:'up',kind:'file',type:'',size:f.size||0};
+    pending.push(slot);renderAtts();
+    try{
+      const r=await prepareFile(f);
+      if(pending.indexOf(slot)<0)continue;                      // пользователь убрал файл, пока он обрабатывался
+      if(r.kind!=='text'){
+        const used=pending.reduce((s,a)=>s+(a!==slot&&a.state==='ok'&&a.kind!=='text'?a.size:0),0);
+        if(used+r.size>LIM.total)throw new Rej('total');
+      }
+      Object.assign(slot,{kind:r.kind,type:r.type,blob:r.blob,size:r.size,w:r.w,h:r.h,from:r.from,state:'ok'});
+      if(r.warn)warn.push({name:nm,msg:r.warn});
+      await fileSave(slot.id,r.blob);
+    }catch(e){
+      const i=pending.indexOf(slot);if(i>=0)pending.splice(i,1);
+      rej.push({name:nm,why:(e&&e.why)||'read',size:e&&e.size,max:e&&e.max,ext:e&&e.ext});
+      if(!(e&&e.why))console.warn('attach failed',e);
+    }
+    renderAtts();
+  }
+  if(rej.length||warn.length)await attachProblems(rej,warn);
+}
 function renderAtts(){
-  $('#atts').innerHTML=pending.map(a=>'<div class="att'+(isPdf(a.type)?' pdf':'')+'">'+
-    (isImg(a.type)?'<img alt="" src="'+getUrl(a.id,a.blob)+'">':ic('file',22)+'<span>'+esc(a.name)+'</span>')+
-    '<button class="x" data-rm="'+esc(a.id)+'" aria-label="Убрать файл">'+ic('x',12)+'</button></div>').join('');
+  $('#atts').innerHTML=pending.map(a=>{
+    const thumb=a.kind==='image'&&a.blob;
+    return '<div class="att'+(thumb?'':' pdf')+(a.state==='up'?' up':'')+'">'+
+      (thumb?'<img alt="" src="'+getUrl(a.id,a.blob)+'">'
+        :ic('file',22)+'<div class="an"><span>'+esc(a.name)+'</span><small>'+(a.state==='up'?'Обработка…':fmtSize(a.size))+'</small></div>')+
+      '<button class="x" data-rm="'+esc(a.id)+'" aria-label="Убрать файл">'+ic('x',12)+'</button></div>';
+  }).join('');
   updateComposer();
 }
 $('#atts').addEventListener('click',e=>{
@@ -1632,15 +2327,63 @@ $('#atts').addEventListener('click',e=>{
   const i=pending.findIndex(a=>a.id===b.dataset.rm);if(i<0)return;
   const a=pending.splice(i,1)[0];fileDel([a.id]);renderAtts();hap();
 });
-$('#file').addEventListener('change',e=>{
-  const list=Array.prototype.slice.call(e.target.files||[]);e.target.value='';
-  if(list.length)addFiles(list);
+/* Меню «+»: без списка расширений в accept — в WebView Telegram на Android такой список ломает окно выбора файла */
+function onPickFiles(e){
+  const el=e.target,list=Array.prototype.slice.call(el.files||[]);
+  if(!list.length)return;
+  addFiles(list).then(()=>{try{el.value=''}catch(x){}},()=>{try{el.value=''}catch(x){}});
+}
+$('#file').addEventListener('change',onPickFiles);
+$('#fileImg').addEventListener('change',onPickFiles);
+/* вставка из буфера (Ctrl+V с картинкой) и перетаскивание файлов — на компьютере */
+inp.addEventListener('paste',e=>{
+  const fl=e.clipboardData&&e.clipboardData.files;
+  if(fl&&fl.length){e.preventDefault();addFiles(Array.prototype.slice.call(fl))}
 });
+const hasFiles=e=>e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')>=0;
+document.addEventListener('dragover',e=>{if(hasFiles(e)){e.preventDefault();$('#app').classList.add('drop')}});
+document.addEventListener('dragleave',e=>{if(!e.relatedTarget)$('#app').classList.remove('drop')});
+document.addEventListener('drop',e=>{
+  $('#app').classList.remove('drop');
+  if(!hasFiles(e))return;
+  e.preventDefault();
+  addFiles(Array.prototype.slice.call(e.dataTransfer.files||[]));
+});
+
+/* ----- маленькое меню возле кнопки ----- */
+function sheet(anchor,items,onPick){
+  return new Promise(res=>{
+    const d=$('#dlg');
+    if(d.classList.contains('on')){res(null);return}
+    d.innerHTML='<div class="dcard" style="padding:10px">'+items.map(it=>
+      '<button class="pi row" data-r="'+esc(it.id)+'"'+(it.danger?' style="color:#ff8a8a"':'')+'>'+ic(it.icon,18)+'<span>'+esc(it.label)+'</span></button>').join('')+'</div>';
+    d.classList.add('on');positionContextMenu(anchor);
+    const done=v=>{d.classList.remove('on','context');d.innerHTML='';d.onclick=null;popLayer(cancel);res(v)};
+    const cancel=()=>done(null);pushLayer(cancel);
+    d.onclick=e=>{
+      if(e.target===d)return done(null);
+      const b=e.target.closest('[data-r]');if(!b)return;
+      if(onPick)onPick(b.dataset.r);      // синхронно, внутри нажатия: иначе iOS не откроет выбор файла
+      done(b.dataset.r);
+    };
+  });
+}
+function openAttachMenu(){
+  sheet($('#btnAttach'),[{id:'img',icon:'img',label:'Фото или картинка'},{id:'file',icon:'file',label:'Файл или документ'}],
+    id=>{(id==='img'?$('#fileImg'):$('#file')).click()});
+}
+
+/* ----- вложения в сообщениях и файлы, которые вернула модель ----- */
+const fileBtn=a=>'<button class="ufile" data-file="'+esc(a.id)+'">'+ic('file',18)+'<span>'+esc(a.name)+'</span>'+(a.size?'<small>'+fmtSize(a.size)+'</small>':'')+'</button>';
 function attHtml(m){
   if(!m.attachments||!m.attachments.length)return '';
-  return '<div class="uatts">'+m.attachments.map(a=>isImg(a.type)
-    ?'<img class="uimg" data-att="'+esc(a.id)+'" alt="'+esc(a.name)+'">'
-    :'<div class="ufile">'+ic('file',18)+'<span>'+esc(a.name)+'</span></div>').join('')+'</div>';
+  return '<div class="uatts">'+m.attachments.map(a=>kindOf(a)==='image'
+    ?'<img class="uimg" data-att="'+esc(a.id)+'" alt="'+esc(a.name)+'">':fileBtn(a)).join('')+'</div>';
+}
+function filesHtml(m){
+  if(!m.files||!m.files.length)return '';
+  return '<div class="afiles">'+m.files.map(a=>kindOf(a)==='image'
+    ?'<img class="aimg" data-att="'+esc(a.id)+'" alt="'+esc(a.name)+'">':fileBtn(a)).join('')+'</div>';
 }
 function hydrateAtts(){
   box.querySelectorAll('img[data-att]').forEach(async im=>{
@@ -1648,30 +2391,148 @@ function hydrateAtts(){
     const id=im.dataset.att;let u=urlCache.get(id);
     if(!u){const b=await fileGet(id);if(b)u=getUrl(id,b)}
     if(u)im.src=u;
-    else if(im.isConnected)im.outerHTML='<div class="ufile">'+ic('file',18)+'<span>'+esc(im.alt||'Изображение')+'</span></div>';
+    else if(im.isConnected)im.outerHTML=fileBtn({id:id,name:im.alt||'Изображение'});
   });
 }
+
+/* ---------- скачивание и «отдача» файлов ----------
+   В мобильных клиентах Telegram обычная ссылка «скачать» не работает, поэтому порядок такой:
+   1) системное меню «Поделиться / Сохранить в Файлы», если оно есть;
+   2) отправка файла ботом в личный чат (универсально, работает во всех клиентах Telegram);
+   3) обычная загрузка браузера (компьютер, веб-версия). */
+const safeName=n=>String(n||'file').replace(/[\\\/:*?"<>|\u0000-\u001f]+/g,'_').replace(/^\.+/,'').slice(0,120)||'file';
+const dlName=a=>a.from?a.name.replace(/\.[^.]+$/,'')+'.txt':a.name;
+function anchorDownload(blob,name){
+  const u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000);
+}
+async function sendFileToBot(blob,name){
+  if(!tg||!tg.initData)throw needTg();
+  if(blob.size>LIM.botSend){const er=new Error('too large');er.cloud=true;er.status=413;er.raw='Файл '+fmtSize(blob.size)+', лимит '+fmtSize(LIM.botSend);throw er}
+  const fd=new FormData();fd.append('file',blob,name);
+  let r;
+  try{r=await fetch(CLOUD_API+'/files/send',{method:'POST',headers:{'X-Telegram-Init-Data':tg.initData},body:fd})}
+  catch(e){throw new TypeError('network')}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw cloudErr(r,j);
+}
+async function deliverFile(blob,name,mode){
+  const plat=(tg&&tg.platform)||'unknown',inTg=!!(tg&&tg.initData);
+  if(mode==='bot'){await sendFileToBot(blob,name);return 'bot'}
+  const mobile=/^(ios|macos|android|android_x)$/.test(plat);
+  if(mobile){
+    try{
+      const file=new File([blob],name,{type:blob.type||'application/octet-stream'});
+      if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return 'shared'}
+    }catch(e){if(e&&e.name==='AbortError')return 'cancel'}
+    if(inTg){await sendFileToBot(blob,name);return 'bot'}
+  }
+  anchorDownload(blob,name);
+  return 'saved';
+}
+async function saveFlow(blob,name,anchor,mode){
+  name=safeName(name);
+  const plat=(tg&&tg.platform)||'unknown',inTg=!!(tg&&tg.initData);
+  // в Telegram на компьютере обычная загрузка может не сработать — даём выбор
+  if(!mode&&inTg&&anchor&&!/^(ios|macos|android|android_x|weba|webk)$/.test(plat)){
+    const v=await sheet(anchor,[{id:'dl',icon:'download',label:'Скачать на компьютер'},{id:'bot',icon:'send',label:'Прислать в чат с ботом'}]);
+    if(!v)return;
+    mode=v==='bot'?'bot':'';
+  }
+  try{
+    const r=await deliverFile(blob,name,mode);
+    if(r==='bot'){
+      const a=await notice({icon:'ok',title:'Файл отправлен в Telegram',
+        text:'Мы прислали «'+name+'» вам в чат с ботом. Откройте переписку с ботом и нажмите на файл, чтобы сохранить или открыть его.',
+        actions:[{id:'ok',label:'Понятно',kind:'pri'},{id:'chat',label:'Перейти в чат с ботом'}],dismiss:'ok'});
+      if(a==='chat'){try{tg.close()}catch(e){}}
+    }else if(r==='saved')toast('Загрузка файла началась');
+  }catch(e){
+    const act=await showError(e,{where:'file',retry:true,title:'Не удалось сохранить файл'});
+    if(act==='retry')return saveFlow(blob,name,anchor,mode);
+  }
+}
+async function downloadAtt(a,anchor,mode){
+  const b=await fileGet(a.id);
+  if(!b){await infoBox('Файл недоступен','«'+a.name+'» больше не хранится на этом устройстве. Такое бывает, если память приложения очистили. Приложите файл заново.');return}
+  return saveFlow(b,dlName(a),anchor,mode);
+}
+async function openFileSheet(id,anchor){
+  const a=findAtt(id);if(!a)return;
+  const items=[{id:'dl',icon:'download',label:'Скачать'}];
+  if(tg&&tg.initData)items.push({id:'bot',icon:'send',label:'Прислать в чат с ботом'});
+  if(kindOf(a)==='text')items.push({id:'copy',icon:'copy',label:'Скопировать текст'});
+  const v=await sheet(anchor,items);
+  if(v==='dl')downloadAtt(a,null);
+  else if(v==='bot')downloadAtt(a,null,'bot');
+  else if(v==='copy'){const b=await fileGet(a.id);if(b)copyText(await blobText(b))}
+}
+
+/* код из ответа модели — в файл */
+const LANG_EXT={python:'py',py:'py',javascript:'js',js:'js',typescript:'ts',ts:'ts',tsx:'tsx',jsx:'jsx',json:'json',html:'html',css:'css',scss:'scss',bash:'sh',sh:'sh',shell:'sh',zsh:'sh',sql:'sql',java:'java',kotlin:'kt',swift:'swift',c:'c',cpp:'cpp','c++':'cpp',csharp:'cs','c#':'cs',cs:'cs',go:'go',golang:'go',rust:'rs',rs:'rs',ruby:'rb',php:'php',yaml:'yml',yml:'yml',xml:'xml',markdown:'md',md:'md',toml:'toml',ini:'ini',csv:'csv',lua:'lua',r:'r',dart:'dart',scala:'scala',powershell:'ps1',ps1:'ps1',diff:'diff',tex:'tex',latex:'tex',text:'txt',txt:'txt',plaintext:'txt',svg:'svg',dockerfile:'Dockerfile',makefile:'Makefile'};
+function codeFileName(lang){
+  lang=String(lang||'').trim();
+  if(/^[\w.-]+\.[A-Za-z0-9]{1,8}$/.test(lang))return lang;     // ```main.py
+  const e=LANG_EXT[lang.toLowerCase()];
+  if(e==='Dockerfile'||e==='Makefile')return e;
+  return 'code.'+(e||'txt');
+}
+/* ответ целиком — в файл */
+const plainMd=s=>String(s).replace(/```[\w+#.-]*[ \t]*\n?([\s\S]*?)```/g,'$1').replace(/^#{1,6}\s+/gm,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/(^|[^*\w])\*([^*\n]+)\*/g,'$1$2').replace(/`([^`]+)`/g,'$1').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'$1 ($2)');
+async function answerDownload(i,anchor){
+  const m=cur.messages[i];if(!m||!m.content)return;
+  const v=await sheet(anchor,[{id:'txt',icon:'file',label:'Текстовый файл (.txt)'},{id:'md',icon:'code',label:'Markdown (.md)'},{id:'html',icon:'lang',label:'Веб-страница (.html)'}]);
+  if(!v)return;
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const base='Ответ ИИ '+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+'-'+p(d.getMinutes());
+  let blob;
+  if(v==='md')blob=new Blob([m.content],{type:'text/markdown;charset=utf-8'});
+  else if(v==='html'){
+    const body=md(m.content).replace(/<span class="chb">[\s\S]*?<\/span>/g,'');
+    blob=new Blob(['<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ответ ИИ</title><style>body{font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#111}pre{background:#f4f4f7;padding:12px;border-radius:10px;overflow:auto}code{background:#f4f4f7;padding:1px 5px;border-radius:5px}.ch{font-size:12px;color:#666;margin-bottom:4px}table{border-collapse:collapse}td,th{border-bottom:1px solid #ddd;padding:6px 10px;text-align:left}</style></head><body>'+body+'</body></html>'],{type:'text/html;charset=utf-8'});
+  }else blob=new Blob([plainMd(m.content)],{type:'text/plain;charset=utf-8'});
+  saveFlow(blob,base+'.'+v,anchor);
+}
+
+/* файлы, которые вернула модель (например, картинки от моделей с генерацией изображений) */
+const OUT_EXT={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif','application/pdf':'pdf','text/plain':'txt'};
+function b64ToBlob(b64,mime){const bin=atob(b64),n=bin.length,u=new Uint8Array(n);for(let i=0;i<n;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime})}
+function addOutFile(g,mime,b64){
+  mime=String(mime||'application/octet-stream').toLowerCase();
+  if(!OUT_EXT[mime])return;                       // принимаем только безопасные типы: картинки, PDF, текст
+  const blob=b64ToBlob(b64,mime),id=uid(),msg=g.msg;
+  const n=(msg.files||[]).length+1,img=mime.indexOf('image/')===0;
+  const a={id:id,name:(img?'image':'file')+'-'+n+'.'+OUT_EXT[mime],type:mime,kind:img?'image':(isPdf(mime)?'pdf':'text'),size:blob.size};
+  (msg.files||(msg.files=[])).push(a);
+  g.saves.push(fileSave(id,blob));
+}
+
 function dictate(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){toast('Голосовой ввод недоступен в этом клиенте');return}
+  if(!SR){infoBox('Голосовой ввод недоступен','Этот клиент Telegram не поддерживает диктовку. Напечатайте сообщение или используйте микрофон на клавиатуре телефона.');return}
   if(rec){rec.stop();return}
   rec=new SR();rec.lang='ru-RU';rec.interimResults=true;
   const base=inp.value;
   rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=(base?base+' ':'')+t;autosize();updateComposer()};
   rec.onend=()=>{rec=null;$('#btnMic').classList.remove('on')};
-  rec.onerror=()=>toast('Не удалось включить микрофон');
+  rec.onerror=()=>warnBox('Не удалось включить микрофон','Разрешите доступ к микрофону в настройках телефона или используйте диктовку на клавиатуре.');
   try{rec.start();$('#btnMic').classList.add('on')}catch(e){rec=null}
 }
 
 /* ---------- sending ---------- */
-function send(){
-  const text=inp.value.trim();if((!text&&!pending.length)||busy)return;
-  if(!cur.model||!avail().includes(cur.model)){
-    if(avail().length){toast('Выберите модель');openPicker()}else openConn();
-    return;
-  }
-  const atts=pending.splice(0).map(a=>({id:a.id,name:a.name,type:a.type,size:a.size}));
-  renderAtts();
+async function send(){
+  if(busy)return;
+  const text=inp.value.trim();
+  if(pending.some(a=>a.state==='up')){toast('Подождите: файл ещё обрабатывается');return}
+  const ready=pending.filter(a=>a.state==='ok');
+  if(!text&&!ready.length)return;
+  if(!cur.model||!avail().includes(cur.model)){await needModel();return}
+  const pm=splitM(cur.model);
+  const chk=await mediaCheck(pm[0],pm[1],ready);     // умеет ли модель читать приложенное
+  if(chk==='stop'||busy)return;
+  const atts=ready.map(a=>({id:a.id,name:a.name,type:a.type,kind:a.kind,size:a.size,from:a.from}));
+  pending.splice(0);renderAtts();
   const um={role:'user',content:text,timestamp:Date.now()};
   if(atts.length)um.attachments=atts;
   cur.messages.push(um);
@@ -1679,37 +2540,47 @@ function send(){
   if(S.chats.indexOf(cur)<0)S.chats.unshift(cur);
   cur.updated=Date.now();S.lastModel=cur.model;save();
   inp.value='';autosize();errMsg='';hap();
-  generate();
+  generate(Object.assign({checked:true},chk));
 }
 function est(hist){let n=sysPrompt().length;hist.forEach(m=>n+=m.content.length);return Math.ceil(n/3.5)}
 function b64(blob){
   return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
 }
-/* Превращает историю в нейтральный вид {role,text,files:[{type,data}]}; сообщения без вложений не меняются */
-async function wireHist(hist,kind,limitMb){
-  let total=0;const out=[];
+/* Превращает историю в нейтральный вид {role,text,files:[{type,kind,data,name}]}.
+   Текстовые файлы вставляются в текст сообщения; фото и PDF — как вложения. Если запрос получается слишком тяжёлым,
+   вложения убираются из самых старых сообщений (последнее сообщение не трогаем). */
+async function wireHist(hist,o){
+  o=o||{};
+  const limit=(o.limitMb||24)*MB;
+  let lastU=-1;for(let i=hist.length-1;i>=0;i--)if(hist[i].role==='user'){lastU=i;break}
+  const out=[],missing=[],dropped=[];
   for(let i=0;i<hist.length;i++){
     const m=hist[i],atts=m.attachments||[];
     if(m.role!=='user'||!atts.length){out.push({role:m.role,text:m.content,files:[]});continue}
-    const files=[];let note='';
+    let text=m.content||'';const files=[],notes=[];
     for(const a of atts){
-      const b=await fileGet(a.id);
-      if(!b){note+='\n[Вложение «'+a.name+'» недоступно]';continue}
-      const d=await b64(b);total+=d.length;files.push({type:a.type,data:d,name:a.name});
+      const k=kindOf(a),b=await fileGet(a.id);
+      if(!b){missing.push({name:a.name,last:i===lastU});notes.push('[Файл «'+a.name+'» недоступен]');continue}
+      if(k==='text'){text+='\n\n<attached_file name="'+String(a.name).replace(/"/g,"'")+'">\n'+await blobText(b)+'\n</attached_file>';continue}
+      if(o.skip&&o.skip(a,i===lastU)){notes.push('[К сообщению '+(k==='pdf'?'прикладывался PDF-документ':'прикладывалось изображение')+' «'+a.name+'», но модель не может его просмотреть]');continue}
+      files.push({type:a.type,kind:k,data:await b64(b),name:a.name});
     }
-    out.push({role:'user',text:(m.content+note).trim(),files:files});
+    out.push({role:'user',text:(text+(notes.length?'\n'+notes.join('\n'):'')).trim(),files:files,last:i===lastU});
   }
-  if(limitMb&&total>limitMb*1024*1024)throw new Error('Слишком большой общий размер вложений в этом чате (лимит API около '+limitMb+' МБ). Начните новый чат или удалите часть файлов.');
+  const size=()=>out.reduce((s,m)=>s+m.files.reduce((t,f)=>t+f.data.length,0),0);
+  let total=size();
+  for(let i=0;i<out.length&&total>limit;i++){
+    const m=out[i];if(!m.files.length||m.last)continue;
+    m.text=(m.text+'\n'+m.files.map(f=>'[Вложение «'+f.name+'» не передано повторно: слишком большой диалог]').join('\n')).trim();
+    m.files.forEach(f=>dropped.push(f.name));m.files=[];total=size();
+  }
+  if(total>limit){const er=new Error('too large');er.kind='toolarge';er.raw='Вложения занимают '+fmtSize(total)+', лимит запроса около '+fmtSize(limit);throw er}
+  out.info={missing:missing,dropped:dropped};
   return out;
 }
 function addUsage(pid,model,i,o){
   const c=S.providers[pid];c.used.in+=i;c.used.out+=o;
   const b=c.by[model]||(c.by[model]={in:0,out:0});b.in+=i;b.out+=o;save();
-}
-async function apiErr(res){
-  let m=res.status+' '+res.statusText;
-  try{const j=await res.json();const e=j.error||j;m=res.status+': '+(e.message||(typeof e==='string'?e:JSON.stringify(e)))}catch(e){}
-  return new Error(m);
 }
 async function sse(res,onData){
   const r=res.body.getReader(),d=new TextDecoder();let buf='';
@@ -1729,66 +2600,105 @@ async function sse(res,onData){
     }
   }
 }
-async function generate(){
+const genCtx=g=>({where:'chat',provider:provName(g.pid),model:g.model,kinds:g.kinds,managed:g.pid==='managed'});
+/* Окно с ошибкой генерации и действиями: повторить, без файлов, другая модель… */
+async function showGenError(g){
+  const info=errInfo(g.err,genCtx(g));
+  if(info.kind==='nofiles'&&g.kinds.length)capSet(g.pid,g.model,g.kinds,false);   // запоминаем: эта модель не принимает такие файлы
+  const act=await notice(info.dialog);
+  const o=g.opts||{};
+  if(act==='model')openPicker();
+  else if(act==='settings')openSettings();
+  else if(act==='newchat')startNew();
+  else if(act==='retry')generate({force:o.force});
+  else if(act==='text')generate({noMedia:true});
+  else if(act==='noold')generate({noOld:true,force:o.force});
+}
+async function generate(opts){
+  opts=opts||{};
   if(busy)return;
   const chat=cur;
-  while(chat.messages.length&&chat.messages[chat.messages.length-1].role==='assistant')chat.messages.pop();
-  if(!chat.messages.length)return;
+  let n=chat.messages.length;while(n&&chat.messages[n-1].role==='assistant')n--;
+  if(!n)return;
   const pm=splitM(chat.model),pid=pm[0],model=pm[1];
-  if(!pid||!isAvail(pid)){if(avail().length){toast('Выберите модель');openPicker()}else openConn();return}
-  const p=provOf(pid),c=S.providers[pid],mg=pid==='managed';
+  if(!pid||!isAvail(pid)){await needModel();return}
+  if(!opts.checked&&!opts.noMedia&&!opts.force){
+    const chk=await mediaCheck(pid,model,chat.messages[n-1].attachments||[]);
+    if(chk==='stop'||busy||cur!==chat)return;
+    Object.assign(opts,chk);
+  }
+  while(chat.messages.length&&chat.messages[chat.messages.length-1].role==='assistant')chat.messages.pop();
+  const p=provOf(pid),c=S.providers[pid],mg=pid==='managed',caps=capsFor(pid,model);
   const hist=chat.messages.filter(m=>m.content||(m.attachments&&m.attachments.length)).map(m=>({role:m.role,content:m.content||'',attachments:m.attachments}));
   const msg={role:'assistant',content:'',model:chat.model};
   chat.messages.push(msg);
   const abort=new AbortController();
-  const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,
+  const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,opts:opts,kinds:[],saves:[],err:null,
     got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
-  G=g;busy=true;abortC=abort;errMsg='';stick=true;anchored=true;renderAll();anchorSoon();
+  G=g;busy=true;abortC=abort;errMsg='';errData=null;stick=true;anchored=true;renderAll();anchorSoon();
   const signal=abort.signal;
   const base=mg?'':(c.base||p.base).replace(/\/+$/,'');
-  let uIn=0,uOut=0,got=false;
+  let uIn=0,uOut=0,got=false,completed=false,filtered=false;
   const push=d=>{if(g.stopped)return;msg.content+=d;paint()};
   try{
     await Promise.race([configP,new Promise(r=>setTimeout(r,1500))]);
     if(signal.aborted)return;
+    // что из вложений отправлять: старые фото/PDF не отправляем, если модель их не читает
+    const skip=(a,isLast)=>{
+      const k=kindOf(a);if(k==='text')return false;
+      if(opts.noMedia)return true;
+      if(opts.noOld&&!isLast)return true;
+      return !isLast&&(k==='image'?caps.img===false:caps.pdf===false);
+    };
+    const W=await wireHist(hist,{limitMb:p.type==='anthropic'?28:p.type==='gemini'?18:24,skip:skip});
+    if(signal.aborted)return;
+    W.forEach(m=>m.files.forEach(f=>{if(g.kinds.indexOf(f.kind)<0)g.kinds.push(f.kind)}));
+    const lost=W.info.missing.filter(x=>x.last);
+    if(lost.length){
+      const a=await notice({icon:'file',title:'Файл больше недоступен',
+        text:'«'+lost.map(x=>x.name).join('», «')+'» больше не хранится на этом устройстве (память приложения была очищена). Модель его не увидит.',
+        tips:['Можно отправить сообщение без этого файла или приложить файл заново.'],
+        actions:[{id:'go',label:'Отправить без файла',kind:'pri'},{id:'cancel',label:'Отмена',kind:'ghost'}],dismiss:'cancel'});
+      if(a!=='go'){g.cancelled=true;return}
+    }
+    if(W.info.dropped.length)toast('Старые вложения не переданы модели: не хватило места в запросе');
+    if(signal.aborted)return;
+
     if(p.type==='oai'){
-      const raw=await wireHist(hist,'oai',0);
-      if(signal.aborted)return;
-      const mkMsgs=textOnly=>raw.map(m=>m.files.length
-        ?(textOnly
-          ?{role:m.role,content:((m.text||'')+'\n[К сообщению было приложено изображение или файл, но эта модель принимает только текст]').trim()}
-          :{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>isPdf(f.type)
+      const msgs=W.map(m=>m.files.length
+        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>f.kind==='pdf'
             ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
-            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))})
+            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
         :{role:m.role,content:m.text});
-      const send=textOnly=>{
-        const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(mkMsgs(textOnly)),stream:true};
-        if(p.usage)body.stream_options={include_usage:true};
-        if(mg)return managedFetch('chat',model,JSON.stringify(body),signal);
-        return fetch(base+'/chat/completions',{method:'POST',signal:signal,
+      const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(msgs),stream:true};
+      if(p.usage)body.stream_options={include_usage:true};
+      if(p.id==='openrouter'&&/image/i.test(model))body.modalities=['image','text'];   // модели, которые умеют рисовать
+      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal)
+        :await fetch(base+'/chat/completions',{method:'POST',signal:signal,
           headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
-      };
-      let res=await send(false);
-      if(!res.ok){
-        const er=await apiErr(res);
-        // текстовые модели отвечают 400 «content must be a string» на сообщения с картинками — повторяем без вложений
-        if(res.status===400&&/must be a string|expected.*string/i.test(er.message)&&raw.some(m=>m.files.length)){
-          toast('Модель не поддерживает изображения — отправлен только текст');
-          res=await send(true);
-          if(!res.ok)throw await apiErr(res);
-        }else throw er;
-      }
-      await sse(res,j=>{
-        const ch=j.choices&&j.choices[0];const t=ch&&ch.delta&&ch.delta.content;if(t)push(t);
+      if(!res.ok)throw await apiErr(res);
+      const onChunk=j=>{
+        const ch=j.choices&&j.choices[0];
+        if(ch){
+          const dl=ch.delta||ch.message||{};
+          const t=Array.isArray(dl.content)?dl.content.map(x=>(x&&x.text)||'').join(''):(typeof dl.content==='string'?dl.content:'');
+          if(t)push(t);
+          (dl.images||[]).forEach(im=>{
+            const u=im&&((im.image_url&&im.image_url.url)||im.url),mm=/^data:([^;,]+);base64,(.+)$/.exec(u||'');
+            if(mm)addOutFile(g,mm[1],mm[2]);
+          });
+          if(ch.finish_reason==='content_filter')filtered=true;
+        }
         if(j.usage&&j.usage.prompt_tokens!=null){uIn=j.usage.prompt_tokens;uOut=j.usage.completion_tokens||0;got=true}
-      });
+      };
+      if(/application\/json/i.test(res.headers.get('content-type')||''))onChunk(await res.json());   // сервис ответил без потока
+      else await sse(res,onChunk);
     }else if(p.type==='anthropic'){
-      const wh=(await wireHist(hist,'anthropic',30)).map(m=>m.files.length
-        ?{role:m.role,content:m.files.map(f=>isPdf(f.type)
+      const wh=W.map(m=>m.files.length
+        ?{role:m.role,content:m.files.map(f=>f.kind==='pdf'
             ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}}
             :{type:'image',source:{type:'base64',media_type:f.type,data:f.data}}).concat(m.text?[{type:'text',text:m.text}]:[])}
         :{role:m.role,content:m.text});
-      if(signal.aborted)return;
       const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
       if(sysPrompt())body.system=sysPrompt();
       const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/v1/messages',{method:'POST',signal:signal,
@@ -1797,31 +2707,44 @@ async function generate(){
       await sse(res,j=>{
         if(j.type==='content_block_delta'&&j.delta&&j.delta.text)push(j.delta.text);
         else if(j.type==='message_start'&&j.message&&j.message.usage){uIn=(j.message.usage.input_tokens||0)+(j.message.usage.cache_read_input_tokens||0);got=true}
-        else if(j.type==='message_delta'&&j.usage){uOut=j.usage.output_tokens||uOut;got=true}
-        else if(j.type==='error')throw new Error((j.error&&j.error.message)||'Ошибка API');
+        else if(j.type==='message_delta'&&j.usage){uOut=j.usage.output_tokens||uOut;got=true;if(j.delta&&j.delta.stop_reason==='refusal')filtered=true}
+        else if(j.type==='error'){
+          const er=new Error((j.error&&j.error.message)||'Ошибка API');er.raw=er.message;
+          er.status=(j.error&&j.error.type==='overloaded_error')?529:(j.error&&j.error.type==='rate_limit_error')?429:0;
+          throw er;
+        }
       });
     }else{
-      const wh=await wireHist(hist,'gemini',19);
-      if(signal.aborted)return;
-      const body={contents:wh.map(m=>({role:m.role==='assistant'?'model':'user',
+      const body={contents:W.map(m=>({role:m.role==='assistant'?'model':'user',
           parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
         generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
+      if(/image/i.test(model))body.generationConfig.responseModalities=['TEXT','IMAGE'];   // модели, которые умеют рисовать
       if(sysPrompt())body.systemInstruction={parts:[{text:sysPrompt()}]};
       const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
         {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!res.ok)throw await apiErr(res);
       await sse(res,j=>{
-        const parts=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;
-        if(parts)parts.forEach(x=>{if(x.text&&!x.thought)push(x.text)});
+        const cand=j.candidates&&j.candidates[0],parts=cand&&cand.content&&cand.content.parts;
+        if(parts)parts.forEach(x=>{
+          if(x.text&&!x.thought)push(x.text);
+          const d=x.inlineData||x.inline_data;
+          if(d&&d.data)addOutFile(g,d.mimeType||d.mime_type,d.data);
+        });
+        if((j.promptFeedback&&j.promptFeedback.blockReason)||(cand&&/SAFETY|PROHIBITED|BLOCKLIST|SPII/.test(cand.finishReason||'')))filtered=true;
         if(j.usageMetadata){uIn=j.usageMetadata.promptTokenCount||uIn;uOut=(j.usageMetadata.candidatesTokenCount||0)+(j.usageMetadata.thoughtsTokenCount||0);got=true}
       });
     }
+    completed=true;
   }catch(e){
     if(g.stopped||(e&&e.name==='AbortError')){/* остановлено пользователем */}
-    else if(e instanceof TypeError)errMsg='Не удалось связаться с API: сеть, CORS или блокировка. Проверьте интернет и Base URL (можно указать свой прокси) в настройках.'+(chat.messages.some(m=>m.attachments&&m.attachments.length)?' Есть вложения: если без них запрос проходит, дело в размере запроса.':'')+' ['+(e.message||'TypeError')+']';
-    else errMsg=String(e&&e.message||e);
+    else g.err=e;
   }finally{
     g.uIn=uIn;g.uOut=uOut;g.got=got;
+    if(completed&&!g.err&&!g.stopped&&!msg.content&&!(msg.files&&msg.files.length)){
+      const er=new Error('empty');er.kind=filtered?'safety':'empty';g.err=er;   // пустой ответ — тоже ошибка, о которой надо сказать
+    }
+    if(completed&&!g.err&&g.kinds.length)capSet(pid,model,g.kinds,true);   // модель приняла файлы — запоминаем
+    try{await Promise.all(g.saves)}catch(e){}
     g.streamDone=true;
     if(!g.done){
       save();
@@ -1924,10 +2847,10 @@ function openConn(view){
     else if(a==='back')openConn();
     else if(a==='redeem'){
       const ci=$('#cnCode'),v=ci?ci.value.trim():'';
-      if(!v){toast('Вставьте код или ссылку');return}
+      if(!v){infoBox('Вставьте код','Скопируйте код быстрой настройки или ссылку, которую вам прислали, и вставьте в поле.');return}
       b.disabled=true;
       try{if(await redeemCode(v)){closeConn();toast('Готово! API подключён')}else b.disabled=false}
-      catch(err){toast(err.message);b.disabled=false}
+      catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось применить код',noNav:true})}
     }
   };
 }
@@ -2016,7 +2939,7 @@ async function vShow(i){
   const id=V.ids[i];let u=urlCache.get(id);
   if(!u){const b=await fileGet(id);if(b)u=getUrl(id,b)}
   if(!V.open||V.i!==i)return;
-  if(!u){toast('Не удалось открыть фото');closeViewer();return}
+  if(!u){closeViewer();infoBox('Фото недоступно','Это изображение больше не хранится на устройстве. Такое бывает, если память приложения была очищена.');return}
   V.img.onload=()=>{V.img.style.opacity='1'};
   V.img.src=u;
   if(V.img.complete)V.img.style.opacity='1';
@@ -2098,6 +3021,8 @@ V.st.addEventListener('wheel',e=>{
   vBounds();vApply(false);
 },{passive:false});
 $('#vClose').addEventListener('click',closeViewer);
+$('#vSave').innerHTML=ic('download',22);
+$('#vSave').addEventListener('click',()=>{const a=findAtt(V.ids[V.i]);if(a)downloadAtt(a,null)});
 $('#vPrev').addEventListener('click',()=>{if(V.i>0)vShow(V.i-1)});
 $('#vNext').addEventListener('click',()=>{if(V.i<V.ids.length-1)vShow(V.i+1)});
 document.addEventListener('keydown',e=>{
@@ -2172,7 +3097,7 @@ async function adminRequest(method,text){
     headers:{'X-Telegram-Init-Data':tg.initData,'Content-Type':'application/json'},
     body:method==='PUT'?JSON.stringify({text:text}):undefined});
   let j={};try{j=await res.json()}catch(e){}
-  if(!res.ok)throw new Error(j.error||('Ошибка '+res.status));
+  if(!res.ok)throw cloudErr(res,j);
   return j;
 }
 function renderUsage(){
@@ -2302,10 +3227,10 @@ onSet('click',async e=>{
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='setredeem'){
     const i=$('#setCode'),v=i?i.value.trim():'';
-    if(!v){toast('Вставьте код или ссылку');return}
+    if(!v){infoBox('Вставьте код','Скопируйте код быстрой настройки или ссылку, которую вам прислали, и вставьте в поле.');return}
     b.disabled=true;
     try{if(await redeemCode(v)){toast('Готово! Системное подключение обновлено');renderSettings()}}
-    catch(err){toast(err.message)}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось применить код',noNav:true})}
     b.disabled=false;
   }
   else if(a==='clearkey'){
@@ -2327,25 +3252,26 @@ async function fetchBal(pid,silent){
   try{
     let text='';
     if(p.balance==='deepseek'){
-      const r=await fetch(base+'/user/balance',{headers:H});const j=await r.json();
-      if(!r.ok)throw new Error((j.error&&j.error.message)||r.status);
+      const r=await fetch(base+'/user/balance',{headers:H});
+      if(!r.ok)throw await apiErr(r);
+      const j=await r.json();
       text=(j.balance_infos||[]).map(b=>b.total_balance+' '+b.currency).join(' · ')||'—';
     }else{
       let r=await fetch(base+'/credits',{headers:H});
       if(r.ok){const d=(await r.json()).data;text='$'+(d.total_credits-d.total_usage).toFixed(2)}
-      else{r=await fetch(base+'/key',{headers:H});const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.status);
+      else{r=await fetch(base+'/key',{headers:H});if(!r.ok)throw await apiErr(r);const j=await r.json();
         const d=j.data;text=d.limit_remaining!=null?'$'+Number(d.limit_remaining).toFixed(2):'потрачено $'+Number(d.usage).toFixed(2)}
     }
     c.bal={text:text,t:Date.now()};save();
   }catch(e){
     delete c.bal;
-    if(!silent)toast('Баланс '+p.name+': '+(e instanceof TypeError?'нет связи с сервисом':e.message));
+    if(!silent)showError(e,{where:'models',provider:p.name,title:'Не удалось проверить баланс',noNav:true});
   }
   renderUsage();
 }
 async function loadModels(pid){
   const p=provOf(pid),c=S.providers[pid],mg=pid==='managed';
-  if(!isAvail(pid)){toast('Сначала укажите '+(p.custom?'Base URL':'API ключ'));return}
+  if(!isAvail(pid)){infoBox('Сначала подключите сервис',p.custom?'Укажите адрес сервиса (Base URL), а затем загрузите список моделей.':'Вставьте API-ключ, а затем загрузите список моделей.');return}
   const base=mg?'':(c.base||p.base).replace(/\/+$/,'');
   try{
     let list=[];
@@ -2367,7 +3293,7 @@ async function loadModels(pid){
       list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace(/^models\//,''));
     }
     list=Array.from(new Set(list.filter(Boolean))).sort();
-    if(!list.length){toast('Список пуст');return}
+    if(!list.length){infoBox('Список моделей пуст','Сервис не вернул ни одной модели. Проверьте ключ и адрес сервиса или добавьте модель вручную кнопкой «+».');return}
     // что было отмечено до загрузки, остаётся отмеченным; остальное пользователь отмечает галочками
     const prev=new Set(getModels(pid));
     const extra=Array.from(prev).filter(m=>list.indexOf(m)<0);
@@ -2375,7 +3301,7 @@ async function loadModels(pid){
     c.enabled=c.models.filter(m=>prev.has(m));
     openProv.add(pid);save();
     toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
-  }catch(e){toast('Не удалось загрузить: '+(e instanceof TypeError?'нет связи с сервисом':e.message))}
+  }catch(e){showError(e,{where:'models',provider:provName(pid),title:'Не удалось загрузить список моделей',noNav:true})}
 }
 
 /* ---------- Управление обновлениями (только администратор) ---------- */
@@ -2392,18 +3318,16 @@ function tgHtml(title,text){
   return ((title?'<b>'+esc(title)+'</b>\n\n':'')+s).trim();
 }
 async function upApi(method,path,body){
-  if(!tg||!tg.initData)throw new Error('Откройте приложение через Telegram');
+  if(!tg||!tg.initData)throw needTg();
   const h={'X-Telegram-Init-Data':tg.initData};
   if(body)h['Content-Type']='application/json';
-  let r;
-  try{r=await fetch(CLOUD_API+path,{method:method,headers:h,body:body?JSON.stringify(body):undefined})}
-  catch(e){throw new Error('Нет связи с сервером')}
+  const r=await fetch(CLOUD_API+path,{method:method,headers:h,body:body?JSON.stringify(body):undefined});
   let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok){const er=new Error(j.error||('Ошибка '+r.status));er.status=r.status;er.data=j;throw er}
+  if(!r.ok){const er=cloudErr(r,j);er.data=j;throw er}
   return j;
 }
 async function prepTgImage(f){   // Telegram надёжно принимает JPEG/PNG; остальное конвертируем в JPEG
-  if(f.type==='image/jpeg'||f.type==='image/png')return prepImage(f);
+  if(f.type==='image/jpeg'||f.type==='image/png'){const r=await prepImageFile(f,f.type);return r.blob}
   const img=await loadImg(f),w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,2048/Math.max(w,h));
   const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
   const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
@@ -2460,24 +3384,25 @@ function upHist(){
 }
 async function upLoad(){
   try{const j=await upApi('GET','/admin/broadcasts');UP.items=j.items||[];UP.users=j.users||null;upHist();upCount()}
-  catch(e){toast('История: '+e.message)}
+  catch(e){showError(e,{where:'cloud',title:'Не удалось загрузить историю рассылок'})}
 }
 function upContent(){
   const title=$('#uTitle').value.trim(),text=$('#uText').value.trim();
-  if(UP.media.some(m=>m.state==='up')){toast('Дождитесь загрузки файлов');return null}
-  if(UP.media.some(m=>m.state==='err')){toast('Удалите файлы, которые не загрузились');return null}
-  if(!title&&!text&&!UP.media.length){toast('Сообщение пустое');return null}
+  if(UP.media.some(m=>m.state==='up')){infoBox('Файлы ещё загружаются','Подождите, пока фото и видео загрузятся на сервер, и попробуйте снова.');return null}
+  if(UP.media.some(m=>m.state==='err')){warnBox('Часть файлов не загрузилась','Уберите файлы с красной рамкой (крестик на превью) или добавьте их заново.');return null}
+  if(!title&&!text&&!UP.media.length){infoBox('Сообщение пустое','Добавьте текст, заголовок или хотя бы одно фото или видео.');return null}
   return {title:title,text:text,media:UP.media.map(m=>({id:m.fileId,type:m.type}))};
 }
 async function upAdd(files){
   for(const f of files){
-    if(UP.media.length>=10){toast('Не больше 10 вложений в альбоме');break}
+    const fn='«'+(f.name||'файл')+'»';
+    if(UP.media.length>=10){infoBox('Слишком много вложений','В одном уведомлении может быть не больше 10 фото и видео.');break}
     const isV=/^video\//.test(f.type),isI=/^image\//.test(f.type);
-    if(!isV&&!isI){toast('Формат не поддерживается');continue}
-    if(isV&&f.type!=='video/mp4'){toast('Для видео нужен формат MP4');continue}
-    if(isV&&f.size>45*1024*1024){toast('Видео больше 45 МБ');continue}
+    if(!isV&&!isI){warnBox('Этот формат не подходит',fn+': в уведомление можно добавить фото (JPEG, PNG, WebP, GIF) и видео MP4.');continue}
+    if(isV&&f.type!=='video/mp4'){warnBox('Видео нужно в формате MP4',fn+' в другом формате. Сохраните видео как MP4 и добавьте снова.');continue}
+    if(isV&&f.size>45*1024*1024){warnBox('Видео слишком большое',fn+' весит '+fmtSize(f.size)+', а можно до 45 МБ.');continue}
     let blob=f;
-    if(isI){try{blob=await prepTgImage(f)}catch(e){toast('Не удалось обработать фото');continue}}
+    if(isI){try{blob=await prepTgImage(f)}catch(e){warnBox('Не удалось открыть фото',fn+' повреждён или имеет неподдерживаемый формат. Попробуйте JPEG или PNG.');continue}}
     const it={uid:uid(),type:isV?'video':'photo',name:f.name||(isV?'video.mp4':'photo.jpg'),url:URL.createObjectURL(blob),state:'up',fileId:''};
     UP.media.push(it);UP.token=null;upAtts();upPrev();
     (async()=>{
@@ -2485,9 +3410,9 @@ async function upAdd(files){
         const fd=new FormData();fd.append('file',blob,it.name);
         const r=await fetch(CLOUD_API+'/admin/media',{method:'POST',headers:{'X-Telegram-Init-Data':tg.initData},body:fd});
         const j=await r.json().catch(()=>({}));
-        if(!r.ok)throw new Error(j.error||('Ошибка '+r.status));
+        if(!r.ok)throw cloudErr(r,j);
         it.fileId=j.id;it.type=j.type||it.type;it.state='ok';
-      }catch(e){it.state='err';toast('Не загрузилось: '+(e.message||'сеть'))}
+      }catch(e){it.state='err';showError(e,{where:'cloud',title:'Файл не загрузился'})}
       upAtts();
     })();
   }
@@ -2501,11 +3426,11 @@ function upReset(){
 async function upTest(){
   const c=upContent();if(!c)return;
   try{await upApi('POST','/admin/broadcasts/test',c);toast('Тест отправлен вам в чат с ботом')}
-  catch(e){toast(e.message)}
+  catch(e){showError(e,{where:'cloud',title:'Не удалось отправить тест'})}
 }
 async function upSend(){
   const c=upContent();if(!c)return;
-  if(UP.running){toast('Рассылка уже идёт');return}
+  if(UP.running){infoBox('Рассылка уже идёт','Дождитесь её завершения или поставьте на паузу.');return}
   const n=UP.users?UP.users.total-UP.users.blocked:null;
   const ok=await dialog({title:'Разослать всем?',text:'Сообщение получат '+(n!=null?n+' пользователей':'все пользователи')+'. После запуска уже доставленные сообщения вернуть нельзя.',ok:'Разослать',danger:true});
   if(!ok)return;
@@ -2517,7 +3442,7 @@ async function upSend(){
     upProgress();
     const p=$('#uProg');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});
     upRun(s.id);
-  }catch(e){toast(e.message)}
+  }catch(e){showError(e,{where:'cloud',title:'Не удалось запустить рассылку'})}
 }
 async function upRun(id){
   if(UP.running)return;
@@ -2530,7 +3455,7 @@ async function upRun(id){
       if(st.retry_after)await sleepMs(st.retry_after*1000);
       else if(st.busy)await sleepMs(1500);
     }
-  }catch(e){toast('Рассылка приостановлена: '+e.message)}
+  }catch(e){showError(e,{where:'cloud',title:'Рассылка приостановлена'})}
   UP.running=null;UP.stop=false;upProgress();
   await upLoad();
   if(UP.cur&&UP.cur.status==='done'){hap('medium');toast('Рассылка завершена')}
@@ -2589,8 +3514,8 @@ function qModelAdd(){
 async function qLoadModels(){
   const pid=$('#qProv').value,p=PROV[pid],key=$('#qKey').value.trim();
   const base=($('#qBase').value.trim()||p.base).replace(/\/+$/,'');
-  if(!base){toast('Сначала укажите Base URL');return}
-  if(!key&&!p.custom){toast('Сначала введите API ключ');return}
+  if(!base){infoBox('Сначала укажите адрес','Заполните поле Base URL, а затем загрузите список моделей.');return}
+  if(!key&&!p.custom){infoBox('Сначала введите ключ','Вставьте API-ключ, а затем загрузите список моделей.');return}
   try{
     let list=[];
     if(p.type==='oai'){
@@ -2605,11 +3530,11 @@ async function qLoadModels(){
       list=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace(/^models\//,''));
     }
     list=Array.from(new Set(list.filter(Boolean))).sort();
-    if(!list.length){toast('Список пуст');return}
+    if(!list.length){infoBox('Список моделей пуст','Сервис не вернул ни одной модели. Проверьте ключ и адрес сервиса или добавьте модель вручную кнопкой «+».');return}
     const prev=new Set(QM.on),extra=Array.from(prev).filter(m=>list.indexOf(m)<0);
     QM.all=list.concat(extra).sort();QM.on=prev;
     toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
-  }catch(e){toast('Не удалось загрузить: '+(e instanceof TypeError?'нет связи с сервисом':e.message))}
+  }catch(e){showError(e,{where:'models',provider:p.name,title:'Не удалось загрузить список моделей',noNav:true})}
 }
 function buildUpd(){
   if(UP.built)return;UP.built=true;
@@ -2688,26 +3613,26 @@ $('#updBody').addEventListener('click',async e=>{
     try{
       if(a==='syssave'){const t=$('#adminSys').value.trim();await adminRequest('PUT',t);remoteSystem=t;toast('Промпт сохранён для всех')}
       else{await adminRequest('DELETE');remoteSystem=null;$('#adminSys').value='';toast('Промпт очищен')}
-    }catch(err){toast('Не удалось сохранить: '+(err instanceof TypeError?'нет связи с сервером':err.message))}
+    }catch(err){showError(err,{where:'cloud',title:'Не удалось сохранить промпт'})}
     b.disabled=false;
   }
   else if(a==='qload'){b.disabled=true;const sp=b.querySelector('span');if(sp)sp.textContent='Загрузка…';await qLoadModels();qModelsRender()}
   else if(a==='qmtog'){const m=b.dataset.m;if(QM.on.has(m))QM.on.delete(m);else QM.on.add(m);b.classList.toggle('on',QM.on.has(m));b.setAttribute('aria-checked',String(QM.on.has(m)));hap()}
   else if(a==='qmdel'){const m=b.dataset.m;QM.all=QM.all.filter(x=>x!==m);QM.on.delete(m);const row=b.closest('.mrow');if(row)row.remove()}
   else if(a==='qmadd')qModelAdd();
-  else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){toast(err.message)}b.disabled=false}
+  else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){showError(err,{where:'cloud',title:'Не удалось создать код'})}b.disabled=false}
   else if(a==='qcopy'){copyText(b.dataset.t)}
   else if(a==='qdel'){
     const ok=await dialog({title:'Удалить запись?',text:'Код '+b.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
     if(!ok)return;
-    try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id+'?purge=1');qLoad()}catch(err){toast(err.message)}
+    try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id+'?purge=1');qLoad()}catch(err){showError(err,{where:'cloud',title:'Не удалось удалить код'})}
   }
-  else if(a==='qrev'){try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id);qLoad()}catch(err){toast(err.message)}}
+  else if(a==='qrev'){try{await upApi('DELETE','/admin/setup-codes/'+b.dataset.id);qLoad()}catch(err){showError(err,{where:'cloud',title:'Не удалось отозвать код'})}}
   else if(a==='cancel'){
     const ok=await dialog({title:'Отменить рассылку?',text:'Недоставленные сообщения отправлены не будут.',ok:'Отменить рассылку',danger:true});
     if(!ok)return;
     try{await upApi('POST','/admin/broadcasts/'+b.dataset.id+'/cancel');if(UP.cur&&UP.cur.id===b.dataset.id)UP.cur=null;upProgress();await upLoad()}
-    catch(err){toast(err.message)}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось отменить рассылку'})}
   }
 });
 
@@ -2796,7 +3721,7 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
     try{
       if(!hasSetup()){await redeemCode(sp);toast('Настройка применена')}
       else if(await redeemCode(sp))toast('Настройка обновлена');
-    }catch(e){if(!hasSetup())toast(e.message)}
+    }catch(e){if(!hasSetup())showError(e,{where:'cloud',title:'Не удалось применить код настройки',noNav:true})}
   }
   if(!hasSetup())openConn();
 })();
