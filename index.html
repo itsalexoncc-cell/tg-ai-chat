@@ -41,14 +41,14 @@ svg{display:block}
 .m.u{display:flex;justify-content:flex-end}
 .m.u .uwrap{display:flex;flex-direction:column;align-items:flex-end;max-width:86%;min-width:0}
 .m.u .b{
-  background:linear-gradient(165deg,#383940 0%,#2a2b31 58%,#232429 100%);
+  background:linear-gradient(155deg,#474a56 0%,#353844 55%,#2b2d38 100%);
   border:0;
   padding:11px 16px;
   border-radius:22px 22px 6px 22px;
   max-width:100%;
   white-space:pre-wrap;
   word-break:break-word;
-  box-shadow:0 10px 26px -6px rgba(0,0,0,.58),0 3px 10px -2px rgba(0,0,0,.38),inset 0 1px 1px rgba(255,255,255,.12),inset 0 -2px 5px rgba(0,0,0,.25);
+  box-shadow:0 12px 28px -6px rgba(0,0,0,.72),0 4px 12px -2px rgba(0,0,0,.52),inset 0 1.5px 1px rgba(255,255,255,.18),inset 0 -2px 6px rgba(0,0,0,.28);
 }
 
 .ufoot{
@@ -602,7 +602,7 @@ svg{display:block}
 
 :root[data-theme="light"] .ul.sub{color:#575761}
 :root[data-theme="light"] .m.a .b{color:var(--text)}
-:root[data-theme="light"] .m.u .b{background:linear-gradient(165deg,#ffffff 0%,#f2f3f8 62%,#e8eaf2 100%);border:0;color:var(--text);box-shadow:0 10px 26px -6px rgba(15,23,42,.15),0 3px 10px -2px rgba(15,23,42,.08),inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 5px rgba(15,23,42,.04)}
+:root[data-theme="light"] .m.u .b{background:linear-gradient(155deg,#e4e8f2 0%,#d7ddeb 58%,#cbd3e4 100%);border:0;color:var(--text);box-shadow:0 10px 24px -6px rgba(30,41,59,.22),0 3px 10px -2px rgba(30,41,59,.12),inset 0 1.5px 1px rgba(255,255,255,.8),inset 0 -2px 6px rgba(30,41,59,.08)}
 :root[data-theme="light"] .composer{background:#f4f4f7;border-color:#c0c0ca}
 :root[data-theme="light"] #drawer{background:#fafafc}
 :root[data-theme="light"] .pcard,:root[data-theme="light"] .dcard{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.18)}
@@ -904,8 +904,10 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 .src-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .src-chip:active{opacity:.72}
 .pi-meta{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--muted)}
-.pi-web{display:grid;place-items:center;color:var(--muted);opacity:.72}
+.pi-web{display:grid;place-items:center;color:var(--muted);opacity:.78}
 .pi-web.auto{color:#4ade80;opacity:.95}
+.pi-web.paid{color:#7db4ff;opacity:.88}
+.pi-web.off{color:var(--muted);opacity:.55}
 .nt-ic.web{background:rgba(96,165,250,.16);color:#7db4ff}
 :root[data-theme="light"] .web-hint{background:var(--surface);border-color:var(--border);color:var(--muted);box-shadow:0 2px 10px rgba(15,23,42,.06)}
 :root[data-theme="light"] .web-hint.on{background:#e3efff;border-color:#b6d3fb;color:#1769c2}
@@ -915,6 +917,7 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 :root[data-theme="light"] .webbtn.on{background:#e3efff;color:#1769c2}
 :root[data-theme="light"] .gstat-ic{color:#1769c2}
 :root[data-theme="light"] .pi-web.auto{color:#1f7a3a}
+:root[data-theme="light"] .pi-web.paid{color:#1769c2}
 :root[data-theme="light"] .src-chip{background:var(--surface);border-color:var(--border);color:var(--muted)}
 :root[data-theme="light"] .nt-ic.web{background:#e3efff;color:#1769c2}
 </style>
@@ -1646,16 +1649,22 @@ async function mediaCheck(pid,model,atts){
    tier:'paid' — платные API / платный плагин поиска (OpenRouter, OpenAI, Claude, Grok): отдельный переключатель (по умолчанию выключен) с предупреждением.
    null        — модели без выхода в интернет: чистые запросы без лишних параметров. */
 let paidWeb=false;
-const webCool=new Map();   // временная пауза автопоиска (если у провайдера закончилась квота на поиск, но обычные запросы работают)
-const isWebCooled=(pid,model)=>((webCool.get(capKey(pid,model))||0)>Date.now());
+const isWebFreeOff=(pid,model)=>{
+  const L=S.caps&&S.caps[capKey(pid,model)];
+  return !!(L&&L.web==='free_off');
+};
 function clearWebCaps(pid){
   const pref=pid+'|';
-  webCool.forEach((_,k)=>{if(k.indexOf(pref)===0)webCool.delete(k)});
   if(S.caps){
     let ch=false;
-    Object.keys(S.caps).forEach(k=>{if(k.indexOf(pref)===0&&S.caps[k]&&S.caps[k].web===false){delete S.caps[k].web;ch=true}});
+    Object.keys(S.caps).forEach(k=>{
+      if(k.indexOf(pref)===0&&S.caps[k]&&S.caps[k].web!=null){
+        delete S.caps[k].web;ch=true;
+      }
+    });
     if(ch)save();
   }
+  syncWebBtn();
 }
 function webSpec(pid,model){
   if(!pid||!model)return null;
@@ -1699,7 +1708,10 @@ function findWebModel(tierOnly){
   const score=m=>{
     const pm=splitM(m),ws=webSpec(pm[0],pm[1]);
     if(!ws||(tierOnly&&ws.tier!==tierOnly))return 0;
-    if(ws.tier==='auto')return ws.mode==='gemini'?10:9;
+    if(ws.tier==='auto'){
+      if(isWebFreeOff(pm[0],pm[1]))return 0;
+      return ws.mode==='gemini'?10:9;
+    }
     return ws.mode==='openrouter'?4:ws.mode==='oai-responses'||ws.mode==='oai-search'?3:ws.mode==='anthropic'?2:1;
   };
   return a.filter(m=>score(m)>0).sort((x,y)=>score(y)-score(x))[0]||'';
@@ -1740,7 +1752,7 @@ function webHintPill(cls,ico,text,kind){
 function emptyWebHintHtml(){
   const pm=cur&&cur.model?splitM(cur.model):['',''],ws=webSpec(pm[0],pm[1]);
   if(ws&&ws.tier==='auto'){
-    if(isWebCooled(pm[0],pm[1])){
+    if(isWebFreeOff(pm[0],pm[1])){
       return webHintPill('','langoff','В бесплатной версии поиск недоступен','cooled');
     }
     return webHintPill(' auto','lang','Поиск в сети работает автоматически','auto');
@@ -1797,10 +1809,9 @@ async function toggleWeb(forceOn){
   if(!cur||!cur.model||!avail().includes(cur.model)){await needModel();return false}
   const pm=splitM(cur.model),pid=pm[0],model=pm[1],ws=webSpec(pid,model);
   if(ws&&ws.tier==='auto'){
-    if(isWebCooled(pid,model)){
-      webCool.delete(capKey(pid,model));syncWebBtn();hap();
-      toast('Попробуем веб-поиск в следующем запросе');
-      return true;
+    if(isWebFreeOff(pid,model)){
+      if(!forceOn)await infoBox('В бесплатной версии поиск недоступен','У «'+model+'» веб-поиск сейчас не работает, поэтому ответы идут в обычном режиме. Чтобы проверить поиск снова, загрузите список моделей заново в настройках.');
+      return false;
     }
     if(!forceOn)await infoBox('Поиск работает автоматически','«'+model+'» сама обращается в интернет, когда вы спрашиваете про свежие новости, цены или события. Если поиск не пройдёт, запрос автоматически отправится как обычный.');
     return true;
@@ -3192,7 +3203,7 @@ async function generate(opts){
   chat.messages.push(msg);
   const abort=new AbortController();
   const ws=opts.noWeb?null:webSpec(pid,model);
-  const cooled=!!(ws&&ws.tier==='auto'&&isWebCooled(pid,model));
+  const cooled=!!(ws&&ws.tier==='auto'&&isWebFreeOff(pid,model));
   const wm=ws?(ws.tier==='auto'?(cooled?null:ws.mode):(paidWeb?ws.mode:null)):null;
   const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,wordT:[],lockedPos:0,lockedWords:0,tail:null,paintT:0,
     status:(wm&&ws&&ws.tier==='paid')?'searching':'',webMode:wm,webTier:wm&&ws?ws.tier:'',opts:opts,kinds:[],saves:[],err:null,
@@ -3376,7 +3387,7 @@ async function generate(opts){
         await runProvider(null);
         /* Обычный запрос прошёл: запоминаем, что именно веб-поиск сейчас не сработал */
         if(errKind==='noweb')capSetWeb(pid,model,false);
-        else webCool.set(capKey(pid,model),Date.now()+15*60*1000);
+        else if(!wasPaid)capSetWeb(pid,model,'free_off');
         if(wasPaid)paidWeb=false;
         if(cur===chat){
           syncWebBtn();
@@ -3416,7 +3427,13 @@ function openPicker(){
     PROVIDERS.forEach(p=>{
       const ms=isAvail(p.id)?getModels(p.id):[];if(!ms.length)return;
       h+='<div class="pg">'+esc(provName(p.id))+'</div>';
-      ms.forEach(m=>{const v=p.id+'|'+m,ws=webSpec(p.id,m);h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span><span class="pi-meta">'+(ws?'<span class="pi-web'+(ws.tier==='auto'?' auto':'')+'" aria-label="'+(ws.tier==='auto'?'Автопоиск в сети':'Веб-поиск по кнопке')+'">'+ic('lang',15)+'</span>':'')+(v===cur.model?ic('check',18):'')+'</span></button>'});
+      ms.forEach(m=>{
+        const v=p.id+'|'+m,ws=webSpec(p.id,m),fo=!!(ws&&ws.tier==='auto'&&isWebFreeOff(p.id,m));
+        const wHtml=(ws&&!fo)
+          ?'<span class="pi-web '+(ws.tier==='auto'?'auto':'paid')+'" aria-label="'+(ws.tier==='auto'?'Автопоиск в сети':'Веб-поиск по кнопке')+'">'+ic('lang',15)+'</span>'
+          :'<span class="pi-web off" aria-label="'+(fo?'В бесплатной версии поиск недоступен':'Без доступа в интернет')+'">'+ic('langoff',15)+'</span>';
+        h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span><span class="pi-meta">'+wHtml+(v===cur.model?ic('check',18):'')+'</span></button>';
+      });
     });
   }
   $('#pcard').innerHTML=h;$('#pop').classList.add('on');pushLayer(closePicker);
@@ -3959,7 +3976,7 @@ onSet('click',async e=>{
     const c=S.providers[pid];
     c.key='';c.base='';c.limit=0;delete c.models;delete c.enabled;if(PROV[pid].custom)c.name='';
     delete c.bal;
-    save();saveCloudKey(pid,'');renderProvs();renderUsage();
+    clearWebCaps(pid);save();saveCloudKey(pid,'');renderProvs();renderUsage();
   }
   else if(a==='resetu'){S.providers[pid].used={in:0,out:0};S.providers[pid].by={};save();renderUsage();toast('Счётчик сброшен')}
   else if(a==='resetall'){const ok=await dialog({title:'Сбросить все счётчики?',ok:'Сбросить'});if(ok){PROVIDERS.forEach(p=>{S.providers[p.id].used={in:0,out:0};S.providers[p.id].by={}});save();renderUsage()}}
@@ -4019,6 +4036,7 @@ async function loadModels(pid){
     const extra=Array.from(prev).filter(m=>list.indexOf(m)<0);
     c.models=list.concat(extra).sort();
     c.enabled=c.models.filter(m=>prev.has(m));
+    clearWebCaps(pid);
     openProv.add(pid);save();
     toast('Загружено моделей: '+list.length+'. Отметьте нужные галочками');
   }catch(e){showError(e,{where:'models',provider:provName(pid),title:'Не удалось загрузить список моделей',noNav:true})}
