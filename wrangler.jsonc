@@ -3,6 +3,7 @@
   "name": "tg-ai-api",
   "main": "worker.js",
   "compatibility_date": "2026-11-09",
+  "keep_vars": true,
   "d1_databases": [
     {
       "binding": "DB",
