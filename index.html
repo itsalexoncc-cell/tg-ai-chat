@@ -67,19 +67,19 @@ svg{display:block}
 .m.a .b{word-break:break-word}
 .word-in{
   display:inline-block;
+  will-change:opacity,transform,filter;
   animation:wordSettle .24s cubic-bezier(.2,.7,.2,1) both;
 }
 @keyframes wordSettle{
   from{
     opacity:0;
     filter:blur(6px);
-    position:relative;
-    top:4px;
+    transform:translateY(4px);
   }
   to{
     opacity:1;
     filter:blur(0);
-    top:0;
+    transform:none;
   }
 }
 .m.a{
@@ -858,8 +858,47 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
   to{opacity:0;transform:scale(1.36)}
 }
 @media (prefers-reduced-motion:reduce){
-  .bk-arc,.bk-key,.bk-lock,#boot.ok .bk-pulse{animation:none}
+  .bk-arc,.bk-key,.bk-lock,#boot.ok .bk-pulse,.gstat-ic{animation:none}
 }
+
+/* ---- Веб-поиск, статус ожидания и источники ---- */
+.empty-in{display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 16px;text-align:center}
+.empty-t{font-size:22px;font-weight:500}
+.web-hint{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1.3;font-weight:400;max-width:86vw;transition:background .18s,color .18s,border-color .18s}
+.web-hint svg{flex:none}
+.web-hint:active{opacity:.78}
+.web-hint.on{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.45);color:#7db4ff}
+.web-hint.auto{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.35);color:#4ade80}
+.webbtn{flex:none;height:38px;min-width:38px;padding:0 9px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);transition:background .18s,color .18s,padding .18s}
+.webbtn:active{background:#2a2a2a}
+.webbtn .wlbl{display:none;font-size:13.5px;font-weight:600;white-space:nowrap}
+.webbtn.on{padding:0 12px;background:rgba(96,165,250,.18);color:#7db4ff}
+.webbtn.on .wlbl{display:inline}
+.webbtn.dim{opacity:.48}
+.gstat{display:inline-flex;align-items:center;gap:8px;padding:6px 0;color:var(--muted);font-size:14.5px;font-weight:500}
+.gstat-ic{display:grid;place-items:center;color:#7db4ff;animation:gSpin 2.6s linear infinite}
+@keyframes gSpin{to{transform:rotate(360deg)}}
+.dots.sm{gap:4px;padding:0}
+.dots.sm i{width:5px;height:5px}
+.srcs{display:flex;gap:6px;overflow-x:auto;margin:8px 0 4px;padding:2px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.srcs::-webkit-scrollbar{display:none}
+.src-chip{flex:none;display:inline-flex;align-items:center;gap:6px;max-width:210px;padding:5px 11px;border-radius:999px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:12.5px;line-height:1.25;text-decoration:none}
+.src-chip svg{flex:none;opacity:.8}
+.src-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src-chip:active{opacity:.72}
+.pi-meta{display:inline-flex;align-items:center;gap:6px;flex:none;color:var(--muted)}
+.pi-web{display:grid;place-items:center;color:var(--muted);opacity:.72}
+.pi-web.auto{color:#4ade80;opacity:.95}
+.nt-ic.web{background:rgba(96,165,250,.16);color:#7db4ff}
+:root[data-theme="light"] .web-hint{background:var(--surface);border-color:var(--border);color:var(--muted)}
+:root[data-theme="light"] .web-hint.on{background:#e3efff;border-color:#b6d3fb;color:#1769c2}
+:root[data-theme="light"] .web-hint.auto{background:#dff3e4;border-color:#b5e2c2;color:#1f7a3a}
+:root[data-theme="light"] .webbtn:active{background:#e5e5e9}
+:root[data-theme="light"] .webbtn.on{background:#e3efff;color:#1769c2}
+:root[data-theme="light"] .gstat-ic{color:#1769c2}
+:root[data-theme="light"] .pi-web.auto{color:#1f7a3a}
+:root[data-theme="light"] .src-chip{background:var(--surface);border-color:var(--border);color:var(--muted)}
+:root[data-theme="light"] .nt-ic.web{background:#e3efff;color:#1769c2}
 </style>
 </head>
 <body>
@@ -877,6 +916,7 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
       <div class="atts" id="atts"></div>
       <div class="crow">
         <button class="ib" id="btnAttach" aria-label="Прикрепить файл"></button>
+        <button class="webbtn" id="btnWeb" aria-label="Поиск в интернете" aria-pressed="false"></button>
         <button class="ib" id="btnMic" aria-label="Диктовка" hidden></button>
         <textarea id="inp" rows="1" placeholder="Спроси что угодно…" enterkeyhint="enter"></textarea>
         <button class="send" id="btnSend" aria-label="Отправить"></button>
@@ -1222,7 +1262,7 @@ let cur=null,busy=false,abortC=null,errMsg='',rec=null;
 function newChat(){
   const a=avail();
   cur={id:uid(),title:'Новый чат',model:a.includes(S.lastModel)?S.lastModel:(a[0]||''),messages:[],updated:Date.now()};
-  errMsg='';renderAll();
+  paidWeb=false;errMsg='';renderAll();
 }
 
 /* ---------- helpers ---------- */
@@ -1248,7 +1288,7 @@ const fmtSize=n=>{n=+n||0;return n>=MB?(n/MB).toFixed(n>=10*MB?0:1).replace('.',
 /* ---------- диалоги-уведомления (вместо исчезающих тостов и сырых ошибок) ----------
    notice({icon,title,text,list,tips,details,actions:[{id,label,kind}],dismiss}) → Promise<id | dismiss>
    Окна показываются по очереди, поверх любых других окон; закрываются кнопкой, тапом по фону или кнопкой «назад» Telegram. */
-const NT_ICON={error:'warn',warn:'warn',info:'info',ok:'okc',net:'net',lock:'lock',img:'img',file:'file',bot:'send'};
+const NT_ICON={error:'warn',warn:'warn',info:'info',ok:'okc',net:'net',lock:'lock',img:'img',file:'file',bot:'send',web:'lang'};
 let ntQ=Promise.resolve();
 function notice(o){
   const p=ntQ.then(()=>ntShow(o));
@@ -1347,6 +1387,7 @@ function classify(e,ctx){
   if(/too many (images|files|attachments|documents)|maximum (number )?of (images|files)|at most \d+ (images|files)|up to \d+ images|limit of \d+ images|max(imum)? \d+ images/.test(s))return 'toomany';
   if(/context[_ ](length|window)|maximum context|too many tokens|token limit|prompt is too long|input is too long|reduce the length|input token count|tokens? (exceed|limit)|exceeds the.*tokens/.test(s))return 'context';
   if(st===413||/request[_ ]entity too large|payload too large|request too large|body.*too large|image.*(exceeds|larger than|too big|too large)|(exceeds|larger than).*(\d+ ?mb|size limit)|image size|more than \d+ pages|page limit|content[_ ]length/.test(s))return 'toolarge';
+  if(ctx.web&&(st===400||st===404||st===410||st===422)&&/web[_ ]?search|google[_ ]?search|search_parameters|web_search_options|plugins|grounding|tool|online|unknown field|extra_forbidden|unrecognized|not support|unsupported/.test(s))return 'noweb';
   if(files&&(st===400||st===404||st===415||st===422||st===500)&&/image|vision|multimodal|multi-modal|modalit|pdf|document|file|attachment|content|must be a string|valid string|expected a string|invalid type|unknown variant|does not support|not support|unsupported|cannot (read|process)|image_url|mime|base64/.test(s))return 'nofiles';
   if(st===403)return 'auth';
   if(st===404||/model.*(not found|does not exist|not available|decommissioned|deprecated|no longer)|unknown model|invalid model|no such model|is not a valid model/.test(s))return 'model';
@@ -1362,12 +1403,13 @@ const ACT={
   model:{id:'model',label:'Выбрать другую модель',kind:'pri'},
   settings:{id:'settings',label:'Открыть настройки',kind:'pri'},
   text:{id:'text',label:'Отправить без файлов',kind:''},
+  noweb:{id:'noweb',label:'Отправить без поиска',kind:'pri'},
   noold:{id:'noold',label:'Без старых вложений',kind:'pri'},
   newchat:{id:'newchat',label:'Начать новый чат',kind:''},
   close:{id:'close',label:'Закрыть',kind:'ghost'},
   ok:{id:'ok',label:'Понятно',kind:'pri'}
 };
-const CHAT_ONLY=['retry','text','noold','newchat'];
+const CHAT_ONLY=['retry','text','noold','noweb','newchat'];
 const GENERIC_KINDS=['network','server','timeout','unknown','msg','cloudserver','badreq'];
 
 /* Тексты для людей: что случилось, почему, что делать */
@@ -1395,6 +1437,10 @@ function copyFor(kind,ctx,e){
         tips:ctx.managed?['Это системное подключение — сообщите администратору, что оно перестало работать.']:['Откройте настройки и проверьте API-ключ: в нём не должно быть лишних пробелов.','Убедитесь, что ключ создан именно в сервисе «'+prov+'».'],
         acts:[ctx.managed?null:'settings','model','close']};
     case 'quota':
+      if(ctx.web&&ctx.webTier==='paid')return {icon:'web',title:'Для веб-поиска нужен баланс',
+        text:'«'+prov+'» отклонил запрос с веб-поиском: поиск в интернете оплачивается отдельно, даже на бесплатных моделях.',
+        tips:['Отправьте этот же вопрос без веб-поиска — обычный запрос сработает бесплатно.','Или выберите модель с бесплатным автопоиском (например, Google Gemini).'],
+        acts:['noweb','model','close']};
       return {icon:'warn',title:'На аккаунте закончились средства',
         text:'Сервис отказал в запросе: на счёте нет денег или исчерпан лимит. Это ограничение самого сервиса, а не приложения.',
         tips:['Пополните баланс или проверьте лимиты в личном кабинете «'+prov+'».','Либо выберите другую модель или другой сервис.'],acts:['model','close']};
@@ -1418,6 +1464,11 @@ function copyFor(kind,ctx,e){
       return {icon:'warn',title:'Диалог слишком длинный для модели',
         text:'Вся переписка и прикреплённые файлы не помещаются в память этой модели.',
         tips:['Начните новый чат.','Приложите файл поменьше или выберите модель с большим контекстом.'],acts:['newchat','model','close']};
+    case 'noweb':
+      return {icon:'web',title:'Эта модель не поддерживает веб-поиск',
+        text:mdl+' не смогла выполнить поиск в интернете. Можно отправить вопрос без поиска или выбрать другую модель.',
+        tips:['Встроенный поиск в сети работает в Google Gemini, OpenRouter (для любых моделей), Claude, OpenAI и Grok.'],
+        acts:['noweb','model','close']};
     case 'nofiles':
       return {icon:'img',title:hasImg&&hasPdf?'Эта модель не принимает фото и PDF':hasPdf?'Эта модель не читает PDF':'Эта модель не принимает фото',
         text:mdl+' не смогла обработать прикреплённое ('+what+'). Скорее всего, она работает только с текстом. Реже причина в том, что файл повреждён.',
@@ -1569,6 +1620,163 @@ async function mediaCheck(pid,model,atts){
   if(act==='force')return {force:true};
   return 'stop';
 }
+
+/* ---------- веб-поиск в интернете ----------
+   tier:'auto' — API с бесплатным тарифом и умным встроенным поиском (Gemini, Groq Compound): работает универсально и автоматически, без переключателя.
+   tier:'paid' — платные API / платный плагин поиска (OpenRouter, OpenAI, Claude, Grok): отдельный переключатель (по умолчанию выключен) с предупреждением.
+   null        — модели без выхода в интернет: чистые запросы без лишних параметров. */
+let paidWeb=false;
+function webSpec(pid,model){
+  if(!pid||!model)return null;
+  const L=S.caps&&S.caps[capKey(pid,model)];
+  if(L&&L.web===false)return null;
+  const p=provOf(pid),c=S.providers[pid]||{},mg=pid==='managed',id=String(model).toLowerCase(),base=String(c.base||'').toLowerCase();
+  if(p.type==='gemini'){
+    if(/gemma|embedding|aqa|imagen|image|tts|audio|veo|learnlm|gemini-1\./i.test(id))return null;
+    return {mode:'gemini',tier:'auto'};
+  }
+  if(p.id==='groq'&&/compound/i.test(id))return {mode:'native',tier:'auto'};
+  if(p.id==='openrouter'||/openrouter\.ai/.test(base)){
+    if(/embedding|moderation/i.test(id))return null;
+    if(/:online$/i.test(id)||/^perplexity\/sonar/i.test(id))return {mode:'native',tier:'auto'};
+    return {mode:'openrouter',tier:'paid'};
+  }
+  if(/perplexity\.ai/.test(base)||/(^|\/)sonar/i.test(id))return {mode:'native',tier:'auto'};
+  if(p.type==='anthropic'){
+    if(/claude-(2|instant)/i.test(id))return null;
+    return {mode:'anthropic',tier:'paid'};
+  }
+  if(p.id==='xai'){
+    if(/image/i.test(id))return null;
+    return {mode:'xai',tier:'paid'};
+  }
+  if(p.id==='openai'){
+    if(/search/i.test(id))return {mode:'oai-search',tier:'paid'};
+    if(!mg&&(!base||/api\.openai\.com/.test(base))&&!/^(dall-e|whisper|tts|text-embedding|moderation|gpt-image)/i.test(id))return {mode:'oai-responses',tier:'paid'};
+    return null;
+  }
+  return null;
+}
+const curWebSpec=()=>{const pm=cur&&cur.model?splitM(cur.model):['',''];return webSpec(pm[0],pm[1])};
+function capSetWeb(pid,model,val){
+  if(!S.caps)S.caps={};
+  const k=capKey(pid,model),c=S.caps[k]||(S.caps[k]={});
+  c.web=val;save();
+}
+function findWebModel(tierOnly){
+  const a=avail();
+  const score=m=>{
+    const pm=splitM(m),ws=webSpec(pm[0],pm[1]);
+    if(!ws||(tierOnly&&ws.tier!==tierOnly))return 0;
+    if(ws.tier==='auto')return ws.mode==='gemini'?10:9;
+    return ws.mode==='openrouter'?4:ws.mode==='oai-responses'||ws.mode==='oai-search'?3:ws.mode==='anthropic'?2:1;
+  };
+  return a.filter(m=>score(m)>0).sort((x,y)=>score(y)-score(x))[0]||'';
+}
+function emptyWebHintHtml(){
+  const ws=curWebSpec();
+  if(ws&&ws.tier==='auto'){
+    return '<button class="web-hint auto" data-toggle-web>'+ic('lang',15)+'<span>Поиск в сети работает автоматически</span></button>';
+  }
+  if(ws&&ws.tier==='paid'){
+    return '<button class="web-hint'+(paidWeb?' on':'')+'" data-toggle-web>'+ic('lang',15)+'<span>'+(paidWeb?'Веб-поиск включён · актуальные данные':'Для свежих новостей и цен включите поиск')+'</span></button>';
+  }
+  return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Модель без интернета · как включить поиск</span></button>';
+}
+function syncWebBtn(){
+  const b=$('#btnWeb');if(!b)return;
+  const ws=curWebSpec();
+  const isAuto=!!(ws&&ws.tier==='auto');
+  const isPaid=!!(ws&&ws.tier==='paid');
+  if(!isPaid&&paidWeb)paidWeb=false;
+  b.hidden=isAuto;   // для автопоиска кнопка не нужна — всё работает универсально
+  b.classList.toggle('on',isPaid&&paidWeb);
+  b.classList.toggle('dim',!ws);
+  b.setAttribute('aria-pressed',String(isPaid&&paidWeb));
+  b.title=isPaid?(paidWeb?'Веб-поиск включён':'Включить веб-поиск (может быть платным)'):'Эта модель без доступа в интернет';
+  const el=$('#inp');
+  if(el)el.placeholder=(isPaid&&paidWeb)?'Спроси — найду в интернете…':'Спроси что угодно…';
+  const mh=$('#msgs'),h=mh&&mh.querySelector('.web-hint');
+  if(h)h.outerHTML=emptyWebHintHtml();
+}
+async function confirmPaidWeb(pid,ws){
+  const autoAlt=findWebModel('auto');
+  const isOR=ws.mode==='openrouter';
+  const actions=[{id:'on',label:'Включить поиск',kind:'pri'}];
+  if(autoAlt)actions.push({id:'auto',label:'Перейти на '+modelLabel(autoAlt)+' (автопоиск)'});
+  actions.push({id:'close',label:'Отмена',kind:'ghost'});
+  const act=await notice({icon:'web',title:'Веб-поиск может быть платным',
+    text:isOR
+      ?'В OpenRouter поиск в интернете оплачивается отдельно с баланса аккаунта — даже если выбрана бесплатная модель.'
+      :'В сервисе «'+provName(pid)+'» обращение к интернету тарифицируется отдельно сверх обычных токенов.',
+    tips:['Включайте поиск только когда нужны свежие новости, курсы или цены.',
+      autoAlt?'У вас уже подключена модель с бесплатным автопоиском — можно переключиться на неё кнопкой ниже.':'В Google Gemini поиск в интернете встроен и работает автоматически (есть бесплатный тариф).'],
+    actions:actions,dismiss:'close'});
+  if(act==='on'){
+    paidWeb=true;syncWebBtn();hap();toast('Веб-поиск включён');return true;
+  }
+  if(act==='auto'&&autoAlt){
+    cur.model=autoAlt;S.lastModel=autoAlt;save();paidWeb=false;renderTop();hap('medium');
+    toast('Выбрана '+modelLabel(autoAlt)+' · автопоиск в сети');return true;
+  }
+  return false;
+}
+async function toggleWeb(forceOn){
+  if(!cur||!cur.model||!avail().includes(cur.model)){await needModel();return false}
+  const pm=splitM(cur.model),pid=pm[0],model=pm[1],ws=webSpec(pid,model);
+  if(ws&&ws.tier==='auto'){
+    if(!forceOn)await infoBox('Поиск работает автоматически','«'+model+'» сама обращается в интернет, когда вы спрашиваете про свежие новости, цены или события. Ничего дополнительно включать не нужно.');
+    return true;
+  }
+  if(ws&&ws.tier==='paid'){
+    if(paidWeb&&!forceOn){
+      paidWeb=false;syncWebBtn();hap();toast('Веб-поиск выключен');return false;
+    }
+    if(paidWeb)return true;
+    return await confirmPaidWeb(pid,ws);
+  }
+  const autoAlt=findWebModel('auto'),paidAlt=!autoAlt?findWebModel('paid'):'';
+  const alt=autoAlt||paidAlt;
+  if(alt){
+    const ap=splitM(alt);
+    const act=await notice({icon:'web',title:'Эта модель работает без интернета',
+      text:autoAlt
+        ?'«'+model+'» ('+provName(pid)+') не умеет искать в сети. Переключиться на «'+ap[1]+'» — там веб-поиск работает автоматически?'
+        :'«'+model+'» ('+provName(pid)+') не умеет искать в сети. Переключиться на «'+ap[1]+'» ('+provName(ap[0])+')? Обратите внимание: веб-поиск там может быть платным.',
+      actions:[{id:'sw',label:autoAlt?'Переключить на '+modelLabel(alt):'Переключить и включить поиск',kind:'pri'},{id:'pick',label:'Выбрать другую модель'},{id:'close',label:'Отмена',kind:'ghost'}],dismiss:'close'});
+    if(act==='sw'){
+      cur.model=alt;S.lastModel=alt;save();
+      paidWeb=!autoAlt;
+      renderTop();hap('medium');
+      toast(autoAlt?'Автопоиск в сети · '+modelLabel(alt):'Веб-поиск включён · '+modelLabel(alt));
+      return true;
+    }
+    if(act==='pick')openPicker();
+    return false;
+  }
+  const act=await notice({icon:'web',title:'У этой модели нет доступа в интернет',
+    text:'«'+model+'» ('+provName(pid)+') отвечает только по своим знаниям и не видит свежих новостей, курсов и цен.',
+    tips:['Для бесплатного автоматического поиска подключите Google Gemini (или Groq Compound).','Также веб-поиск по переключателю доступен в OpenRouter, Claude, OpenAI и Grok (может быть платным).'],
+    actions:[{id:'set',label:'Открыть настройки',kind:'pri'},{id:'close',label:'Понятно',kind:'ghost'}],dismiss:'close'});
+  if(act==='set')openSettings();
+  return false;
+}
+function addSource(g,url,title){
+  if(!url||typeof url!=='string'||!/^https?:\/\//i.test(url))return;
+  const list=g.msg.sources||(g.msg.sources=[]);
+  if(list.length>=8||list.some(x=>x.url===url))return;
+  let lbl=String(title||'').trim();
+  if(!lbl){try{lbl=new URL(url).hostname.replace(/^www\./,'')}catch(e){lbl=url}}
+  if(lbl.length>30)lbl=lbl.slice(0,29)+'…';
+  list.push({url:url,title:lbl});
+}
+function sourcesHtml(m){
+  if(!m||!m.sources||!m.sources.length)return '';
+  return '<div class="srcs">'+m.sources.filter(s=>s&&/^https?:\/\//i.test(s.url)).map(s=>
+    '<a class="src-chip" href="'+esc(s.url)+'" target="_blank" rel="noopener">'+ic('lang',13)+'<span>'+esc(s.title||s.url)+'</span></a>'
+  ).join('')+'</div>';
+}
+
 async function needModel(){
   if(!avail().length){openConn();return}
   const a=await notice({icon:'info',title:'Сначала выберите модель',
@@ -1714,7 +1922,8 @@ function renderMsgs(){
   const c=cur;
 
   if(!c.messages.length&&!errMsg){
-    box.innerHTML='<div class="empty">Чем могу помочь?</div>';
+    box.innerHTML='<div class="empty"><div class="empty-in"><div class="empty-t">Чем могу помочь?</div>'+
+      emptyWebHintHtml()+'</div></div>';
     return;
   }
 
@@ -1736,7 +1945,8 @@ function renderMsgs(){
     const last=i===c.messages.length-1;
     const act=(busy&&last)?'':actHtml(m,last);
 
-    return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):((m.files&&m.files.length)?'':'<span class="dots"><i></i><i></i><i></i></span>'))+'</div>'+filesHtml(m)+act+'</div>';
+    const waitHtml=(busy&&last&&G&&G.msg===m)?statusHtml(G):'<span class="dots"><i></i><i></i><i></i></span>';
+    return '<div class="m a" data-i="'+i+'"><div class="b">'+(m.content?md(m.content):((m.files&&m.files.length)?'':waitHtml))+'</div>'+filesHtml(m)+(busy&&last?'':sourcesHtml(m))+act+'</div>';
   }).join('')+(busy?'<div class="send-space"></div>':'');
 
   hydrateAtts();
@@ -1751,6 +1961,80 @@ function renderMsgs(){
    всё это время кнопка работает как «Стоп», а нажатие полностью прекращает и запрос, и печать. */
 let G=null;   // текущая генерация
 
+function statusHtml(g){
+  if(g&&g.status==='searching')return '<div class="gstat"><span class="gstat-ic">'+ic('lang',16)+'</span><span>Ищу в интернете</span><span class="dots sm"><i></i><i></i><i></i></span></div>';
+  if(g&&g.status==='thinking')return '<div class="gstat"><span>Думает</span><span class="dots sm"><i></i><i></i><i></i></span></div>';
+  return '<span class="dots"><i></i><i></i><i></i></span>';
+}
+function setGenStatus(g,st){
+  if(G!==g||g.msg.content||g.status===st)return;
+  g.status=st;
+  if(cur!==g.chat)return;
+  const i=g.chat.messages.indexOf(g.msg);
+  const n=i>=0?box.querySelector('.m.a[data-i="'+i+'"] .b'):null;
+  if(n)n.innerHTML=statusHtml(g);
+}
+/* Находит границу завершённых блоков Markdown (пустая строка вне блока кода ```), чтобы не перерисовывать весь текст заново */
+function safeSplitPos(s){
+  let inCode=false,pos=0,lastSafe=0;
+  const lines=s.split('\n');
+  for(let i=0;i<lines.length-1;i++){
+    const line=lines[i];
+    const fences=line.match(/```/g);
+    if(fences&&fences.length%2)inCode=!inCode;
+    pos+=line.length+1;
+    if(!inCode&&!line.trim()&&i>0)lastSafe=pos;
+  }
+  return lastSafe;
+}
+/* Оборачивает в .word-in только новые и ещё не завершившие анимацию слова (age < 260 мс), оставляя остальной текст лёгким */
+function animWords(root,startIdx,g,now){
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()){
+    const nd=walker.currentNode;
+    if(nd.parentElement&&nd.parentElement.closest('.ch'))continue;
+    nodes.push(nd);
+  }
+  let count=startIdx;
+  const dur=260;
+  for(let j=0;j<nodes.length;j++){
+    const node=nodes[j],parts=node.textContent.match(/\s+|\S+/g);
+    if(!parts)continue;
+    let wordNum=0;
+    for(let k=0;k<parts.length;k++)if(!/^\s+$/.test(parts[k]))wordNum++;
+    let needWrap=false;
+    for(let k=0;k<wordNum;k++){
+      const t=g.wordT[count+k];
+      if(t===undefined||now-t<dur){needWrap=true;break}
+    }
+    if(!needWrap){count+=wordNum;continue}
+    const frag=document.createDocumentFragment();
+    let plain='';
+    const flush=()=>{if(plain){frag.appendChild(document.createTextNode(plain));plain=''}};
+    for(let k=0;k<parts.length;k++){
+      const part=parts[k];
+      if(/^\s+$/.test(part)){plain+=part;continue}
+      let t=g.wordT[count];
+      if(t===undefined){t=now;g.wordT[count]=t}
+      const age=now-t;
+      if(age<dur){
+        flush();
+        const span=document.createElement('span');
+        span.className='word-in';
+        if(age>8)span.style.animationDelay='-'+Math.round(age)+'ms';
+        span.textContent=part;
+        frag.appendChild(span);
+      }else{
+        plain+=part;
+      }
+      count++;
+    }
+    flush();
+    node.parentNode.replaceChild(frag,node);
+  }
+  return count;
+}
 function paint(){
   const g=G;
   if(!g||g.painting)return;
@@ -1763,46 +2047,43 @@ function paint(){
     const n=(cur===g.chat&&i>=0)?box.querySelector('.m.a[data-i="'+i+'"] .b'):null;
 
     if(n){
-      const next=m.content.indexOf(' ',g.idx);
-      g.idx=next===-1?m.content.length:next+1;
+      let p=g.idx,len=m.content.length;
+      while(p<len&&/\s/.test(m.content[p]))p++;
+      while(p<len&&!/\s/.test(m.content[p]))p++;
+      while(p<len&&/\s/.test(m.content[p]))p++;
+      g.idx=p;
 
-      n.innerHTML=m.content
-        ?md(m.content.slice(0,g.idx))
-        :'<span class="dots"><i></i><i></i><i></i></span>';
-
-      if(m.content){
-        const walker=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);
-        const nodes=[];
-        while(walker.nextNode())nodes.push(walker.currentNode);
-
-        let count=0;
-        nodes.forEach(node=>{
-          const parts=node.textContent.match(/\s+|\S+/g)||[];
+      if(!m.content){
+        n.innerHTML=statusHtml(g);
+      }else{
+        const now=(window.performance&&performance.now)?performance.now():Date.now();
+        const slice=m.content.slice(0,g.idx);
+        if(!g.tail||g.tail.parentNode!==n){
+          n.innerHTML='';
+          g.tail=document.createElement('div');
+          n.appendChild(g.tail);
+          g.lockedPos=0;g.lockedWords=0;
+        }
+        const safe=safeSplitPos(slice);
+        if(safe>g.lockedPos){
+          const tmp=document.createElement('div');
+          tmp.innerHTML=md(slice.slice(g.lockedPos,safe));
+          g.lockedWords=animWords(tmp,g.lockedWords,g,now);
           const frag=document.createDocumentFragment();
-
-          parts.forEach(part=>{
-            if(/^\s+$/.test(part)){
-              frag.appendChild(document.createTextNode(part));
-            }else{
-              const span=document.createElement('span');
-              span.textContent=part;
-              if(count>=g.words)span.className='word-in';
-              count++;
-              frag.appendChild(span);
-            }
-          });
-
-          node.parentNode.replaceChild(frag,node);
-        });
-
-        g.words=count;
+          while(tmp.firstChild)frag.appendChild(tmp.firstChild);
+          n.insertBefore(frag,g.tail);
+          g.lockedPos=safe;
+        }
+        const tailText=slice.slice(g.lockedPos);
+        g.tail.innerHTML=tailText?md(tailText):'';
+        g.words=tailText?animWords(g.tail,g.lockedWords,g,now):g.lockedWords;
       }
     }else{
       g.idx=m.content.length;   // чат не на экране — печатать нечего
     }
 
     if(g.idx<m.content.length){
-      setTimeout(()=>requestAnimationFrame(step),30);
+      g.paintT=setTimeout(()=>requestAnimationFrame(step),30);
     }else{
       g.painting=false;
       if(g.streamDone)finishGen(g);
@@ -1838,7 +2119,7 @@ function finishGen(g){
   if(removed||hasFiles)renderMsgs();
   else{
     const last=box.querySelector('.m.a[data-i="'+(chat.messages.length-1)+'"]');
-    if(last&&!last.querySelector('.act'))last.insertAdjacentHTML('beforeend',actHtml(msg,true));
+    if(last&&!last.querySelector('.act'))last.insertAdjacentHTML('beforeend',sourcesHtml(msg)+actHtml(msg,true));
   }
   if(failed)showGenError(g);
 }
@@ -1848,6 +2129,7 @@ function stopGen(){
   const g=G;
   if(!g)return;
   g.stopped=true;
+  clearTimeout(g.paintT);
   try{g.abort.abort()}catch(e){}
   // оставляем ровно то, что пользователь уже увидел на экране
   if(g.idx<g.msg.content.length)g.msg.content=g.msg.content.slice(0,g.idx);
@@ -1997,6 +2279,9 @@ box.addEventListener('click',e=>{
     return;
   }
 
+  const wh=e.target.closest('[data-toggle-web]');
+  if(wh){toggleWeb().then(on=>{if(on&&curWebSpec())inp.focus()});return}
+
   const cp=e.target.closest('[data-copy]');
   if(cp){
     const pre=cp.closest('.code').querySelector('pre');
@@ -2058,6 +2343,7 @@ function updateComposer(){
 }
 function renderTop(){
   $('#modelName').textContent=modelLabel(cur.model);
+  syncWebBtn();
 }
 function renderAll(){renderTop();renderMsgs();updateComposer()}
 
@@ -2065,6 +2351,7 @@ function renderAll(){renderTop();renderMsgs();updateComposer()}
 $('#btnMenu').innerHTML=ic('menu',22);
 $('#pchev').innerHTML=ic('chev',18);
 $('#btnAttach').innerHTML=ic('plus',26);
+$('#btnWeb').innerHTML=ic('lang',20)+'<span class="wlbl">Поиск</span>';
 $('#btnMic').innerHTML=ic('mic',22);
 $('#sIc').innerHTML=ic('search',18);
 $('#btnNew2').innerHTML=ic('edit',20);
@@ -2084,13 +2371,18 @@ $('#themeSw').addEventListener('click',e=>{
 });
 (function(){
   const cards=[
+    ['lang','Найти в сети','Свежие новости и цены','',true],
     ['book','Объясни тему','Просто о сложном','Объясни простыми словами: '],
     ['code','Помоги с кодом','Написать или починить','Помоги с кодом: '],
-    ['lang','Переведи текст','На любой язык','Переведи на английский: '],
     ['pen','Напиши текст','Письма, посты, идеи','Напиши текст: ']
   ];
   $('#sugg').innerHTML=cards.map((c,i)=>'<button class="sc" data-i="'+i+'"><span class="tile">'+ic(c[0],20)+'</span><span><b>'+c[1]+'</b><small>'+c[2]+'</small></span></button>').join('');
-  $('#sugg').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b)return;const inp=$('#inp');inp.value=cards[+b.dataset.i][3];autosize();inp.focus();updateComposer()});
+  $('#sugg').addEventListener('click',async e=>{
+    const b=e.target.closest('.sc');if(!b)return;
+    const card=cards[+b.dataset.i];
+    if(card[4]){const ok=await toggleWeb(true);if(!ok)return}
+    inp.value=card[3];autosize();inp.focus();updateComposer();
+  });
 })();
 const user=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;
 $('#pname').textContent=user?([user.first_name,user.last_name].filter(Boolean).join(' ')||user.username||'Гость'):'Гость';
@@ -2112,6 +2404,7 @@ $('#btnSend').addEventListener('click',()=>{
   if(inp.value.trim()||pending.length)send();
 });
 $('#btnAttach').addEventListener('click',()=>$('#file').click());
+$('#btnWeb').addEventListener('click',()=>toggleWeb());
 
 /* ---------- вложения: фото, PDF, текстовые файлы и документы Office ----------
    Всё, что можно прочитать как текст (код, txt, csv, docx, xlsx, pptx), уходит модели обычным текстом — это работает с любой моделью.
@@ -2754,7 +3047,7 @@ async function sse(res,onData){
 /* Скрывает «размышления» моделей, которые некоторые сервисы присылают прямо в тексте ответа:
    <think>…</think>, <thinking>, <thought>, <reasoning>. Блок распознаётся только в самом начале ответа,
    чтобы не прятать обычный текст, где такие теги просто упоминаются. */
-function thinkFilter(out){
+function thinkFilter(out,onThink){
   const OPENS=['<think>','<thinking>','<thought>','<reasoning>'];
   let buf='',inside='',shown=false;
   const emit=s=>{
@@ -2772,7 +3065,7 @@ function thinkFilter(out){
         }
         if(!shown){
           const s=buf.replace(/^\s+/,''),m=/^<(think|thinking|thought|reasoning)>/i.exec(s);
-          if(m){buf=s.slice(m[0].length);inside=m[1].toLowerCase();continue}
+          if(m){buf=s.slice(m[0].length);inside=m[1].toLowerCase();if(onThink)onThink();continue}
           if(!s||OPENS.some(o=>o.length>s.length&&o.indexOf(s.toLowerCase())===0)){buf=s;return}   // может оказаться началом тега — ждём
         }
         emit(buf);buf='';return;
@@ -2781,19 +3074,31 @@ function thinkFilter(out){
     end(){if(!inside&&buf)emit(buf);buf=''}
   };
 }
-const genCtx=g=>({where:'chat',provider:provName(g.pid),model:g.model,kinds:g.kinds,managed:g.pid==='managed'});
-/* Окно с ошибкой генерации и действиями: повторить, без файлов, другая модель… */
+const genCtx=g=>({where:'chat',provider:provName(g.pid),model:g.model,kinds:g.kinds,web:!!g.webMode,webTier:g.webTier||'',managed:g.pid==='managed'});
+function canWebFallback(e,g){
+  if(!e||e.name==='AbortError'||e.cloud)return false;
+  const st=e.status||0;
+  if(st===401||st===402||st===403||st===413||st===429||st>=500)return false;
+  const k=classify(e,genCtx(g));
+  if(k==='noweb')return true;
+  if(g.webMode==='oai-responses'&&(st===404||st===405||st===501))return true;
+  if(g.webTier==='auto'&&(st===400||st===404||st===422)&&!g.kinds.length)return true;
+  return false;
+}
+/* Окно с ошибкой генерации и действиями: повторить, без файлов, без поиска, другая модель… */
 async function showGenError(g){
   const info=errInfo(g.err,genCtx(g));
   if(info.kind==='nofiles'&&g.kinds.length)capSet(g.pid,g.model,g.kinds,false);   // запоминаем: эта модель не принимает такие файлы
+  if(info.kind==='noweb'&&g.webMode){capSetWeb(g.pid,g.model,false);syncWebBtn()}
   const act=await notice(info.dialog);
   const o=g.opts||{};
   if(act==='model')openPicker();
   else if(act==='settings')openSettings();
   else if(act==='newchat')startNew();
-  else if(act==='retry')generate({force:o.force});
-  else if(act==='text')generate({noMedia:true});
-  else if(act==='noold')generate({noOld:true,force:o.force});
+  else if(act==='retry')generate({force:o.force,noWeb:o.noWeb});
+  else if(act==='text')generate({noMedia:true,noWeb:o.noWeb});
+  else if(act==='noold')generate({noOld:true,force:o.force,noWeb:o.noWeb});
+  else if(act==='noweb'){paidWeb=false;syncWebBtn();generate({noWeb:true,force:o.force})}
 }
 async function generate(opts){
   opts=opts||{};
@@ -2814,14 +3119,16 @@ async function generate(opts){
   const msg={role:'assistant',content:'',model:chat.model};
   chat.messages.push(msg);
   const abort=new AbortController();
-  const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,opts:opts,kinds:[],saves:[],err:null,
+  const ws=opts.noWeb?null:webSpec(pid,model);
+  const wm=ws?(ws.tier==='auto'?ws.mode:(paidWeb?ws.mode:null)):null;
+  const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,wordT:[],lockedPos:0,lockedWords:0,tail:null,paintT:0,
+    status:(wm&&ws&&ws.tier==='paid')?'searching':'',webMode:wm,webTier:wm&&ws?ws.tier:'',opts:opts,kinds:[],saves:[],err:null,
     got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
   G=g;busy=true;abortC=abort;errMsg='';stick=true;anchored=true;renderAll();anchorSoon();
   const signal=abort.signal;
   const base=mg?'':(c.base||p.base).replace(/\/+$/,'');
   let uIn=0,uOut=0,got=false,completed=false,filtered=false;
   const push=d=>{if(g.stopped)return;msg.content+=d;paint()};
-  const think=thinkFilter(push);
   try{
     await Promise.race([configP,new Promise(r=>setTimeout(r,1500))]);
     if(signal.aborted)return;
@@ -2846,78 +3153,158 @@ async function generate(opts){
     if(W.info.dropped.length)toast('Старые вложения не переданы модели: не хватило места в запросе');
     if(signal.aborted)return;
 
-    if(p.type==='oai'){
-      const msgs=W.map(m=>m.files.length
-        ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>f.kind==='pdf'
-            ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
-            :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
-        :{role:m.role,content:m.text});
-      const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(msgs),stream:true};
-      if(p.usage)body.stream_options={include_usage:true};
-      if(p.id==='openrouter'&&/image/i.test(model))body.modalities=['image','text'];   // модели, которые умеют рисовать
-      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal)
-        :await fetch(base+'/chat/completions',{method:'POST',signal:signal,
+    const runProvider=async activeWm=>{
+      const think=thinkFilter(push,()=>setGenStatus(g,'thinking'));
+      if(p.type==='oai'&&activeWm==='oai-responses'&&!mg){
+        const input=W.map(m=>({role:m.role,content:m.role==='assistant'
+          ?[{type:'output_text',text:m.text}]
+          :(m.text?[{type:'input_text',text:m.text}]:[]).concat(m.files.map(f=>f.kind==='pdf'
+              ?{type:'input_file',filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}
+              :{type:'input_image',image_url:'data:'+f.type+';base64,'+f.data}))}));
+        const body={model:model,input:input,tools:[{type:'web_search'}],stream:true};
+        if(sysPrompt())body.instructions=sysPrompt();
+        const res=await fetch(base+'/responses',{method:'POST',signal:signal,
           headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
-      if(!res.ok)throw await apiErr(res);
-      const onChunk=j=>{
-        const ch=j.choices&&j.choices[0];
-        if(ch){
-          const dl=ch.delta||ch.message||{};
-          const t=Array.isArray(dl.content)?dl.content.map(x=>(x&&(!x.type||x.type==='text'||x.type==='output_text')&&x.text)||'').join(''):(typeof dl.content==='string'?dl.content:'');
-          if(t)think.feed(t);
-          (dl.images||[]).forEach(im=>{
-            const u=im&&((im.image_url&&im.image_url.url)||im.url),mm=/^data:([^;,]+);base64,(.+)$/.exec(u||'');
-            if(mm)addOutFile(g,mm[1],mm[2]);
-          });
-          if(ch.finish_reason==='content_filter')filtered=true;
-        }
-        if(j.usage&&j.usage.prompt_tokens!=null){uIn=j.usage.prompt_tokens;uOut=j.usage.completion_tokens||0;got=true}
-      };
-      if(/application\/json/i.test(res.headers.get('content-type')||''))onChunk(await res.json());   // сервис ответил без потока
-      else await sse(res,onChunk);
-    }else if(p.type==='anthropic'){
-      const wh=W.map(m=>m.files.length
-        ?{role:m.role,content:m.files.map(f=>f.kind==='pdf'
-            ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}}
-            :{type:'image',source:{type:'base64',media_type:f.type,data:f.data}}).concat(m.text?[{type:'text',text:m.text}]:[])}
-        :{role:m.role,content:m.text});
-      const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
-      if(sysPrompt())body.system=sysPrompt();
-      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/v1/messages',{method:'POST',signal:signal,
-        headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
-      if(!res.ok)throw await apiErr(res);
-      await sse(res,j=>{
-        if(j.type==='content_block_delta'&&j.delta&&j.delta.text&&(!j.delta.type||j.delta.type==='text_delta'))think.feed(j.delta.text);
-        else if(j.type==='message_start'&&j.message&&j.message.usage){uIn=(j.message.usage.input_tokens||0)+(j.message.usage.cache_read_input_tokens||0);got=true}
-        else if(j.type==='message_delta'&&j.usage){uOut=j.usage.output_tokens||uOut;got=true;if(j.delta&&j.delta.stop_reason==='refusal')filtered=true}
-        else if(j.type==='error'){
-          const er=new Error((j.error&&j.error.message)||'Ошибка API');er.raw=er.message;
-          er.status=(j.error&&j.error.type==='overloaded_error')?529:(j.error&&j.error.type==='rate_limit_error')?429:0;
-          throw er;
-        }
-      });
-    }else{
-      const body={contents:W.map(m=>({role:m.role==='assistant'?'model':'user',
-          parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
-        generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
-      if(/image/i.test(model))body.generationConfig.responseModalities=['TEXT','IMAGE'];   // модели, которые умеют рисовать
-      if(sysPrompt())body.systemInstruction={parts:[{text:sysPrompt()}]};
-      const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
-        {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-      if(!res.ok)throw await apiErr(res);
-      await sse(res,j=>{
-        const cand=j.candidates&&j.candidates[0],parts=cand&&cand.content&&cand.content.parts;
-        if(parts)parts.forEach(x=>{
-          if(x.thought)return;   // «мысли» модели (текст и черновые картинки) не показываем
-          if(x.text)think.feed(x.text);
-          const d=x.inlineData||x.inline_data;
-          if(d&&d.data)addOutFile(g,d.mimeType||d.mime_type,d.data);
+        if(!res.ok)throw await apiErr(res);
+        await sse(res,j=>{
+          if(j.type==='response.web_search_call.in_progress'||j.type==='response.web_search_call.searching')setGenStatus(g,'searching');
+          else if(j.type==='response.reasoning_summary_text.delta')setGenStatus(g,'thinking');
+          else if(j.type==='response.output_text.delta'&&j.delta)think.feed(j.delta);
+          else if(j.type==='response.output_text.annotation.added'&&j.annotation&&j.annotation.type==='url_citation')addSource(g,j.annotation.url,j.annotation.title);
+          else if(j.type==='response.completed'&&j.response){
+            const u=j.response.usage;
+            if(u){uIn=u.input_tokens||0;uOut=u.output_tokens||0;got=true}
+            (j.response.output||[]).forEach(o=>{
+              (o.content||[]).forEach(ct=>{(ct.annotations||[]).forEach(a=>{if(a&&a.type==='url_citation')addSource(g,a.url,a.title)})});
+            });
+          }else if(j.type==='response.failed'||j.type==='error'){
+            const er=new Error((j.error&&j.error.message)||(j.response&&j.response.error&&j.response.error.message)||'Ошибка API');
+            er.raw=er.message;throw er;
+          }
         });
-        if((j.promptFeedback&&j.promptFeedback.blockReason)||(cand&&/SAFETY|PROHIBITED|BLOCKLIST|SPII/.test(cand.finishReason||'')))filtered=true;
-        if(j.usageMetadata){uIn=j.usageMetadata.promptTokenCount||uIn;uOut=(j.usageMetadata.candidatesTokenCount||0)+(j.usageMetadata.thoughtsTokenCount||0);got=true}
-      });
+      }else if(p.type==='oai'){
+        const msgs=W.map(m=>m.files.length
+          ?{role:m.role,content:(m.text?[{type:'text',text:m.text}]:[]).concat(m.files.map(f=>f.kind==='pdf'
+              ?{type:'file',file:{filename:f.name||'document.pdf',file_data:'data:application/pdf;base64,'+f.data}}
+              :{type:'image_url',image_url:{url:'data:'+f.type+';base64,'+f.data}}))}
+          :{role:m.role,content:m.text});
+        const body={model:model,messages:(sysPrompt()?[{role:'system',content:sysPrompt()}]:[]).concat(msgs),stream:true};
+        if(p.usage)body.stream_options={include_usage:true};
+        if(p.id==='openrouter'&&/image/i.test(model))body.modalities=['image','text'];   // модели, которые умеют рисовать
+        if(activeWm==='openrouter')body.plugins=[{id:'web'}];
+        else if(activeWm==='oai-search')body.web_search_options={};
+        else if(activeWm==='xai')body.search_parameters={mode:'on'};
+        const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal)
+          :await fetch(base+'/chat/completions',{method:'POST',signal:signal,
+            headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
+        if(!res.ok)throw await apiErr(res);
+        const onChunk=j=>{
+          if(Array.isArray(j.citations))j.citations.forEach(ct=>{
+            if(typeof ct==='string')addSource(g,ct,'');
+            else if(ct&&ct.url)addSource(g,ct.url,ct.title);
+          });
+          const ch=j.choices&&j.choices[0];
+          if(ch){
+            const dl=ch.delta||ch.message||{};
+            if(dl.reasoning_content||dl.reasoning)setGenStatus(g,'thinking');
+            const t=Array.isArray(dl.content)?dl.content.map(x=>(x&&(!x.type||x.type==='text'||x.type==='output_text')&&x.text)||'').join(''):(typeof dl.content==='string'?dl.content:'');
+            if(t)think.feed(t);
+            (dl.annotations||(ch.message&&ch.message.annotations)||[]).forEach(a=>{
+              const uc=a&&(a.url_citation||a);
+              if(uc&&uc.url)addSource(g,uc.url,uc.title);
+            });
+            (dl.images||[]).forEach(im=>{
+              const u=im&&((im.image_url&&im.image_url.url)||im.url),mm=/^data:([^;,]+);base64,(.+)$/.exec(u||'');
+              if(mm)addOutFile(g,mm[1],mm[2]);
+            });
+            if(ch.finish_reason==='content_filter')filtered=true;
+          }
+          if(j.usage&&j.usage.prompt_tokens!=null){uIn=j.usage.prompt_tokens;uOut=j.usage.completion_tokens||0;got=true}
+        };
+        if(/application\/json/i.test(res.headers.get('content-type')||''))onChunk(await res.json());   // сервис ответил без потока
+        else await sse(res,onChunk);
+      }else if(p.type==='anthropic'){
+        const wh=W.map(m=>m.files.length
+          ?{role:m.role,content:m.files.map(f=>f.kind==='pdf'
+              ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}}
+              :{type:'image',source:{type:'base64',media_type:f.type,data:f.data}}).concat(m.text?[{type:'text',text:m.text}]:[])}
+          :{role:m.role,content:m.text});
+        const body={model:model,max_tokens:Math.max(256,+S.maxTokens||4096),messages:wh,stream:true};
+        if(sysPrompt())body.system=sysPrompt();
+        if(activeWm==='anthropic')body.tools=[{type:'web_search_20250305',name:'web_search',max_uses:5}];
+        const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/v1/messages',{method:'POST',signal:signal,
+          headers:{'Content-Type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+        if(!res.ok)throw await apiErr(res);
+        await sse(res,j=>{
+          if(j.type==='content_block_start'&&j.content_block){
+            const cb=j.content_block;
+            if(cb.type==='server_tool_use'&&cb.name==='web_search')setGenStatus(g,'searching');
+            else if(cb.type==='thinking')setGenStatus(g,'thinking');
+            else if(cb.type==='web_search_tool_result'&&Array.isArray(cb.content)){
+              cb.content.forEach(x=>{if(x&&x.url)addSource(g,x.url,x.title)});
+            }
+          }else if(j.type==='content_block_delta'&&j.delta){
+            if(j.delta.type==='thinking_delta')setGenStatus(g,'thinking');
+            else if(j.delta.type==='citations_delta'&&j.delta.citation&&j.delta.citation.url)addSource(g,j.delta.citation.url,j.delta.citation.title);
+            else if(j.delta.text&&(!j.delta.type||j.delta.type==='text_delta'))think.feed(j.delta.text);
+          }else if(j.type==='message_start'&&j.message&&j.message.usage){uIn=(j.message.usage.input_tokens||0)+(j.message.usage.cache_read_input_tokens||0);got=true}
+          else if(j.type==='message_delta'&&j.usage){uOut=j.usage.output_tokens||uOut;got=true;if(j.delta&&j.delta.stop_reason==='refusal')filtered=true}
+          else if(j.type==='error'){
+            const er=new Error((j.error&&j.error.message)||'Ошибка API');er.raw=er.message;
+            er.status=(j.error&&j.error.type==='overloaded_error')?529:(j.error&&j.error.type==='rate_limit_error')?429:0;
+            throw er;
+          }
+        });
+      }else{
+        const body={contents:W.map(m=>({role:m.role==='assistant'?'model':'user',
+            parts:m.files.map(f=>({inline_data:{mime_type:f.type,data:f.data}})).concat(m.files.length&&!m.text?[]:[{text:m.text}])})),
+          generationConfig:{maxOutputTokens:Math.max(256,+S.maxTokens||4096)}};
+        if(/image/i.test(model))body.generationConfig.responseModalities=['TEXT','IMAGE'];   // модели, которые умеют рисовать
+        if(activeWm==='gemini')body.tools=[{google_search:{}}];
+        if(sysPrompt())body.systemInstruction={parts:[{text:sysPrompt()}]};
+        const res=mg?await managedFetch('chat',model,JSON.stringify(body),signal):await fetch(base+'/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(c.key),
+          {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!res.ok)throw await apiErr(res);
+        await sse(res,j=>{
+          const cand=j.candidates&&j.candidates[0],parts=cand&&cand.content&&cand.content.parts;
+          const gm=cand&&cand.groundingMetadata;
+          if(gm&&gm.webSearchQueries&&gm.webSearchQueries.length)setGenStatus(g,'searching');
+          if(parts)parts.forEach(x=>{
+            if(x.thought){setGenStatus(g,'thinking');return}   // «мысли» модели не показываем, но сообщаем, что она думает
+            if(x.text)think.feed(x.text);
+            const d=x.inlineData||x.inline_data;
+            if(d&&d.data)addOutFile(g,d.mimeType||d.mime_type,d.data);
+          });
+          if(gm&&Array.isArray(gm.groundingChunks)){
+            gm.groundingChunks.forEach(ch=>{if(ch&&ch.web&&ch.web.uri)addSource(g,ch.web.uri,ch.web.title)});
+          }
+          if((j.promptFeedback&&j.promptFeedback.blockReason)||(cand&&/SAFETY|PROHIBITED|BLOCKLIST|SPII/.test(cand.finishReason||'')))filtered=true;
+          if(j.usageMetadata){uIn=j.usageMetadata.promptTokenCount||uIn;uOut=(j.usageMetadata.candidatesTokenCount||0)+(j.usageMetadata.thoughtsTokenCount||0);got=true}
+        });
+      }
+      think.end();
+    };
+
+    try{
+      await runProvider(wm);
+    }catch(e){
+      /* Если провайдер/модель отклонили инструмент веб-поиска — запоминаем это и сразу повторяем обычный запрос без ошибки */
+      if(!g.stopped&&wm&&wm!=='native'&&!msg.content&&!(msg.files&&msg.files.length)&&canWebFallback(e,g)){
+        capSetWeb(pid,model,false);
+        const wasPaid=g.webTier==='paid';
+        g.webMode=null;g.webTier='';g.status='';
+        if(wasPaid)paidWeb=false;
+        if(cur===chat){
+          syncWebBtn();
+          const idx=chat.messages.indexOf(msg);
+          const nEl=idx>=0?box.querySelector('.m.a[data-i="'+idx+'"] .b'):null;
+          if(nEl)nEl.innerHTML=statusHtml(g);
+          if(wasPaid)toast('Эта модель не поддерживает веб-поиск — отвечаю без интернета');
+        }
+        uIn=0;uOut=0;got=false;filtered=false;
+        await runProvider(null);
+      }else throw e;
     }
-    think.end();
     completed=true;
   }catch(e){
     if(g.stopped||(e&&e.name==='AbortError')){/* остановлено пользователем */}
@@ -2950,7 +3337,7 @@ function openPicker(){
     PROVIDERS.forEach(p=>{
       const ms=isAvail(p.id)?getModels(p.id):[];if(!ms.length)return;
       h+='<div class="pg">'+esc(provName(p.id))+'</div>';
-      ms.forEach(m=>{const v=p.id+'|'+m;h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span>'+(v===cur.model?ic('check',18):'')+'</button>'});
+      ms.forEach(m=>{const v=p.id+'|'+m,ws=webSpec(p.id,m);h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span><span class="pi-meta">'+(ws?'<span class="pi-web'+(ws.tier==='auto'?' auto':'')+'" aria-label="'+(ws.tier==='auto'?'Автопоиск в сети':'Веб-поиск по кнопке')+'">'+ic('lang',15)+'</span>':'')+(v===cur.model?ic('check',18):'')+'</span></button>'});
     });
   }
   $('#pcard').innerHTML=h;$('#pop').classList.add('on');pushLayer(closePicker);
@@ -2960,7 +3347,7 @@ $('#btnModel').addEventListener('click',()=>popOpen?closePicker():openPicker());
 $('#pop').addEventListener('click',e=>{
   if(e.target.id==='pop'){closePicker();return}
   const b=e.target.closest('[data-m]');
-  if(b){cur.model=b.dataset.m;S.lastModel=cur.model;save();closePicker();renderTop();hap();return}
+  if(b){const changed=cur.model!==b.dataset.m,hadPaid=paidWeb;cur.model=b.dataset.m;S.lastModel=cur.model;if(changed)paidWeb=false;save();closePicker();renderTop();if(changed&&hadPaid)toast('Веб-поиск сброшен для новой модели');hap();return}
   if(e.target.closest('[data-go]')){closePicker();openSettings()}
 });
 
