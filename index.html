@@ -1689,14 +1689,14 @@ function emptyWebHintHtml(){
   const pm=cur&&cur.model?splitM(cur.model):['',''],ws=webSpec(pm[0],pm[1]);
   if(ws&&ws.tier==='auto'){
     if(isWebCooled(pm[0],pm[1])){
-      return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Поиск временно недоступен · обычные ответы</span></button>';
+      return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>В бесплатной версии поиск недоступен</span></button>';
     }
     return '<button class="web-hint auto" data-toggle-web>'+ic('lang',15)+'<span>Поиск в сети работает автоматически</span></button>';
   }
   if(ws&&ws.tier==='paid'){
     return '<button class="web-hint'+(paidWeb?' on':'')+'" data-toggle-web>'+ic('lang',15)+'<span>'+(paidWeb?'Веб-поиск включён · актуальные данные':'Для свежих новостей и цен включите поиск')+'</span></button>';
   }
-  return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Модель без интернета · как включить поиск</span></button>';
+  return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Модель без интернета · выберите другую модель</span></button>';
 }
 function syncWebBtn(){
   const b=$('#btnWeb');if(!b)return;
@@ -2391,18 +2391,13 @@ $('#themeSw').addEventListener('click',e=>{
 });
 (function(){
   const cards=[
-    ['lang','Найти в сети','Свежие новости и цены','',true],
     ['book','Объясни тему','Просто о сложном','Объясни простыми словами: '],
     ['code','Помоги с кодом','Написать или починить','Помоги с кодом: '],
+    ['lang','Переведи текст','На любой язык','Переведи на английский: '],
     ['pen','Напиши текст','Письма, посты, идеи','Напиши текст: ']
   ];
   $('#sugg').innerHTML=cards.map((c,i)=>'<button class="sc" data-i="'+i+'"><span class="tile">'+ic(c[0],20)+'</span><span><b>'+c[1]+'</b><small>'+c[2]+'</small></span></button>').join('');
-  $('#sugg').addEventListener('click',async e=>{
-    const b=e.target.closest('.sc');if(!b)return;
-    const card=cards[+b.dataset.i];
-    if(card[4]){const ok=await toggleWeb(true);if(!ok)return}
-    inp.value=card[3];autosize();inp.focus();updateComposer();
-  });
+  $('#sugg').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b)return;inp.value=cards[+b.dataset.i][3];autosize();inp.focus();updateComposer()});
 })();
 const user=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;
 $('#pname').textContent=user?([user.first_name,user.last_name].filter(Boolean).join(' ')||user.username||'Гость'):'Гость';
