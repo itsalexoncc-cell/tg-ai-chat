@@ -923,37 +923,42 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 
 /* ---- Парящий объёмный дизайн + вдавленные поля поиска и ввода ---- */
 :root{
-  --flt-bg:linear-gradient(155deg,#2a2c35 0%,#20222a 58%,#1a1c22 100%);
-  --flt-bg-hi:linear-gradient(155deg,#383b47 0%,#2b2d38 58%,#23252e 100%);
-  --flt-sh:0 12px 28px -8px rgba(0,0,0,.72),0 4px 12px -2px rgba(0,0,0,.48),inset 0 1px 1px rgba(255,255,255,.11),inset 0 -2px 5px rgba(0,0,0,.26);
-  --flt-sh-sm:0 7px 18px -4px rgba(0,0,0,.64),0 2px 6px -1px rgba(0,0,0,.42),inset 0 1px 1px rgba(255,255,255,.14),inset 0 -1.5px 4px rgba(0,0,0,.24);
-  --flt-sh-lg:0 24px 54px -12px rgba(0,0,0,.84),0 8px 22px -4px rgba(0,0,0,.58),inset 0 1.5px 1px rgba(255,255,255,.12),inset 0 -2px 8px rgba(0,0,0,.32);
-  --deb-bg:linear-gradient(160deg,#0c0d11 0%,#14161d 100%);
-  --deb-sh:inset 0 3px 9px rgba(0,0,0,.78),inset 0 1px 2px rgba(0,0,0,.55),0 1px 0 rgba(255,255,255,.07);
+  --flt-bg:linear-gradient(155deg,#2e313c 0%,#23252f 58%,#1c1e26 100%);
+  --flt-bg-hi:linear-gradient(155deg,#3b3e4c 0%,#2e313d 58%,#252832 100%);
+  --flt-btn:linear-gradient(155deg,#424656 0%,#333644 58%,#292c38 100%);
+  --flt-sh:0 12px 28px -8px rgba(0,0,0,.74),0 4px 12px -2px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,255,.12),inset 0 -2px 5px rgba(0,0,0,.28);
+  --flt-sh-sm:0 7px 18px -4px rgba(0,0,0,.66),0 2px 6px -1px rgba(0,0,0,.44),inset 0 1px 1px rgba(255,255,255,.15),inset 0 -1.5px 4px rgba(0,0,0,.26);
+  --flt-sh-lg:0 24px 54px -12px rgba(0,0,0,.84),0 8px 22px -4px rgba(0,0,0,.58),inset 0 1.5px 1px rgba(255,255,255,.13),inset 0 -2px 8px rgba(0,0,0,.32);
+  --deb-bg:linear-gradient(160deg,#0b0c10 0%,#13151c 100%);
+  --deb-sh:inset 0 3px 9px rgba(0,0,0,.8),inset 0 1px 2px rgba(0,0,0,.56),0 1px 0 rgba(255,255,255,.07);
   --pri-bg:linear-gradient(155deg,#ffffff 0%,#e5e7ef 100%);
   --pri-sh:0 9px 22px -4px rgba(0,0,0,.66),0 3px 8px -1px rgba(0,0,0,.42),inset 0 1.5px 1px rgba(255,255,255,.95),inset 0 -2px 4px rgba(0,0,0,.14);
   --dan-bg:linear-gradient(155deg,#6c2929 0%,#521e1e 100%);
   --dan-sh:0 8px 18px -5px rgba(0,0,0,.65),inset 0 1px 1px rgba(255,180,180,.18),inset 0 -2px 4px rgba(0,0,0,.3);
-  --sel-bg:linear-gradient(155deg,#474a56 0%,#353844 58%,#2b2d38 100%);
-  --sel-sh:0 8px 20px -5px rgba(0,0,0,.62),inset 0 1.5px 1px rgba(255,255,255,.2),inset 0 -1.5px 4px rgba(0,0,0,.28);
+  --sel-bg:linear-gradient(155deg,#4b4f5e 0%,#383b48 58%,#2d303c 100%);
+  --sel-sh:0 8px 20px -5px rgba(0,0,0,.64),inset 0 1.5px 1px rgba(255,255,255,.22),inset 0 -1.5px 4px rgba(0,0,0,.28);
 }
 :root[data-theme="light"]{
-  --flt-bg:linear-gradient(155deg,#ffffff 0%,#f3f5fb 60%,#e9edf6 100%);
-  --flt-bg-hi:linear-gradient(155deg,#ffffff 0%,#eef1f8 58%,#e2e7f2 100%);
-  --flt-sh:0 10px 26px -7px rgba(30,41,59,.16),0 3px 10px -2px rgba(30,41,59,.08),inset 0 1.5px 1px rgba(255,255,255,.96),inset 0 -2px 5px rgba(30,41,59,.05);
-  --flt-sh-sm:0 6px 16px -4px rgba(30,41,59,.15),0 2px 6px -1px rgba(30,41,59,.08),inset 0 1.5px 1px rgba(255,255,255,.96),inset 0 -1.5px 4px rgba(30,41,59,.05);
-  --flt-sh-lg:0 24px 50px -12px rgba(15,23,42,.24),0 8px 20px -4px rgba(15,23,42,.12),inset 0 1.5px 1px rgba(255,255,255,.98),inset 0 -2px 6px rgba(15,23,42,.05);
-  --deb-bg:linear-gradient(160deg,#e2e6f0 0%,#eceff6 100%);
-  --deb-sh:inset 0 3px 7px rgba(15,23,42,.15),inset 0 1px 2px rgba(15,23,42,.09),0 1px 0 rgba(255,255,255,.92);
+  --flt-bg:linear-gradient(155deg,#eceff8 0%,#e1e6f3 58%,#d5dced 100%);
+  --flt-bg-hi:linear-gradient(155deg,#eef1f9 0%,#e2e7f4 58%,#d6deee 100%);
+  --flt-btn:linear-gradient(155deg,#f8faff 0%,#edf1fa 58%,#e1e7f4 100%);
+  --flt-sh:0 12px 28px -6px rgba(30,41,59,.2),0 4px 12px -2px rgba(30,41,59,.11),inset 0 1.5px 1px rgba(255,255,255,.86),inset 0 -2px 6px rgba(30,41,59,.07);
+  --flt-sh-sm:0 7px 18px -4px rgba(30,41,59,.2),0 2px 7px -1px rgba(30,41,59,.11),inset 0 1.5px 1px rgba(255,255,255,.88),inset 0 -1.5px 4px rgba(30,41,59,.07);
+  --flt-sh-lg:0 24px 52px -12px rgba(15,23,42,.26),0 8px 22px -4px rgba(15,23,42,.14),inset 0 1.5px 1px rgba(255,255,255,.9),inset 0 -2px 6px rgba(15,23,42,.07);
+  --deb-bg:linear-gradient(160deg,#cfd6e6 0%,#dce2f0 62%,#e6ebf5 100%);
+  --deb-sh:inset 0 3px 8px rgba(30,41,59,.19),inset 0 1px 3px rgba(30,41,59,.11),0 1px 0 rgba(255,255,255,.88);
   --pri-bg:linear-gradient(155deg,#2e303b 0%,#181920 100%);
-  --pri-sh:0 8px 20px -4px rgba(15,23,42,.34),0 2px 8px -1px rgba(15,23,42,.2),inset 0 1px 1px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.3);
-  --dan-bg:linear-gradient(155deg,#fee2e2 0%,#fbd0d0 100%);
-  --dan-sh:0 6px 16px -4px rgba(180,35,43,.18),inset 0 1px 1px rgba(255,255,255,.85),inset 0 -1.5px 4px rgba(180,35,43,.08);
-  --sel-bg:linear-gradient(155deg,#e2e7f4 0%,#d2daf0 58%,#c5d0eb 100%);
-  --sel-sh:0 7px 18px -5px rgba(30,41,59,.2),inset 0 1.5px 1px rgba(255,255,255,.85),inset 0 -1.5px 4px rgba(30,41,59,.07);
+  --pri-sh:0 8px 20px -4px rgba(15,23,42,.36),0 2px 8px -1px rgba(15,23,42,.22),inset 0 1px 1px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.3);
+  --dan-bg:linear-gradient(155deg,#fee2e2 0%,#f9c9c9 100%);
+  --dan-sh:0 6px 16px -4px rgba(180,35,43,.22),inset 0 1px 1px rgba(255,255,255,.85),inset 0 -1.5px 4px rgba(180,35,43,.1);
+  --sel-bg:linear-gradient(155deg,#d6dff2 0%,#c7d3ec 58%,#b8c7e6 100%);
+  --sel-sh:0 7px 18px -4px rgba(30,41,59,.22),inset 0 1.5px 1px rgba(255,255,255,.8),inset 0 -1.5px 4px rgba(30,41,59,.09);
 }
 
-/* Верхняя панель: парящие кнопка меню и пилюля модели */
+/* Верхняя панель и отступы прокручиваемых страниц (чтобы тени никогда не обрезались) */
+#top{padding:max(12px,env(safe-area-inset-top)) 16px 12px}
+#msgs{padding:10px 16px 20px}
+#setBody,#manBody,#updBody,#fbPageBody{padding:10px 16px max(34px,env(safe-area-inset-bottom))}
 .circle{width:40px;height:40px;border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,box-shadow .16s ease}
 .circle:active{transform:scale(.94)}
 .pill{height:40px;padding:0 14px 0 18px;border:0;border-radius:999px;background:var(--pri-bg);box-shadow:var(--pri-sh);transition:transform .14s ease}
@@ -980,56 +985,81 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 .mbox{border:0;border-radius:26px;padding:12px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
 :root[data-theme="light"] .mbox{background:var(--deb-bg);border:0}
 .pvb .mfilter input,.gb .mfilter input{box-shadow:none!important;border-radius:0!important}
+.mtop{padding:2px 2px 4px}
 .mtop input{padding:0 14px!important}
 .pvb .inw input{padding-right:46px}
 
-/* Кнопка отправки и подсказки над полем ввода */
+/* Список моделей в настройках: мягкие парящие скруглённые капсулы вместо квадратных плашек */
+.mbox .mlist,:root[data-theme="light"] .mbox .mlist{
+  background:transparent;border:0;border-radius:20px;max-height:290px;margin-top:4px;
+  padding:6px 4px 12px;display:flex;flex-direction:column;gap:8px
+}
+.mrow,:root[data-theme="light"] .mrow{
+  border:0;border-radius:22px;padding:9px 8px 9px 12px;
+  background:var(--flt-btn);box-shadow:var(--flt-sh-sm);
+  transition:transform .14s ease,background .16s ease,box-shadow .16s ease
+}
+.mrow:active,:root[data-theme="light"] .mrow:active{transform:scale(.985);background:var(--flt-btn)}
+.mrow.on,:root[data-theme="light"] .mrow.on{background:var(--sel-bg);box-shadow:var(--sel-sh)}
+.mrow .cb{border-radius:50%;border-width:1.6px}
+
+/* Кнопка отправки и подсказки над полем ввода (тени не обрезаются ни сверху, ни снизу, ни по бокам) */
 .send{background:var(--pri-bg);box-shadow:var(--pri-sh);transition:transform .14s ease,opacity .16s ease}
 .send:active:not(:disabled){transform:scale(.93)}
 .send:disabled{background:var(--flt-bg-hi);box-shadow:none;opacity:.55}
 :root[data-theme="light"] .send{background:var(--pri-bg);color:#fff}
-:root[data-theme="light"] .send:disabled{background:#d4d8e3;color:#8e93a2;box-shadow:none;opacity:.75}
-.sugg{padding:4px 4px 14px;margin:0 -4px 4px}
+:root[data-theme="light"] .send:disabled{background:#cdd3e2;color:#7e8599;box-shadow:none;opacity:.85}
+.sugg{gap:10px;margin:-10px -16px 0;padding:14px 16px 20px;scroll-padding-left:16px}
 .sc{border:0;border-radius:999px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease}
 .sc:active{transform:scale(.97)}
 .sc .tile{background:var(--deb-bg);box-shadow:var(--deb-sh)}
-:root[data-theme="light"] .sc{background:var(--flt-bg-hi);border:0}
+:root[data-theme="light"] .sc{background:var(--flt-bg-hi);border:0;box-shadow:var(--flt-sh-sm)}
 :root[data-theme="light"] .sc .tile{background:var(--deb-bg)}
 
 /* Полукруглые парящие кнопки по всему интерфейсу */
 .btn,.btn.sm,.fb-type,.fb-chip,.err button,.attach-btn,.newc,.ci,.pi{border-radius:999px}
-.btn{border:0;padding:10px 18px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,opacity .16s ease}
+.btn{border:0;padding:10px 18px;background:var(--flt-btn);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,opacity .16s ease}
 .btn:active:not(:disabled){transform:scale(.96)}
 .btn.sm{padding:8px 14px;border-radius:999px}
 .btn.pri{background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
 .btn.dan{background:var(--dan-bg);color:#ffb4b4;box-shadow:var(--dan-sh)}
-.btn.ghost{background:rgba(255,255,255,.06);border:0;box-shadow:var(--flt-sh-sm)}
-:root[data-theme="light"] .btn{background:var(--flt-bg-hi);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
+.btn.ghost{background:var(--flt-btn);border:0;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .btn{background:var(--flt-btn);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
 :root[data-theme="light"] .btn.pri{background:var(--pri-bg);color:#fff;border:0;box-shadow:var(--pri-sh)}
 :root[data-theme="light"] .btn.dan{background:var(--dan-bg);color:#b4232b;border:0;box-shadow:var(--dan-sh)}
-:root[data-theme="light"] .btn.ghost{background:rgba(15,23,42,.05);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .btn.ghost{background:var(--flt-btn);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
 .act button,.umore,.eye,.mrow .mx,.mtop .btn.plus{border-radius:50%}
 .mtop .btn{border-radius:999px;padding:0 15px}
 .mtop .btn.plus{width:40px;height:40px;padding:0}
-.fb-type{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+.fb-type{border:0;background:var(--flt-btn);box-shadow:var(--flt-sh-sm)}
 .fb-type.on,.fb-chip.on{background:var(--pri-bg);color:#121212;border:0;box-shadow:var(--pri-sh)}
-.fb-chip{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
-:root[data-theme="light"] .fb-type,:root[data-theme="light"] .fb-chip{background:var(--flt-bg-hi);border:0;color:var(--muted)}
-:root[data-theme="light"] .fb-type.on,:root[data-theme="light"] .fb-chip.on{background:var(--pri-bg);color:#fff;border:0}
+.fb-chip{border:0;height:36px;padding:0 15px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease}
+.fb-chip:active{transform:scale(.96)}
+:root[data-theme="light"] .fb-type{background:var(--flt-btn);border:0;color:var(--muted)}
+:root[data-theme="light"] .fb-chip{background:var(--flt-bg-hi);border:0;color:var(--muted);box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .fb-type.on,:root[data-theme="light"] .fb-chip.on{background:var(--pri-bg);color:#fff;border:0;box-shadow:var(--pri-sh)}
+.fb-bar{margin:-6px -16px 2px;padding:0;gap:8px}
+.fb-filters{gap:8px;padding:12px 16px 18px}
+.fb-bar>.btn{margin-right:16px;margin-bottom:6px}
 .attach-btn{border:1.5px dashed rgba(155,155,155,.35);background:var(--deb-bg);box-shadow:var(--deb-sh)}
 
 /* Большие парящие окна, карточки, меню и шторка с увеличенным радиусом закругления */
 #drawer{border-right:0;border-radius:0 32px 32px 0;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
 :root[data-theme="light"] #drawer{background:var(--flt-bg);border:0}
-.pcard{border:0;border-radius:30px;padding:10px;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
+.list{padding:6px 14px 16px}
+.pcard{border:0;border-radius:30px;padding:12px 14px;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
 :root[data-theme="light"] .pcard{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh-lg)}
 .dcard,.dcard.cn,.dcard.nt,.dcard.fb{border:0;border-radius:32px;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
 :root[data-theme="light"] .dcard,:root[data-theme="light"] .dcard.cn,:root[data-theme="light"] .dcard.nt,:root[data-theme="light"] .dcard.fb{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh-lg)}
 #dlg.context .dcard{border-radius:26px;padding:10px;box-shadow:var(--flt-sh-lg)}
 .uc,.pv,.gb,.manbtn{border:0;border-radius:26px;background:var(--flt-bg);box-shadow:var(--flt-sh)}
+.pv{overflow:visible}
+.pvh{border-radius:26px}
+.pvb{padding:2px 16px 18px}
 .uc,.pv{margin-bottom:14px}
 .uc{padding:14px 16px}
-.gb{padding:6px 16px 16px}
+.gb{padding:8px 16px 18px}
+.btns{margin-top:14px}
 .manbtn{padding:15px 18px;transition:transform .14s ease}
 .manbtn:active{transform:scale(.98)}
 :root[data-theme="light"] .uc,
@@ -1038,11 +1068,11 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 :root[data-theme="light"] .manbtn{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh)}
 
 /* Выбор модели: мягкое объёмное выделение без галочки */
-.pi{padding:11px 16px;margin:2px 0;transition:background .16s ease,box-shadow .16s ease,transform .14s ease}
+.pi{padding:11px 16px;margin:3px 0;transition:background .16s ease,box-shadow .16s ease,transform .14s ease}
 .pi:active{transform:scale(.98)}
 .pi.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);font-weight:600;color:#fff}
 :root[data-theme="light"] .pi.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);color:var(--text)}
-.ci{padding:0 6px 0 15px;margin:2px 0;transition:background .16s ease,box-shadow .16s ease}
+.ci{padding:0 6px 0 15px;margin:3px 0;transition:background .16s ease,box-shadow .16s ease}
 .ci.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);font-weight:500}
 :root[data-theme="light"] .ci.sel{background:var(--sel-bg);box-shadow:var(--sel-sh)}
 .newc{padding:11px 16px}
@@ -1051,19 +1081,21 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 .code{border:0;border-radius:24px;box-shadow:var(--flt-sh)}
 .code .ch{padding:9px 16px}
 .err{border:0;border-radius:24px;box-shadow:var(--flt-sh)}
+.atts{padding:8px 8px 14px;margin:-4px -6px -4px}
 .att{border:0;border-radius:18px;box-shadow:var(--flt-sh-sm)}
 .aimg,.uimg{border-radius:18px;box-shadow:var(--flt-sh-sm)}
 button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+.srcs{margin:2px -16px 0;padding:8px 16px 14px;gap:8px}
 .src-chip{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);padding:6px 13px}
-:root[data-theme="light"] .src-chip{background:var(--flt-bg-hi);border:0}
+:root[data-theme="light"] .src-chip{background:var(--flt-bg-hi);border:0;box-shadow:var(--flt-sh-sm)}
 .web-hint{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
 .web-hint.auto{background:linear-gradient(155deg,rgba(74,222,128,.22),rgba(34,197,94,.12));box-shadow:var(--flt-sh-sm)}
 .web-hint.on{background:linear-gradient(155deg,rgba(96,165,250,.26),rgba(59,130,246,.14));box-shadow:var(--flt-sh-sm)}
 .web-hint.avail{background:linear-gradient(155deg,rgba(96,165,250,.18),rgba(59,130,246,.08));box-shadow:var(--flt-sh-sm)}
 :root[data-theme="light"] .web-hint{background:var(--flt-bg-hi);border:0;box-shadow:var(--flt-sh-sm)}
-:root[data-theme="light"] .web-hint.auto{background:linear-gradient(155deg,#e6f8ec,#d2f0dc);border:0}
-:root[data-theme="light"] .web-hint.on{background:linear-gradient(155deg,#e8f2ff,#d4e6ff);border:0}
-:root[data-theme="light"] .web-hint.avail{background:linear-gradient(155deg,#f0f6ff,#e1ecfe);border:0}
+:root[data-theme="light"] .web-hint.auto{background:linear-gradient(155deg,#e2f6e9,#cdecd8);border:0}
+:root[data-theme="light"] .web-hint.on{background:linear-gradient(155deg,#e2eeff,#cce1ff);border:0}
+:root[data-theme="light"] .web-hint.avail{background:linear-gradient(155deg,#eaf2ff,#d8e7fe);border:0}
 .tsw .sw{border:0;border-radius:999px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
 .tsw .sw i{box-shadow:0 2px 6px rgba(0,0,0,.35)}
 .bar{border-radius:999px;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}
@@ -1075,7 +1107,6 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 #toast{border-radius:999px;padding:10px 18px;box-shadow:var(--flt-sh-lg)}
 .hint{font-size:12.5px;line-height:1.4;margin:6px 6px 10px;opacity:.82}
 #setBody h3,#updBody h3{margin:20px 0 8px 6px}
-.mrow .cb{border-radius:50%}
 </style>
 </head>
 <body>
@@ -4038,7 +4069,7 @@ function renderProvs(){
       '<div class="lf"><label>Лимит</label><input inputmode="numeric" data-f="limit" value="'+(c.limit||'')+'" placeholder="0"></div></div>'+
       '<label>Base URL'+(p.custom?' (обязательно)':' (необязательно)')+'</label><input data-f="base" autocapitalize="off" spellcheck="false" placeholder="'+esc(p.base||'https://example.com/v1')+'" value="'+esc(c.base)+'">'+
       modelsHtml(p)+
-      '<div class="btns">'+(p.balance?'<button class="btn sm" data-act="bal" style="padding:7px 10px">Проверить баланс</button>':'')+'<button class="btn ghost sm" data-act="resetu" style="padding:7px 10px">Сбросить счётчик</button><button class="btn dan sm" data-act="clearkey" aria-label="Очистить поля ключа" style="margin-left:auto;padding:0;width:36px;height:36px;display:grid;place-items:center">'+ic('trash',18)+'</button></div></div>':'')+'</div>';
+      '<div class="btns">'+(p.balance?'<button class="btn sm" data-act="bal">Проверить баланс</button>':'')+'<button class="btn ghost sm" data-act="resetu">Сбросить счётчик</button><button class="btn dan sm" data-act="clearkey" aria-label="Очистить поля ключа" style="margin-left:auto;padding:0;width:36px;height:36px;display:grid;place-items:center">'+ic('trash',18)+'</button></div></div>':'')+'</div>';
   }).join('');
 }
 function updModelCount(pv,pid){
