@@ -807,6 +807,59 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 :root[data-theme="light"] .fb-tag.idea{background:#e3efff;color:#1769c2}
 :root[data-theme="light"] .fb-tag.bug{background:#fde8e8;color:#c62828}
 :root[data-theme="light"] .fb-dot{background:#2563eb}
+
+/* ---- Экран синхронизации ключей при запуске ---- */
+#boot{position:absolute;inset:0;z-index:75;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;opacity:1;transition:opacity .32s ease,transform .32s ease}
+#boot.hide{opacity:0;transform:scale(1.03);pointer-events:none}
+.bk-stage{position:relative;width:116px;height:116px;display:grid;place-items:center}
+.bk-glow{position:absolute;inset:8px;border-radius:50%;background:var(--text);opacity:.04;transition:background .35s ease,opacity .35s ease,transform .45s cubic-bezier(.2,.8,.2,1)}
+#boot.ok .bk-glow{background:var(--ok);opacity:.16;transform:scale(1.18)}
+.bk-pulse{position:absolute;inset:8px;border-radius:50%;border:2px solid var(--ok);opacity:0;pointer-events:none}
+#boot.ok .bk-pulse{animation:bkPulse .65s cubic-bezier(.2,.8,.2,1) forwards}
+.bk-svg{position:relative;width:116px;height:116px;color:var(--text);overflow:visible}
+.bk-arc,.bk-lock,.bk-shackle,.bk-hole,.bk-key{transform-box:view-box}
+.bk-track{stroke:var(--border);opacity:.5;transition:opacity .3s ease}
+.bk-arc{stroke:var(--text);stroke-dasharray:74 235;stroke-linecap:round;transform-origin:54px 54px;animation:bkSpin 1.35s linear infinite;transition:stroke .3s ease,stroke-dasharray .4s ease}
+#boot.ok .bk-arc{animation:none;stroke:var(--ok);stroke-dasharray:309 0}
+#boot.ok .bk-track{opacity:0}
+.bk-lock{transform-origin:54px 58px;animation:bkLockNudge 1.8s ease-in-out infinite}
+#boot.ok .bk-lock{animation:none}
+.bk-shackle{transform-origin:43px 51px;transition:transform .46s cubic-bezier(.22,1.45,.36,1),stroke .3s ease}
+#boot.ok .bk-shackle{transform:translateY(-4px) rotate(-26deg);stroke:var(--ok)}
+.bk-body{fill:var(--bg);transition:stroke .3s ease}
+#boot.ok .bk-body{stroke:var(--ok)}
+.bk-hole{transition:opacity .22s ease,transform .22s ease;transform-origin:54px 63px}
+#boot.ok .bk-hole{opacity:0;transform:scale(.5)}
+.bk-check{stroke:var(--ok);stroke-dasharray:26;stroke-dashoffset:26;opacity:0;transition:stroke-dashoffset .34s cubic-bezier(.2,.8,.2,1) .14s,opacity .15s ease .12s}
+#boot.ok .bk-check{stroke-dashoffset:0;opacity:1}
+.bk-key{transform-origin:61px 63.5px;animation:bkKeySync 1.8s ease-in-out infinite;transition:opacity .26s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
+.bk-key-bow{fill:var(--bg)}
+#boot.ok .bk-key{animation:none;transform:translateX(-7px) rotate(-26deg) scale(.86);opacity:0}
+.bk-title{margin:20px 0 6px;font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--text);transition:color .25s ease}
+.bk-sub{margin:0;min-height:20px;font-size:14px;line-height:1.4;color:var(--muted)}
+.bk-dots{display:inline-flex;gap:4px;margin-left:5px;vertical-align:middle}
+.bk-dots i{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.3;animation:bl 1.2s infinite}
+.bk-dots i:nth-child(2){animation-delay:.2s}.bk-dots i:nth-child(3){animation-delay:.4s}
+#boot.ok .bk-dots{display:none}
+@keyframes bkSpin{to{transform:rotate(360deg)}}
+@keyframes bkKeySync{
+  0%,100%{transform:translateX(8px) rotate(0deg);opacity:.78}
+  28%{transform:translateX(-5px) rotate(0deg);opacity:1}
+  46%{transform:translateX(-5px) rotate(-20deg);opacity:1}
+  64%{transform:translateX(-5px) rotate(0deg);opacity:1}
+}
+@keyframes bkLockNudge{
+  0%,36%,70%,100%{transform:rotate(0deg)}
+  48%{transform:rotate(-3.5deg)}
+  58%{transform:rotate(2deg)}
+}
+@keyframes bkPulse{
+  from{opacity:.55;transform:scale(.95)}
+  to{opacity:0;transform:scale(1.36)}
+}
+@media (prefers-reduced-motion:reduce){
+  .bk-arc,.bk-key,.bk-lock,#boot.ok .bk-pulse{animation:none}
+}
 </style>
 </head>
 <body>
@@ -870,6 +923,31 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
     <div id="vstage"><img id="vimg" alt="" draggable="false"></div>
     <button class="ib vnav" id="vPrev" aria-label="Предыдущее"></button>
     <button class="ib vnav" id="vNext" aria-label="Следующее"></button>
+  </div>
+  <div id="boot" role="status" aria-live="polite">
+    <div class="bk-stage">
+      <div class="bk-glow"></div>
+      <div class="bk-pulse"></div>
+      <svg class="bk-svg" viewBox="0 0 108 108" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle class="bk-track" cx="54" cy="54" r="49" stroke-width="2"/>
+        <circle class="bk-arc" cx="54" cy="54" r="49" stroke-width="2.4"/>
+        <g class="bk-lock">
+          <path class="bk-shackle" d="M43 52V42a11 11 0 0 1 22 0v10"/>
+          <rect class="bk-body" x="36" y="50" width="36" height="27" rx="7"/>
+          <g class="bk-hole">
+            <circle cx="54" cy="61.5" r="2.6" fill="currentColor" stroke="none"/>
+            <path d="M54 63.5v4.8" stroke-width="2.2"/>
+          </g>
+          <path class="bk-check" d="M46.5 63.5l5 5 10-10.5" stroke-width="2.7"/>
+        </g>
+        <g class="bk-key">
+          <path d="M78.5 63.5H61M64.5 63.5v4M69 63.5v2.8" stroke-width="2.3"/>
+          <circle class="bk-key-bow" cx="84" cy="63.5" r="5.4" stroke-width="2.3"/>
+        </g>
+      </svg>
+    </div>
+    <div class="bk-title" id="bootTitle">Синхронизация ключей</div>
+    <p class="bk-sub"><span id="bootSub">Подключаем ваши модели</span><span class="bk-dots" aria-hidden="true"><i></i><i></i><i></i></span></p>
   </div>
   <div id="toast"></div>
 </div>
@@ -1057,8 +1135,45 @@ function managedFetch(op,model,body,signal){
   return fetch(CLOUD_API+'/managed/proxy?op='+op+(model?'&model='+encodeURIComponent(model):''),
     {method:'POST',signal:signal,headers:h,body:op==='chat'?body:undefined});
 }
+/* ---------- экран синхронизации ключей при запуске ---------- */
+let bootT=Date.now(),bootHideT=0;
+const bootVisible=()=>{const b=$('#boot');return !!(b&&!b.hidden&&!b.classList.contains('hide'))};
+function bootShow(title,sub){
+  const b=$('#boot');if(!b)return;
+  clearTimeout(bootHideT);
+  bootT=Date.now();
+  b.hidden=false;
+  b.classList.remove('ok','hide');
+  if(title)$('#bootTitle').textContent=title;
+  if(sub)$('#bootSub').textContent=sub;
+}
+function bootText(title,sub){
+  if(title&&$('#bootTitle'))$('#bootTitle').textContent=title;
+  if(sub&&$('#bootSub'))$('#bootSub').textContent=sub;
+}
+function bootHide(fast){
+  const b=$('#boot');if(!b||b.hidden)return;
+  clearTimeout(bootHideT);
+  b.classList.add('hide');
+  bootHideT=setTimeout(()=>{b.hidden=true},fast?180:340);
+}
+async function bootUnlock(title,sub){
+  const b=$('#boot');if(!b||b.hidden||b.classList.contains('hide'))return;
+  const minWait=Math.max(0,450-(Date.now()-bootT));
+  if(minWait)await new Promise(r=>setTimeout(r,minWait));
+  if(b.hidden||b.classList.contains('hide'))return;
+  bootText(title||'Ключи синхронизированы',sub||'Готово к работе');
+  b.classList.add('ok');
+  try{if(tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred)tg.HapticFeedback.notificationOccurred('success');else hap('light')}catch(e){}
+  await new Promise(r=>setTimeout(r,620));
+  bootHide(false);
+}
+function modelsReadyText(){
+  const n=avail().length;
+  return n?'Доступно моделей: '+n:'Готово к работе';
+}
 async function loadCloudKeys(){
-  if(!tg||!tg.initData){showError(needTg(),{where:'cloud'});return 1}
+  if(!tg||!tg.initData){bootHide(true);showError(needTg(),{where:'cloud'});return 1}
   let migrated=0,loaded=0,failed=0;
   await Promise.all(VISIBLE.map(async p=>{
     const c=S.providers[p.id];
@@ -1069,8 +1184,8 @@ async function loadCloudKeys(){
   }));
   try{await syncManaged()}catch(e){failed++}
   save();
-  if(failed)syncFailedNotice();
-  else if(migrated||loaded)toast('Ключи синхронизированы с облаком');
+  if(failed){bootHide(true);syncFailedNotice()}
+  else if((migrated||loaded)&&!bootVisible())toast('Ключи синхронизированы с облаком');
   return failed;
 }
 function syncFailedNotice(){
@@ -1080,11 +1195,16 @@ function syncFailedNotice(){
     actions:[{id:'retry',label:'Повторить',kind:'pri'},{id:'close',label:'Закрыть',kind:'ghost'}],dismiss:'close'
   }).then(async a=>{
     if(a!=='retry')return;
+    bootShow('Синхронизация ключей','Повторное подключение');
     const f=await loadCloudKeys();
     const av=avail();
     if(cur&&(!cur.model||av.indexOf(cur.model)<0))cur.model=av.indexOf(S.lastModel)>=0?S.lastModel:(av[0]||'');
     if(!f&&hasSetup())closeConn();
     renderTop();
+    if(!f){
+      if(hasSetup())await bootUnlock('Ключи синхронизированы',modelsReadyText());
+      else bootHide(false);
+    }
   });
 }
 
@@ -3043,7 +3163,7 @@ document.addEventListener('touchend',e=>{
   const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(Math.abs(dy)>70||Date.now()-st>700)return;
   if(V.open)return;
-  if(!dOpen&&!$('#settings').classList.contains('open')&&!$('#upd').classList.contains('open')&&!$('#fbPage').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
+  if(!dOpen&&!bootVisible()&&!$('#settings').classList.contains('open')&&!$('#upd').classList.contains('open')&&!$('#fbPage').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
   else if(dOpen&&dx<-70)closeDrawer();
 },{passive:true});
 
@@ -3978,17 +4098,39 @@ if(window.visualViewport)window.visualViewport.addEventListener('resize',kbFix);
 try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
 (async()=>{
   let failed=0;
-  try{failed=await loadCloudKeys()||0}catch(e){failed=1}
+  try{
+    const res=await Promise.all([loadCloudKeys(),Promise.race([configP,new Promise(r=>setTimeout(r,1500))])]);
+    failed=res[0]||0;
+  }catch(e){failed=1}
   newChat();
-  if(failed)return;   // не удалось связаться с облаком — не считаем пользователя новым
+  if(failed){bootHide(true);return}   // не удалось связаться с облаком — не считаем пользователя новым
   const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
   if(sp){
+    let applied=false;
     try{
-      if(!hasSetup()){await redeemCode(sp);toast('Настройка применена')}
-      else if(await redeemCode(sp))toast('Настройка обновлена');
-    }catch(e){if(!hasSetup())showError(e,{where:'cloud',title:'Не удалось применить код настройки',noNav:true})}
+      if(!hasSetup()){
+        bootText('Быстрая настройка','Применяем код подключения');
+        await redeemCode(sp);
+        applied=true;
+      }else{
+        bootHide(true);
+        if(await redeemCode(sp))toast('Настройка обновлена');
+      }
+    }catch(e){
+      bootHide(true);
+      if(!hasSetup())showError(e,{where:'cloud',title:'Не удалось применить код настройки',noNav:true});
+    }
+    if(applied){
+      await bootUnlock('Настройка применена',modelsReadyText());
+      return;
+    }
   }
-  if(!hasSetup())openConn();
+  if(hasSetup()){
+    await bootUnlock('Ключи синхронизированы',modelsReadyText());
+  }else{
+    bootHide(false);
+    openConn();
+  }
 })();
 gcFiles();
 })();
