@@ -40,7 +40,16 @@ svg{display:block}
 .m{margin:16px 0;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .m.u{display:flex;justify-content:flex-end}
 .m.u .uwrap{display:flex;flex-direction:column;align-items:flex-end;max-width:86%;min-width:0}
-.m.u .b{background:var(--card);padding:10px 16px;border-radius:20px 20px 5px 20px;max-width:100%;white-space:pre-wrap;word-break:break-word}
+.m.u .b{
+  background:linear-gradient(165deg,#383940 0%,#2a2b31 58%,#232429 100%);
+  border:0;
+  padding:11px 16px;
+  border-radius:22px 22px 6px 22px;
+  max-width:100%;
+  white-space:pre-wrap;
+  word-break:break-word;
+  box-shadow:0 10px 26px -6px rgba(0,0,0,.58),0 3px 10px -2px rgba(0,0,0,.38),inset 0 1px 1px rgba(255,255,255,.12),inset 0 -2px 5px rgba(0,0,0,.25);
+}
 
 .ufoot{
   display:flex;
@@ -48,7 +57,7 @@ svg{display:block}
   justify-content:flex-end;
   gap:5px;
   height:20px;
-  margin:2px 4px 0 0;
+  margin:5px 6px 0 0;
   color:#858585;
   font-size:11px;
 }
@@ -273,7 +282,6 @@ svg{display:block}
   color:#fff;
 }
 
-:root[data-theme="light"] .m.u .b,
 :root[data-theme="light"] .sc,
 :root[data-theme="light"] .uc,
 :root[data-theme="light"] .pv,
@@ -594,7 +602,7 @@ svg{display:block}
 
 :root[data-theme="light"] .ul.sub{color:#575761}
 :root[data-theme="light"] .m.a .b{color:var(--text)}
-:root[data-theme="light"] .m.u .b{background:#e8e8ee;border:1px solid #d3d3dc}
+:root[data-theme="light"] .m.u .b{background:linear-gradient(165deg,#ffffff 0%,#f2f3f8 62%,#e8eaf2 100%);border:0;color:var(--text);box-shadow:0 10px 26px -6px rgba(15,23,42,.15),0 3px 10px -2px rgba(15,23,42,.08),inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 5px rgba(15,23,42,.04)}
 :root[data-theme="light"] .composer{background:#f4f4f7;border-color:#c0c0ca}
 :root[data-theme="light"] #drawer{background:#fafafc}
 :root[data-theme="light"] .pcard,:root[data-theme="light"] .dcard{background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.18)}
@@ -864,12 +872,21 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 /* ---- Веб-поиск, статус ожидания и источники ---- */
 .empty-in{display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 16px;text-align:center}
 .empty-t{font-size:22px;font-weight:500}
-.web-hint{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1.3;font-weight:400;max-width:86vw;transition:background .18s,color .18s,border-color .18s}
+.web-hint{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 10px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12.5px;line-height:1.25;font-weight:400;letter-spacing:-.01em;max-width:calc(100vw - 32px);box-shadow:0 2px 10px rgba(0,0,0,.18);transition:background .22s,color .22s,border-color .22s,padding .32s cubic-bezier(.22,1,.36,1),opacity .18s}
+.web-hint.open{padding:0 13px}
 .web-hint svg{flex:none}
 .web-hint:active{opacity:.78}
+.web-hint .wh-ic{display:grid;place-items:center;flex:none}
+.web-hint .wh-arr{display:grid;place-items:center;flex:none;margin-left:3px;opacity:.7;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .22s}
+.web-hint.open .wh-arr{transform:rotate(180deg);opacity:.55}
+.web-hint .wh-txt{display:block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;margin:0;transition:max-width .36s cubic-bezier(.22,1,.36,1),opacity .24s ease,margin .32s cubic-bezier(.22,1,.36,1)}
+.web-hint .wh-txt>span{display:inline-block;max-width:calc(100vw - 96px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.web-hint.open .wh-txt{max-width:var(--wh-w,280px);opacity:1;margin:0 5px 0 7px}
 .web-hint.on{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.45);color:#7db4ff}
+.web-hint.avail{background:rgba(96,165,250,.09);border-color:rgba(96,165,250,.28);color:#8ab8ff}
 .web-hint.auto{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.35);color:#4ade80}
 .webbtn{flex:none;height:38px;min-width:38px;padding:0 9px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);transition:background .18s,color .18s,padding .18s}
+.webbtn .wic{display:grid;place-items:center;flex:none}
 .webbtn:active{background:#2a2a2a}
 .webbtn .wlbl{display:none;font-size:13.5px;font-weight:600;white-space:nowrap}
 .webbtn.on{padding:0 12px;background:rgba(96,165,250,.18);color:#7db4ff}
@@ -890,8 +907,9 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 .pi-web{display:grid;place-items:center;color:var(--muted);opacity:.72}
 .pi-web.auto{color:#4ade80;opacity:.95}
 .nt-ic.web{background:rgba(96,165,250,.16);color:#7db4ff}
-:root[data-theme="light"] .web-hint{background:var(--surface);border-color:var(--border);color:var(--muted)}
+:root[data-theme="light"] .web-hint{background:var(--surface);border-color:var(--border);color:var(--muted);box-shadow:0 2px 10px rgba(15,23,42,.06)}
 :root[data-theme="light"] .web-hint.on{background:#e3efff;border-color:#b6d3fb;color:#1769c2}
+:root[data-theme="light"] .web-hint.avail{background:#edf4ff;border-color:#c6dcfa;color:#1769c2}
 :root[data-theme="light"] .web-hint.auto{background:#dff3e4;border-color:#b5e2c2;color:#1f7a3a}
 :root[data-theme="light"] .webbtn:active{background:#e5e5e9}
 :root[data-theme="light"] .webbtn.on{background:#e3efff;color:#1769c2}
@@ -1025,6 +1043,7 @@ const I={
  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 19V5M9 8h6"/>',
  code:'<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
  lang:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+ langoff:'<g opacity=".65"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></g><path d="M4 4l16 16" stroke-width="2.1"/>',
  pen:'<path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16Z"/><path d="M14 6l4 4"/>',
  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
@@ -1685,18 +1704,53 @@ function findWebModel(tierOnly){
   };
   return a.filter(m=>score(m)>0).sort((x,y)=>score(y)-score(x))[0]||'';
 }
+let webHintT=0;
+function collapseWebHint(btn){
+  clearTimeout(webHintT);webHintT=0;
+  const mh=$('#msgs'),el=btn||(mh&&mh.querySelector('.web-hint.open'));
+  if(!el)return;
+  el.classList.remove('open');
+  el.setAttribute('aria-expanded','false');
+}
+function handleWebHintClick(btn){
+  if(!btn)return;
+  const kind=btn.dataset.whKind||'';
+  if(btn.classList.contains('open')){
+    collapseWebHint(btn);
+    if(kind==='none')openPicker();
+    else if(kind==='paid')toggleWeb().then(on=>{if(on)inp.focus()});
+    return;
+  }
+  const inner=btn.querySelector('.wh-txt>span');
+  const maxW=Math.max(120,window.innerWidth-96);
+  const w=inner?Math.min(Math.ceil(inner.scrollWidth)+2,maxW):240;
+  btn.style.setProperty('--wh-w',w+'px');
+  btn.classList.add('open');
+  btn.setAttribute('aria-expanded','true');
+  hap('light');
+  clearTimeout(webHintT);
+  webHintT=setTimeout(()=>collapseWebHint(btn),3000);
+}
+function webHintPill(cls,ico,text,kind){
+  return '<button class="web-hint'+cls+'" data-toggle-web data-wh-kind="'+kind+'" aria-expanded="false" aria-label="'+esc(text)+'">'+
+    '<span class="wh-ic">'+ic(ico,15)+'</span>'+
+    '<span class="wh-txt"><span>'+esc(text)+'</span></span>'+
+    '<span class="wh-arr">'+ic('next',12)+'</span></button>';
+}
 function emptyWebHintHtml(){
   const pm=cur&&cur.model?splitM(cur.model):['',''],ws=webSpec(pm[0],pm[1]);
   if(ws&&ws.tier==='auto'){
     if(isWebCooled(pm[0],pm[1])){
-      return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>В бесплатной версии поиск недоступен</span></button>';
+      return webHintPill('','langoff','В бесплатной версии поиск недоступен','cooled');
     }
-    return '<button class="web-hint auto" data-toggle-web>'+ic('lang',15)+'<span>Поиск в сети работает автоматически</span></button>';
+    return webHintPill(' auto','lang','Поиск в сети работает автоматически','auto');
   }
   if(ws&&ws.tier==='paid'){
-    return '<button class="web-hint'+(paidWeb?' on':'')+'" data-toggle-web>'+ic('lang',15)+'<span>'+(paidWeb?'Веб-поиск включён · актуальные данные':'Для свежих новостей и цен включите поиск')+'</span></button>';
+    return paidWeb
+      ?webHintPill(' on','lang','Веб-поиск включён · актуальные данные','paid-on')
+      :webHintPill(' avail','lang','Для свежих новостей и цен включите поиск','paid');
   }
-  return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Модель без интернета · выберите другую модель</span></button>';
+  return webHintPill('','langoff','Модель без интернета · выберите другую модель','none');
 }
 function syncWebBtn(){
   const b=$('#btnWeb');if(!b)return;
@@ -1707,10 +1761,13 @@ function syncWebBtn(){
   b.hidden=isAuto;   // для автопоиска кнопка не нужна — всё работает универсально
   b.classList.toggle('on',isPaid&&paidWeb);
   b.classList.toggle('dim',!ws);
+  const wic=b.querySelector('.wic');
+  if(wic)wic.innerHTML=ic(ws?'lang':'langoff',20);
   b.setAttribute('aria-pressed',String(isPaid&&paidWeb));
   b.title=isPaid?(paidWeb?'Веб-поиск включён':'Включить веб-поиск (может быть платным)'):'Эта модель без доступа в интернет';
   const el=$('#inp');
   if(el)el.placeholder=(isPaid&&paidWeb)?'Спроси — найду в интернете…':'Спроси что угодно…';
+  clearTimeout(webHintT);webHintT=0;
   const mh=$('#msgs'),h=mh&&mh.querySelector('.web-hint');
   if(h)h.outerHTML=emptyWebHintHtml();
 }
@@ -2300,7 +2357,7 @@ box.addEventListener('click',e=>{
   }
 
   const wh=e.target.closest('[data-toggle-web]');
-  if(wh){toggleWeb().then(on=>{if(on&&curWebSpec())inp.focus()});return}
+  if(wh){handleWebHintClick(wh);return}
 
   const cp=e.target.closest('[data-copy]');
   if(cp){
@@ -2371,7 +2428,7 @@ function renderAll(){renderTop();renderMsgs();updateComposer()}
 $('#btnMenu').innerHTML=ic('menu',22);
 $('#pchev').innerHTML=ic('chev',18);
 $('#btnAttach').innerHTML=ic('plus',26);
-$('#btnWeb').innerHTML=ic('lang',20)+'<span class="wlbl">Поиск</span>';
+$('#btnWeb').innerHTML='<span class="wic">'+ic('lang',20)+'</span><span class="wlbl">Поиск</span>';
 $('#btnMic').innerHTML=ic('mic',22);
 $('#sIc').innerHTML=ic('search',18);
 $('#btnNew2').innerHTML=ic('edit',20);
