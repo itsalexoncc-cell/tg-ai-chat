@@ -1139,6 +1139,7 @@ async function saveCloudKey(provider,key){
   try{
     if(key)await cloudKeyRequest('PUT',provider,key);
     else await cloudKeyRequest('DELETE',provider);
+    clearWebCaps(provider);
     toast(key?'API ключ сохранён в облаке':'API ключ удалён из облака');
   }catch(e){showError(e,{where:'cloud',title:'Не удалось сохранить ключ',retry:true}).then(a=>{if(a==='retry')saveCloudKey(provider,key)})}
 }
@@ -1626,6 +1627,17 @@ async function mediaCheck(pid,model,atts){
    tier:'paid' — платные API / платный плагин поиска (OpenRouter, OpenAI, Claude, Grok): отдельный переключатель (по умолчанию выключен) с предупреждением.
    null        — модели без выхода в интернет: чистые запросы без лишних параметров. */
 let paidWeb=false;
+const webCool=new Map();   // временная пауза автопоиска (если у провайдера закончилась квота на поиск, но обычные запросы работают)
+const isWebCooled=(pid,model)=>((webCool.get(capKey(pid,model))||0)>Date.now());
+function clearWebCaps(pid){
+  const pref=pid+'|';
+  webCool.forEach((_,k)=>{if(k.indexOf(pref)===0)webCool.delete(k)});
+  if(S.caps){
+    let ch=false;
+    Object.keys(S.caps).forEach(k=>{if(k.indexOf(pref)===0&&S.caps[k]&&S.caps[k].web===false){delete S.caps[k].web;ch=true}});
+    if(ch)save();
+  }
+}
 function webSpec(pid,model){
   if(!pid||!model)return null;
   const L=S.caps&&S.caps[capKey(pid,model)];
@@ -1674,8 +1686,11 @@ function findWebModel(tierOnly){
   return a.filter(m=>score(m)>0).sort((x,y)=>score(y)-score(x))[0]||'';
 }
 function emptyWebHintHtml(){
-  const ws=curWebSpec();
+  const pm=cur&&cur.model?splitM(cur.model):['',''],ws=webSpec(pm[0],pm[1]);
   if(ws&&ws.tier==='auto'){
+    if(isWebCooled(pm[0],pm[1])){
+      return '<button class="web-hint" data-toggle-web>'+ic('lang',15)+'<span>Поиск временно недоступен · обычные ответы</span></button>';
+    }
     return '<button class="web-hint auto" data-toggle-web>'+ic('lang',15)+'<span>Поиск в сети работает автоматически</span></button>';
   }
   if(ws&&ws.tier==='paid'){
@@ -1725,7 +1740,12 @@ async function toggleWeb(forceOn){
   if(!cur||!cur.model||!avail().includes(cur.model)){await needModel();return false}
   const pm=splitM(cur.model),pid=pm[0],model=pm[1],ws=webSpec(pid,model);
   if(ws&&ws.tier==='auto'){
-    if(!forceOn)await infoBox('Поиск работает автоматически','«'+model+'» сама обращается в интернет, когда вы спрашиваете про свежие новости, цены или события. Ничего дополнительно включать не нужно.');
+    if(isWebCooled(pid,model)){
+      webCool.delete(capKey(pid,model));syncWebBtn();hap();
+      toast('Попробуем веб-поиск в следующем запросе');
+      return true;
+    }
+    if(!forceOn)await infoBox('Поиск работает автоматически','«'+model+'» сама обращается в интернет, когда вы спрашиваете про свежие новости, цены или события. Если поиск не пройдёт, запрос автоматически отправится как обычный.');
     return true;
   }
   if(ws&&ws.tier==='paid'){
@@ -3078,12 +3098,12 @@ const genCtx=g=>({where:'chat',provider:provName(g.pid),model:g.model,kinds:g.ki
 function canWebFallback(e,g){
   if(!e||e.name==='AbortError'||e.cloud)return false;
   const st=e.status||0;
-  if(st===401||st===402||st===403||st===413||st===429||st>=500)return false;
+  if(st===401||st===413)return false;
   const k=classify(e,genCtx(g));
-  if(k==='noweb')return true;
-  if(g.webMode==='oai-responses'&&(st===404||st===405||st===501))return true;
-  if(g.webTier==='auto'&&(st===400||st===404||st===422)&&!g.kinds.length)return true;
-  return false;
+  if(k==='auth'&&st!==403)return false;
+  if(k==='region'||k==='toolarge'||k==='context'||k==='toomany'||k==='nofiles'||k==='safety')return false;
+  if(k==='network'&&g.webMode!=='oai-responses')return false;
+  return true;
 }
 /* Окно с ошибкой генерации и действиями: повторить, без файлов, без поиска, другая модель… */
 async function showGenError(g){
@@ -3120,7 +3140,8 @@ async function generate(opts){
   chat.messages.push(msg);
   const abort=new AbortController();
   const ws=opts.noWeb?null:webSpec(pid,model);
-  const wm=ws?(ws.tier==='auto'?ws.mode:(paidWeb?ws.mode:null)):null;
+  const cooled=!!(ws&&ws.tier==='auto'&&isWebCooled(pid,model));
+  const wm=ws?(ws.tier==='auto'?(cooled?null:ws.mode):(paidWeb?ws.mode:null)):null;
   const g={chat:chat,msg:msg,abort:abort,pid:pid,model:model,hist:hist,idx:0,words:0,wordT:[],lockedPos:0,lockedWords:0,tail:null,paintT:0,
     status:(wm&&ws&&ws.tier==='paid')?'searching':'',webMode:wm,webTier:wm&&ws?ws.tier:'',opts:opts,kinds:[],saves:[],err:null,
     got:false,uIn:0,uOut:0,streamDone:false,done:false,stopped:false,painting:false};
@@ -3199,6 +3220,7 @@ async function generate(opts){
             headers:Object.assign({'Content-Type':'application/json'},c.key?{Authorization:'Bearer '+c.key}:{}),body:JSON.stringify(body)});
         if(!res.ok)throw await apiErr(res);
         const onChunk=j=>{
+          if(j&&j.error){const er=new Error(pickMsg(j.error)||'Ошибка API');er.raw=er.message;er.status=+(j.error.code||j.error.status)||0;throw er}
           if(Array.isArray(j.citations))j.citations.forEach(ct=>{
             if(typeof ct==='string')addSource(g,ct,'');
             else if(ct&&ct.url)addSource(g,ct.url,ct.title);
@@ -3266,6 +3288,7 @@ async function generate(opts){
           {method:'POST',signal:signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!res.ok)throw await apiErr(res);
         await sse(res,j=>{
+          if(j&&j.error){const er=new Error(pickMsg(j.error)||'Ошибка API');er.raw=er.message;er.status=+(j.error.code||j.error.status)||0;throw er}
           const cand=j.candidates&&j.candidates[0],parts=cand&&cand.content&&cand.content.parts;
           const gm=cand&&cand.groundingMetadata;
           if(gm&&gm.webSearchQueries&&gm.webSearchQueries.length)setGenStatus(g,'searching');
@@ -3288,21 +3311,25 @@ async function generate(opts){
     try{
       await runProvider(wm);
     }catch(e){
-      /* Если провайдер/модель отклонили инструмент веб-поиска — запоминаем это и сразу повторяем обычный запрос без ошибки */
+      /* Если веб-поиск не прошёл (нет квоты/баланса на поиск, ошибка инструмента и т.п.) — сразу отправляем обычный запрос без подтверждения */
       if(!g.stopped&&wm&&wm!=='native'&&!msg.content&&!(msg.files&&msg.files.length)&&canWebFallback(e,g)){
-        capSetWeb(pid,model,false);
-        const wasPaid=g.webTier==='paid';
+        const prevCtx=genCtx(g),wasPaid=g.webTier==='paid',errKind=classify(e,prevCtx);
         g.webMode=null;g.webTier='';g.status='';
-        if(wasPaid)paidWeb=false;
         if(cur===chat){
-          syncWebBtn();
           const idx=chat.messages.indexOf(msg);
           const nEl=idx>=0?box.querySelector('.m.a[data-i="'+idx+'"] .b'):null;
           if(nEl)nEl.innerHTML=statusHtml(g);
-          if(wasPaid)toast('Эта модель не поддерживает веб-поиск — отвечаю без интернета');
         }
         uIn=0;uOut=0;got=false;filtered=false;
         await runProvider(null);
+        /* Обычный запрос прошёл: запоминаем, что именно веб-поиск сейчас не сработал */
+        if(errKind==='noweb')capSetWeb(pid,model,false);
+        else webCool.set(capKey(pid,model),Date.now()+15*60*1000);
+        if(wasPaid)paidWeb=false;
+        if(cur===chat){
+          syncWebBtn();
+          toast(wasPaid?'Веб-поиск не прошёл — отправлен обычный запрос':'Поиск в сети недоступен — ответ без интернета');
+        }
       }else throw e;
     }
     completed=true;
@@ -4415,7 +4442,7 @@ function applySetup(d){
   const c=S.providers.managed;
   c.key='';c.base='';c.name='';
   c.used={in:0,out:0};c.by={};delete c.bal;
-  c.meta=null;setManagedMeta(d);
+  c.meta=null;setManagedMeta(d);clearWebCaps('managed');
   const first=getModels('managed')[0];
   if(first){cur.model='managed|'+first;S.lastModel=cur.model}
   save();renderTop();
