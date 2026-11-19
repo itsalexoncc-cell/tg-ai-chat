@@ -920,6 +920,162 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 :root[data-theme="light"] .pi-web.paid{color:#1769c2}
 :root[data-theme="light"] .src-chip{background:var(--surface);border-color:var(--border);color:var(--muted)}
 :root[data-theme="light"] .nt-ic.web{background:#e3efff;color:#1769c2}
+
+/* ---- Парящий объёмный дизайн + вдавленные поля поиска и ввода ---- */
+:root{
+  --flt-bg:linear-gradient(155deg,#2a2c35 0%,#20222a 58%,#1a1c22 100%);
+  --flt-bg-hi:linear-gradient(155deg,#383b47 0%,#2b2d38 58%,#23252e 100%);
+  --flt-sh:0 12px 28px -8px rgba(0,0,0,.72),0 4px 12px -2px rgba(0,0,0,.48),inset 0 1px 1px rgba(255,255,255,.11),inset 0 -2px 5px rgba(0,0,0,.26);
+  --flt-sh-sm:0 7px 18px -4px rgba(0,0,0,.64),0 2px 6px -1px rgba(0,0,0,.42),inset 0 1px 1px rgba(255,255,255,.14),inset 0 -1.5px 4px rgba(0,0,0,.24);
+  --flt-sh-lg:0 24px 54px -12px rgba(0,0,0,.84),0 8px 22px -4px rgba(0,0,0,.58),inset 0 1.5px 1px rgba(255,255,255,.12),inset 0 -2px 8px rgba(0,0,0,.32);
+  --deb-bg:linear-gradient(160deg,#0c0d11 0%,#14161d 100%);
+  --deb-sh:inset 0 3px 9px rgba(0,0,0,.78),inset 0 1px 2px rgba(0,0,0,.55),0 1px 0 rgba(255,255,255,.07);
+  --pri-bg:linear-gradient(155deg,#ffffff 0%,#e5e7ef 100%);
+  --pri-sh:0 9px 22px -4px rgba(0,0,0,.66),0 3px 8px -1px rgba(0,0,0,.42),inset 0 1.5px 1px rgba(255,255,255,.95),inset 0 -2px 4px rgba(0,0,0,.14);
+  --dan-bg:linear-gradient(155deg,#6c2929 0%,#521e1e 100%);
+  --dan-sh:0 8px 18px -5px rgba(0,0,0,.65),inset 0 1px 1px rgba(255,180,180,.18),inset 0 -2px 4px rgba(0,0,0,.3);
+  --sel-bg:linear-gradient(155deg,#474a56 0%,#353844 58%,#2b2d38 100%);
+  --sel-sh:0 8px 20px -5px rgba(0,0,0,.62),inset 0 1.5px 1px rgba(255,255,255,.2),inset 0 -1.5px 4px rgba(0,0,0,.28);
+}
+:root[data-theme="light"]{
+  --flt-bg:linear-gradient(155deg,#ffffff 0%,#f3f5fb 60%,#e9edf6 100%);
+  --flt-bg-hi:linear-gradient(155deg,#ffffff 0%,#eef1f8 58%,#e2e7f2 100%);
+  --flt-sh:0 10px 26px -7px rgba(30,41,59,.16),0 3px 10px -2px rgba(30,41,59,.08),inset 0 1.5px 1px rgba(255,255,255,.96),inset 0 -2px 5px rgba(30,41,59,.05);
+  --flt-sh-sm:0 6px 16px -4px rgba(30,41,59,.15),0 2px 6px -1px rgba(30,41,59,.08),inset 0 1.5px 1px rgba(255,255,255,.96),inset 0 -1.5px 4px rgba(30,41,59,.05);
+  --flt-sh-lg:0 24px 50px -12px rgba(15,23,42,.24),0 8px 20px -4px rgba(15,23,42,.12),inset 0 1.5px 1px rgba(255,255,255,.98),inset 0 -2px 6px rgba(15,23,42,.05);
+  --deb-bg:linear-gradient(160deg,#e2e6f0 0%,#eceff6 100%);
+  --deb-sh:inset 0 3px 7px rgba(15,23,42,.15),inset 0 1px 2px rgba(15,23,42,.09),0 1px 0 rgba(255,255,255,.92);
+  --pri-bg:linear-gradient(155deg,#2e303b 0%,#181920 100%);
+  --pri-sh:0 8px 20px -4px rgba(15,23,42,.34),0 2px 8px -1px rgba(15,23,42,.2),inset 0 1px 1px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.3);
+  --dan-bg:linear-gradient(155deg,#fee2e2 0%,#fbd0d0 100%);
+  --dan-sh:0 6px 16px -4px rgba(180,35,43,.18),inset 0 1px 1px rgba(255,255,255,.85),inset 0 -1.5px 4px rgba(180,35,43,.08);
+  --sel-bg:linear-gradient(155deg,#e2e7f4 0%,#d2daf0 58%,#c5d0eb 100%);
+  --sel-sh:0 7px 18px -5px rgba(30,41,59,.2),inset 0 1.5px 1px rgba(255,255,255,.85),inset 0 -1.5px 4px rgba(30,41,59,.07);
+}
+
+/* Верхняя панель: парящие кнопка меню и пилюля модели */
+.circle{width:40px;height:40px;border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,box-shadow .16s ease}
+.circle:active{transform:scale(.94)}
+.pill{height:40px;padding:0 14px 0 18px;border:0;border-radius:999px;background:var(--pri-bg);box-shadow:var(--pri-sh);transition:transform .14s ease}
+.pill:active{transform:scale(.97)}
+:root[data-theme="light"] .pill{background:var(--pri-bg);color:#fff}
+
+/* Вдавленные в экран поля поиска и ввода */
+.composer{background:var(--deb-bg);border:0;border-radius:32px;padding:7px 9px;box-shadow:var(--deb-sh)}
+:root[data-theme="light"] .composer{background:var(--deb-bg);border:0}
+.search{flex:1;display:flex;align-items:center;gap:8px;background:var(--deb-bg);border:0;border-radius:999px;padding:0 15px;height:44px;color:var(--muted);box-shadow:var(--deb-sh)}
+:root[data-theme="light"] .search{background:var(--deb-bg);border:0}
+.pvb input,.pvb textarea,.gb input,.gb textarea,.gb select,.dcard input,.fb-ta{
+  background:var(--deb-bg);border:0;box-shadow:var(--deb-sh);padding:12px 16px
+}
+.pvb input,.gb input,.gb select,.dcard input{border-radius:999px}
+.pvb textarea,.gb textarea,.fb-ta{border-radius:24px}
+:root[data-theme="light"] .pvb input,
+:root[data-theme="light"] .pvb textarea,
+:root[data-theme="light"] .gb input,
+:root[data-theme="light"] .gb textarea,
+:root[data-theme="light"] .gb select,
+:root[data-theme="light"] .dcard input,
+:root[data-theme="light"] .fb-ta{background:var(--deb-bg);border:0;color:var(--text)}
+.mbox{border:0;border-radius:26px;padding:12px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+:root[data-theme="light"] .mbox{background:var(--deb-bg);border:0}
+.pvb .mfilter input,.gb .mfilter input{box-shadow:none!important;border-radius:0!important}
+.mtop input{padding:0 14px!important}
+.pvb .inw input{padding-right:46px}
+
+/* Кнопка отправки и подсказки над полем ввода */
+.send{background:var(--pri-bg);box-shadow:var(--pri-sh);transition:transform .14s ease,opacity .16s ease}
+.send:active:not(:disabled){transform:scale(.93)}
+.send:disabled{background:var(--flt-bg-hi);box-shadow:none;opacity:.55}
+:root[data-theme="light"] .send{background:var(--pri-bg);color:#fff}
+:root[data-theme="light"] .send:disabled{background:#d4d8e3;color:#8e93a2;box-shadow:none;opacity:.75}
+.sugg{padding:4px 4px 14px;margin:0 -4px 4px}
+.sc{border:0;border-radius:999px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease}
+.sc:active{transform:scale(.97)}
+.sc .tile{background:var(--deb-bg);box-shadow:var(--deb-sh)}
+:root[data-theme="light"] .sc{background:var(--flt-bg-hi);border:0}
+:root[data-theme="light"] .sc .tile{background:var(--deb-bg)}
+
+/* Полукруглые парящие кнопки по всему интерфейсу */
+.btn,.btn.sm,.fb-type,.fb-chip,.err button,.attach-btn,.newc,.ci,.pi{border-radius:999px}
+.btn{border:0;padding:10px 18px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,opacity .16s ease}
+.btn:active:not(:disabled){transform:scale(.96)}
+.btn.sm{padding:8px 14px;border-radius:999px}
+.btn.pri{background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
+.btn.dan{background:var(--dan-bg);color:#ffb4b4;box-shadow:var(--dan-sh)}
+.btn.ghost{background:rgba(255,255,255,.06);border:0;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .btn{background:var(--flt-bg-hi);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .btn.pri{background:var(--pri-bg);color:#fff;border:0;box-shadow:var(--pri-sh)}
+:root[data-theme="light"] .btn.dan{background:var(--dan-bg);color:#b4232b;border:0;box-shadow:var(--dan-sh)}
+:root[data-theme="light"] .btn.ghost{background:rgba(15,23,42,.05);color:var(--text);border:0;box-shadow:var(--flt-sh-sm)}
+.act button,.umore,.eye,.mrow .mx,.mtop .btn.plus{border-radius:50%}
+.mtop .btn{border-radius:999px;padding:0 15px}
+.mtop .btn.plus{width:40px;height:40px;padding:0}
+.fb-type{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+.fb-type.on,.fb-chip.on{background:var(--pri-bg);color:#121212;border:0;box-shadow:var(--pri-sh)}
+.fb-chip{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .fb-type,:root[data-theme="light"] .fb-chip{background:var(--flt-bg-hi);border:0;color:var(--muted)}
+:root[data-theme="light"] .fb-type.on,:root[data-theme="light"] .fb-chip.on{background:var(--pri-bg);color:#fff;border:0}
+.attach-btn{border:1.5px dashed rgba(155,155,155,.35);background:var(--deb-bg);box-shadow:var(--deb-sh)}
+
+/* Большие парящие окна, карточки, меню и шторка с увеличенным радиусом закругления */
+#drawer{border-right:0;border-radius:0 32px 32px 0;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
+:root[data-theme="light"] #drawer{background:var(--flt-bg);border:0}
+.pcard{border:0;border-radius:30px;padding:10px;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
+:root[data-theme="light"] .pcard{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh-lg)}
+.dcard,.dcard.cn,.dcard.nt,.dcard.fb{border:0;border-radius:32px;background:var(--flt-bg);box-shadow:var(--flt-sh-lg)}
+:root[data-theme="light"] .dcard,:root[data-theme="light"] .dcard.cn,:root[data-theme="light"] .dcard.nt,:root[data-theme="light"] .dcard.fb{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh-lg)}
+#dlg.context .dcard{border-radius:26px;padding:10px;box-shadow:var(--flt-sh-lg)}
+.uc,.pv,.gb,.manbtn{border:0;border-radius:26px;background:var(--flt-bg);box-shadow:var(--flt-sh)}
+.uc,.pv{margin-bottom:14px}
+.uc{padding:14px 16px}
+.gb{padding:6px 16px 16px}
+.manbtn{padding:15px 18px;transition:transform .14s ease}
+.manbtn:active{transform:scale(.98)}
+:root[data-theme="light"] .uc,
+:root[data-theme="light"] .pv,
+:root[data-theme="light"] .gb,
+:root[data-theme="light"] .manbtn{background:var(--flt-bg);border:0;box-shadow:var(--flt-sh)}
+
+/* Выбор модели: мягкое объёмное выделение без галочки */
+.pi{padding:11px 16px;margin:2px 0;transition:background .16s ease,box-shadow .16s ease,transform .14s ease}
+.pi:active{transform:scale(.98)}
+.pi.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);font-weight:600;color:#fff}
+:root[data-theme="light"] .pi.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);color:var(--text)}
+.ci{padding:0 6px 0 15px;margin:2px 0;transition:background .16s ease,box-shadow .16s ease}
+.ci.sel{background:var(--sel-bg);box-shadow:var(--sel-sh);font-weight:500}
+:root[data-theme="light"] .ci.sel{background:var(--sel-bg);box-shadow:var(--sel-sh)}
+.newc{padding:11px 16px}
+
+/* Блоки кода, вложения, чипы, переключатель темы, прогресс, уведомления */
+.code{border:0;border-radius:24px;box-shadow:var(--flt-sh)}
+.code .ch{padding:9px 16px}
+.err{border:0;border-radius:24px;box-shadow:var(--flt-sh)}
+.att{border:0;border-radius:18px;box-shadow:var(--flt-sh-sm)}
+.aimg,.uimg{border-radius:18px;box-shadow:var(--flt-sh-sm)}
+button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+.src-chip{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);padding:6px 13px}
+:root[data-theme="light"] .src-chip{background:var(--flt-bg-hi);border:0}
+.web-hint{border:0;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm)}
+.web-hint.auto{background:linear-gradient(155deg,rgba(74,222,128,.22),rgba(34,197,94,.12));box-shadow:var(--flt-sh-sm)}
+.web-hint.on{background:linear-gradient(155deg,rgba(96,165,250,.26),rgba(59,130,246,.14));box-shadow:var(--flt-sh-sm)}
+.web-hint.avail{background:linear-gradient(155deg,rgba(96,165,250,.18),rgba(59,130,246,.08));box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .web-hint{background:var(--flt-bg-hi);border:0;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .web-hint.auto{background:linear-gradient(155deg,#e6f8ec,#d2f0dc);border:0}
+:root[data-theme="light"] .web-hint.on{background:linear-gradient(155deg,#e8f2ff,#d4e6ff);border:0}
+:root[data-theme="light"] .web-hint.avail{background:linear-gradient(155deg,#f0f6ff,#e1ecfe);border:0}
+.tsw .sw{border:0;border-radius:999px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+.tsw .sw i{box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.bar{border-radius:999px;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}
+.bar i{border-radius:999px}
+.nt-tips,.nt-det pre{border-radius:20px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+:root[data-theme="light"] .nt-tips,:root[data-theme="light"] .nt-det pre{background:var(--deb-bg)}
+.tgp{border-radius:24px;box-shadow:var(--deb-sh)}
+.tgb{border-radius:20px 20px 20px 6px;box-shadow:var(--flt-sh-sm)}
+#toast{border-radius:999px;padding:10px 18px;box-shadow:var(--flt-sh-lg)}
+.hint{font-size:12.5px;line-height:1.4;margin:6px 6px 10px;opacity:.82}
+#setBody h3,#updBody h3{margin:20px 0 8px 6px}
+.mrow .cb{border-radius:50%}
 </style>
 </head>
 <body>
@@ -3432,7 +3588,7 @@ function openPicker(){
         const wHtml=(ws&&!fo)
           ?'<span class="pi-web '+(ws.tier==='auto'?'auto':'paid')+'" aria-label="'+(ws.tier==='auto'?'Автопоиск в сети':'Веб-поиск по кнопке')+'">'+ic('lang',15)+'</span>'
           :'<span class="pi-web off" aria-label="'+(fo?'В бесплатной версии поиск недоступен':'Без доступа в интернет')+'">'+ic('langoff',15)+'</span>';
-        h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'"><span>'+esc(m)+'</span><span class="pi-meta">'+wHtml+(v===cur.model?ic('check',18):'')+'</span></button>';
+        h+='<button class="pi'+(v===cur.model?' sel':'')+'" data-m="'+esc(v)+'" aria-selected="'+(v===cur.model)+'"><span>'+esc(m)+'</span><span class="pi-meta">'+wHtml+'</span></button>';
       });
     });
   }
@@ -3784,18 +3940,18 @@ $('#setBack').addEventListener('click',closeSettings);
 function renderSettings(){
   $('#setBody').innerHTML=
    '<h3>Токены и баланс</h3><div id="usage"></div>'+
-   '<p class="hint">Остаток считается так: у OpenRouter и DeepSeek баланс запрашивается у самого сервиса. У остальных (OpenAI, Anthropic, Gemini и др.) API не отдаёт баланс по обычному ключу, поэтому остаток = ваш лимит минус токены, потраченные через это приложение.</p>'+
+   '<p class="hint">Баланс OpenRouter и DeepSeek приходит с сервиса, у остальных считается по лимиту.</p>'+
    '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
-   '<p class="hint">OpenAI, Anthropic, Gemini, DeepSeek и другие провайдеры, а также свои endpoint-ы: ключи, модели и лимиты.</p>'+
+   '<p class="hint">Ключи, модели и лимиты провайдеров.</p>'+
       '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
    '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
-   '<p class="hint" style="margin:8px 0 0">Данные из кода сохраняются в защищённое системное подключение и нигде не отображаются. Новый код заменяет прежний: приложение спросит подтверждение перед перезаписью.</p></div>'+
+   '<p class="hint" style="margin:8px 0 0">Данные сохраняются в скрытое системное подключение.</p></div>'+
 '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
-   '<p class="hint" style="margin:6px 0 0">Этот текст добавляется ко всем вашим запросам.</p>'+
+   '<p class="hint" style="margin:6px 0 0">Добавляется ко всем запросам.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
    '<div class="btns"><button class="btn" data-act="resetall">Сбросить все счётчики</button><button class="btn dan" data-act="clearchats">Удалить все чаты</button></div></div>'+
    (!isAdmin?'<h3>Обратная связь</h3><button class="manbtn" data-act="openfb"><span>Отзыв или предложение</span><span class="chev" id="fbChev"></span></button>'+
-   '<p class="hint">Расскажите о впечатлениях, предложите идею или сообщите об ошибке — сообщение придёт напрямую администратору.</p>':'')+adminHtml();
+   '<p class="hint">Отзывы, идеи и сообщения об ошибках.</p>':'')+adminHtml();
 
   renderUsage();
   const ch=$('#manChev');if(ch)ch.innerHTML=ic('next',18);
@@ -3808,7 +3964,7 @@ function openManual(fromConn){
   if($('#manual').classList.contains('open'))return;
   manualFromConn=fromConn===true;
   $('#manBody').innerHTML='<div id="provs"></div>'+
-   '<p class="hint">Отметьте галочками модели, которые должны быть доступны для выбора на главном экране. Лимит — число токенов для расчёта остатка (пусто или 0 — без лимита). Можно подключить до четырёх своих OpenAI-совместимых endpoint-ов — у каждого свои ключ, адрес и список моделей. Ключи хранятся в зашифрованном виде в облаке и привязаны к вашему Telegram-аккаунту. Для запросов ключ загружается в приложение и отправляется напрямую провайдеру.</p>';
+   '<p class="hint">Отметьте нужные модели галочками. Ключи шифруются и хранятся в облаке.</p>';
   renderProvs();
   $('#manual').classList.add('open');pushLayer(closeManual);
   VISIBLE.forEach(p=>{if(p.balance&&S.providers[p.id].key)fetchBal(p.id,true)});
@@ -4408,7 +4564,7 @@ function buildUpd(){
    '<p class="hint">Отзывы, предложения и сообщения об ошибках от пользователей.</p>'+
    '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
-   '<p class="hint" style="margin:6px 0 0">Добавляется к каждому запросу у всех пользователей, им не показывается и не меняется. «Восстановить» очищает промпт. Эта секция видна только вам.</p>'+
+   '<p class="hint" style="margin:6px 0 0">Применяется ко всем пользователям и скрыт от них.</p>'+
    '<div class="btns one"><button class="btn pri" data-u="syssave">Сохранить</button><button class="btn" data-u="sysreset">Восстановить</button></div></div>'+
    '<h3>Новое уведомление</h3><div class="gb">'+
    '<button class="attach-btn" data-u="attach">'+ic('plus',18)+'<span>Фото или видео</span><small>до 10</small></button>'+
