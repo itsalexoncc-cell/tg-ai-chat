@@ -1161,6 +1161,11 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 }
 #manBody{padding-top:calc(max(12px,env(safe-area-inset-top)) + 64px)}
 #setBody > h3:first-child,#updBody > h3:first-child,#updBody > .uh-row:first-child{margin-top:6px}
+/* Скрываем веб-кнопки «Назад» внутри Telegram, чтобы не дублировать нативную кнопку BackButton */
+:root.has-tg-back #setBack,
+:root.has-tg-back #manBack,
+:root.has-tg-back #updBack,
+:root.has-tg-back #fbBack{display:none}
 </style>
 </head>
 <body>
@@ -2150,6 +2155,8 @@ async function needModel(){
 const layers=[];
 function pushLayer(f){layers.push(f);syncBack()}
 function popLayer(f){const i=layers.indexOf(f);if(i>=0)layers.splice(i,1);syncBack()}
+const hasTgBack=!!(tg&&tg.BackButton&&(tg.initData||(tg.platform&&tg.platform!=='unknown'))&&(!tg.isVersionAtLeast||tg.isVersionAtLeast('6.1')));
+if(hasTgBack)document.documentElement.classList.add('has-tg-back');
 function syncBack(){try{if(tg&&tg.BackButton){layers.length?tg.BackButton.show():tg.BackButton.hide()}}catch(e){}}
 try{if(tg&&tg.BackButton)tg.BackButton.onClick(()=>{const f=layers[layers.length-1];if(f)f()})}catch(e){}
 
