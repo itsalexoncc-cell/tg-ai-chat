@@ -1214,6 +1214,18 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 .rc-acts .btn.sm{height:30px;padding:0 10px;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .rc-acts .rc-del{margin-left:auto;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center}
 .req-card .fb-tag{padding:2px 8px;font-size:11.5px;flex:none}
+/* Переключатели уведомлений администратора в Telegram */
+.ntf-box{padding:4px 14px!important;margin-top:10px}
+.ntf-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px}
+.ntf-row+.ntf-row{border-top:1px solid var(--line)}
+.ntf-lbl{min-width:0;flex:1}
+.ntf-lbl b{display:block;font-size:14.5px;font-weight:500;line-height:1.25}
+.ntf-lbl small{display:block;font-size:12px;color:var(--muted);line-height:1.3;margin-top:2px}
+.ntf-sw{position:relative;flex:none;box-sizing:border-box;width:46px;height:26px;padding:3px;border:0;border-radius:999px;display:flex;align-items:center;background:var(--deb-bg);box-shadow:var(--deb-sh);transition:background .2s}
+.ntf-sw i{display:block;flex:none;width:20px;height:20px;border-radius:50%;background:var(--text);box-shadow:0 2px 6px rgba(0,0,0,.35);transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.ntf-sw.on{background:linear-gradient(155deg,#22c55e 0%,#16a34a 100%);box-shadow:inset 0 1px 2px rgba(255,255,255,.25),0 4px 12px -3px rgba(22,163,74,.5)}
+.ntf-sw.on i{background:#fff;transform:translateX(20px)}
+:root[data-theme="light"] .ntf-sw i{background:linear-gradient(155deg,#ffffff 0%,#f0f3fa 100%);box-shadow:0 2px 5px rgba(15,23,42,.28),0 1px 2px rgba(15,23,42,.16)}
 </style>
 </head>
 <body>
@@ -1398,6 +1410,7 @@ const APP_LINK='https://t.me/Ghataimodel_bot';   // если у Mini App ест�
 /* Базовый промпт: добавляется к каждому запросу у всех пользователей. Свой промпт из настроек дописывается после него. */
 const DEFAULT_SYSTEM='';   // по умолчанию базового промпта нет; его задаёт администратор на сервере
 let remoteSystem=null,isAdmin=false,unreadFeedback=0;   // базовый промпт с сервера, признак администратора и число новых отзывов
+let adminNotify={req:true,rev:true};
 const sysPrompt=()=>{
   const base=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
   const u=(S.system||'').trim();
@@ -1412,7 +1425,9 @@ const configP=(async function(){
     if(typeof j.system_prompt==='string')remoteSystem=j.system_prompt;
     isAdmin=!!j.admin;
     if(typeof j.unread_feedback==='number')unreadFeedback=Math.max(0,j.unread_feedback);
+    if(j.admin_notify&&typeof j.admin_notify==='object')adminNotify={req:j.admin_notify.req!==false,rev:j.admin_notify.rev!==false};
     syncFbBadges();
+    if(typeof syncNotifySw==='function')syncNotifySw();
     if($('#settings')&&$('#settings').classList.contains('open'))renderSettings();
   }catch(e){}
 })();
@@ -5094,8 +5109,10 @@ async function fbLoad(silent){
   }
   FB.loading=false;fbRender();
 }
-function openFbPage(){
-  if(!isAdmin||$('#fbPage').classList.contains('open'))return;
+function openFbPage(tab){
+  if(!isAdmin)return;
+  if(tab==='req'||tab==='rev')FB.tab=tab;
+  if($('#fbPage').classList.contains('open')){fbRender();return}
   buildQSection();
   $('#fbPage').classList.add('open');pushLayer(closeFbPage);
   fbRender();fbLoad(true);qLoad(true);
@@ -5227,11 +5244,20 @@ $('#fbPageBody').addEventListener('click',async e=>{
     }catch(err){showError(err,{where:'cloud',title:'Не удалось удалить обращение'})}
   }
 });
+function syncNotifySw(){
+  const r=$('#ntfReq'),v=$('#ntfRev');
+  if(r){r.classList.toggle('on',!!adminNotify.req);r.setAttribute('aria-checked',String(!!adminNotify.req))}
+  if(v){v.classList.toggle('on',!!adminNotify.rev);v.setAttribute('aria-checked',String(!!adminNotify.rev))}
+}
 function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
    '<h3>Обратная связь</h3><button class="manbtn" data-u="openfbpage"><span>Обращения пользователей</span><span class="mright"><span class="fb-badge" id="fbBadge" hidden></span><span class="chev" id="fbUpdChev"></span></span></button>'+
-   '<p class="hint">Заявки на коды, быстрая настройка и отзывы пользователей.</p>'+
+   '<div class="gb ntf-box">'+
+     '<div class="ntf-row"><div class="ntf-lbl"><b>Уведомления о заявках</b><small>Присылать в бот при новой заявке на код</small></div><button class="ntf-sw" id="ntfReq" data-u="ntftog" data-k="req" role="switch" aria-checked="true" aria-label="Уведомления о заявках"><i></i></button></div>'+
+     '<div class="ntf-row"><div class="ntf-lbl"><b>Уведомления об отзывах</b><small>Отзывы, предложения и сообщения об ошибках</small></div><button class="ntf-sw" id="ntfRev" data-u="ntftog" data-k="rev" role="switch" aria-checked="true" aria-label="Уведомления об отзывах"><i></i></button></div>'+
+   '</div>'+
+   '<p class="hint">Сообщения приходят в личный чат с ботом с кнопкой быстрого перехода.</p>'+
    '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
    '<p class="hint" style="margin:6px 0 0">Применяется ко всем пользователям и скрыт от них.</p>'+
@@ -5248,13 +5274,13 @@ function buildUpd(){
    '<div id="uProg" style="margin-top:14px"></div>'+
    '<div class="uh-row"><h3>История рассылок</h3><button class="btn dan sm" id="uHistClear" data-u="bclear" hidden>Очистить</button></div><div id="uHist"></div>';
   const fc=$('#fbUpdChev');if(fc)fc.innerHTML=ic('next',18);
-  upPrev();upProgress();upHist();syncFbBadges();
+  upPrev();upProgress();upHist();syncFbBadges();syncNotifySw();
 }
 function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
   buildUpd();
   $('#adminSys').value=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
-  $('#upd').classList.add('open');pushLayer(closeUpd);fbLoad(true);upLoad();
+  syncNotifySw();$('#upd').classList.add('open');pushLayer(closeUpd);fbLoad(true);upLoad();
 }
 function closeUpd(){
   if(!$('#upd').classList.contains('open'))return;
@@ -5293,6 +5319,22 @@ $('#updBody').addEventListener('click',async e=>{
     b.disabled=false;
   }
   else if(a==='openfbpage'){openFbPage()}
+  else if(a==='ntftog'){
+    const k=b.dataset.k;if(k!=='req'&&k!=='rev')return;
+    const prev=Object.assign({},adminNotify);
+    adminNotify[k]=!adminNotify[k];
+    syncNotifySw();hap();b.disabled=true;
+    try{
+      const j=await upApi('PUT','/admin/notify',adminNotify);
+      if(j&&j.admin_notify)adminNotify={req:j.admin_notify.req!==false,rev:j.admin_notify.rev!==false};
+      syncNotifySw();
+      toast(adminNotify[k]?(k==='req'?'Уведомления о заявках включены':'Уведомления об отзывах включены'):(k==='req'?'Уведомления о заявках выключены':'Уведомления об отзывах выключены'));
+    }catch(err){
+      adminNotify=prev;syncNotifySw();
+      showError(err,{where:'cloud',title:'Не удалось сохранить настройки уведомлений',noNav:true});
+    }
+    b.disabled=false;
+  }
   else if(a==='cancel'){
     const ok=await dialog({title:'Отменить рассылку?',text:'Недоставленные сообщения отправлены не будут.',ok:'Отменить рассылку',danger:true});
     if(!ok)return;
@@ -5410,7 +5452,16 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
   const urlSp=(()=>{try{return new URLSearchParams(location.search).get('startapp')||''}catch(e){return ''}})();
   const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||urlSp;
   if(urlSp&&window.history&&history.replaceState){try{const u=new URL(location.href);u.searchParams.delete('startapp');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
-  if(sp){
+  const isAdminJump=sp==='admin_req'||sp==='admin_rev';
+  if(isAdminJump){
+    if(!isAdmin){try{await Promise.race([configP,new Promise(r=>setTimeout(r,2500))])}catch(e){}}
+    if(isAdmin){
+      bootHide(true);
+      openFbPage(sp==='admin_rev'?'rev':'req');
+      return;
+    }
+  }
+  if(sp&&!isAdminJump){
     let applied=false;
     try{
       if(!hasSetup()){
