@@ -1,4 +1,5 @@
 const ALLOWED_ORIGIN = "https://itsalexoncc-cell.github.io";
+const APP_URL = "https://itsalexoncc-cell.github.io/tg-ai-chat/";
 const CORS_METHODS = "GET, POST, PUT, DELETE, OPTIONS";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -941,28 +942,31 @@ async function handleSetup(request, env, url) {
       if (row.revoked || row.uses >= row.max_uses || row.expires_at <= Date.now()) {
         return response({ error: "Этот код уже недействителен, использован или отозван" }, 400);
       }
-      const rawLink = typeof body.link === "string" ? body.link.trim() : "";
-      const safeLink = /^https:\/\/t\.me\/[\w/?=&.-]+$/i.test(rawLink) ? rawLink : "";
+      const mode = body.mode === "button" || body.mode === "code" ? body.mode : "both";
       const comment = typeof body.message === "string" ? body.message.trim().slice(0, 500) : "";
-      const lines = [
-        "🔑 <b>Ваш код быстрой настройки готов!</b>",
-        "",
-        "Код: <code>" + escHtml(code) + "</code>"
-      ];
-      if (comment) lines.push("", escHtml(comment));
-      if (safeLink) {
-        lines.push("", "Нажмите кнопку ниже, чтобы применить автоматически, либо скопируйте код и вставьте его в приложении.");
-      } else {
+      const webAppUrl = APP_URL + "?startapp=" + encodeURIComponent(code);
+      const lines = [];
+      if (mode === "button") {
+        lines.push("🔑 <b>Доступ к AI Chat готов!</b>");
+        if (comment) lines.push("", escHtml(comment));
+        lines.push("", "Нажмите кнопку «Подключить» ниже, чтобы автоматически применить настройку.");
+      } else if (mode === "code") {
+        lines.push("🔑 <b>Ваш код быстрой настройки готов!</b>", "", "Код: <code>" + escHtml(code) + "</code>");
+        if (comment) lines.push("", escHtml(comment));
         lines.push("", "Скопируйте код и вставьте его в приложении в разделе «Быстрая настройка».");
+      } else {
+        lines.push("🔑 <b>Доступ к AI Chat готов!</b>", "", "Код: <code>" + escHtml(code) + "</code>");
+        if (comment) lines.push("", escHtml(comment));
+        lines.push("", "Нажмите кнопку «Подключить» ниже, чтобы применить автоматически, или скопируйте код вручную.");
       }
       const payload = {
         chat_id: targetId,
         text: lines.join("\n"),
         parse_mode: "HTML"
       };
-      if (safeLink) {
+      if (mode !== "code") {
         payload.reply_markup = {
-          inline_keyboard: [[{ text: "⚡ Применить код", url: safeLink }]]
+          inline_keyboard: [[{ text: "Подключить", web_app: { url: webAppUrl } }]]
         };
       }
       const r = R(await tgCall(env, "sendMessage", payload));
