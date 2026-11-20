@@ -547,11 +547,11 @@ svg{display:block}
 [hidden]{display:none!important}
 
 /* Переключатель темы: солнце — тумблер — луна */
-.tsw{margin-left:auto;display:flex;align-items:center;gap:8px;padding-right:4px}
-.tsw .ico{display:grid;place-items:center;width:24px;height:24px;color:var(--muted);opacity:.4;transition:opacity .2s,color .2s;cursor:pointer}
-.tsw .sw{position:relative;flex:none;width:44px;height:26px;border-radius:13px;background:var(--card);border:1px solid var(--border);transition:background .2s}
-.tsw .sw i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--text);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
-:root:not([data-theme="light"]) .tsw .sw i{transform:translateX(18px)}
+.tsw{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tsw .ico{display:grid;place-items:center;width:22px;height:22px;color:var(--muted);opacity:.45;transition:opacity .2s,color .2s;cursor:pointer}
+.tsw .sw{position:relative;flex:none;box-sizing:border-box;width:46px;height:26px;padding:3px;border:0;border-radius:999px;display:flex;align-items:center;background:var(--card);transition:background .2s}
+.tsw .sw i{position:static;display:block;flex:none;width:20px;height:20px;border-radius:50%;background:var(--text);transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+:root:not([data-theme="light"]) .tsw .sw i{transform:translateX(20px)}
 :root:not([data-theme="light"]) .tsw .moon{opacity:1;color:#a5b4fc}
 :root[data-theme="light"] .tsw .sun{opacity:1;color:#f59e0b}
 
@@ -1096,8 +1096,9 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 :root[data-theme="light"] .web-hint.auto{background:linear-gradient(155deg,#e2f6e9,#cdecd8);border:0}
 :root[data-theme="light"] .web-hint.on{background:linear-gradient(155deg,#e2eeff,#cce1ff);border:0}
 :root[data-theme="light"] .web-hint.avail{background:linear-gradient(155deg,#eaf2ff,#d8e7fe);border:0}
-.tsw .sw{border:0;border-radius:999px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+.tsw .sw{background:var(--deb-bg);box-shadow:var(--deb-sh)}
 .tsw .sw i{box-shadow:0 2px 6px rgba(0,0,0,.35)}
+:root[data-theme="light"] .tsw .sw i{background:linear-gradient(155deg,#ffffff 0%,#f0f3fa 100%);box-shadow:0 2px 5px rgba(15,23,42,.28),0 1px 2px rgba(15,23,42,.16)}
 .bar{border-radius:999px;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}
 .bar i{border-radius:999px}
 .nt-tips,.nt-det pre{border-radius:20px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
@@ -1107,6 +1108,59 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 #toast{border-radius:999px;padding:10px 18px;box-shadow:var(--flt-sh-lg)}
 .hint{font-size:12.5px;line-height:1.4;margin:6px 6px 10px;opacity:.82}
 #setBody h3,#updBody h3{margin:20px 0 8px 6px}
+
+/* Заголовок истории рассылок с кнопкой очистки */
+.uh-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 0 8px}
+#updBody .uh-row h3{margin:0 0 0 6px}
+.uc .uh b{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+/* Парящие верхние кнопки на страницах Настройки / Ручная настройка API / Панель управления / Обращения */
+#settings,#manual,#upd,#fbPage{display:block}
+#settings .sh,#manual .sh,#upd .sh,#fbPage .sh{
+  position:absolute;top:0;left:0;right:0;z-index:8;
+  display:flex;align-items:center;gap:8px;
+  padding:max(12px,env(safe-area-inset-top)) 16px 10px;
+  pointer-events:none;background:transparent;
+}
+#settings .sh > *,#manual .sh > *,#upd .sh > *,#fbPage .sh > *{pointer-events:auto}
+.sh > .ib{
+  flex:none;width:40px;height:40px;border-radius:50%;
+  background:rgba(46,49,60,.74);
+  box-shadow:var(--flt-sh-sm);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  transition:transform .14s ease,background .16s ease;
+}
+.sh > .ib:active{transform:scale(.94);background:rgba(58,62,76,.86)}
+.sh h2{
+  margin:0;display:block;height:40px;line-height:40px;padding:0 16px;
+  border-radius:999px;min-width:0;
+  font-size:15.5px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:rgba(46,49,60,.74);
+  box-shadow:var(--flt-sh-sm);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.sh .tsw{
+  margin-left:auto;flex:none;height:40px;padding:0 10px;
+  border-radius:999px;
+  background:rgba(46,49,60,.74);
+  box-shadow:var(--flt-sh-sm);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.sh .fb-badge{flex:none;box-shadow:var(--flt-sh-sm)}
+:root[data-theme="light"] .sh > .ib,
+:root[data-theme="light"] .sh h2,
+:root[data-theme="light"] .sh .tsw{
+  background:rgba(238,242,250,.76);color:var(--text);
+}
+:root[data-theme="light"] .sh > .ib:active{background:rgba(224,230,244,.9)}
+#setBody,#manBody,#updBody,#fbPageBody{
+  position:absolute;inset:0;overflow-y:auto;
+  padding:calc(max(12px,env(safe-area-inset-top)) + 60px) 16px max(34px,env(safe-area-inset-bottom));
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+#manBody{padding-top:calc(max(12px,env(safe-area-inset-top)) + 64px)}
+#setBody > h3:first-child,#updBody > h3:first-child,#updBody > .uh-row:first-child{margin-top:6px}
 </style>
 </head>
 <body>
@@ -1319,18 +1373,50 @@ const THEME_KEY='tgai.theme.v1';
 let currentTheme='dark';
 try{currentTheme=localStorage.getItem(THEME_KEY)==='light'?'light':'dark'}catch(e){}
 
-function applyTheme(){
-  document.documentElement.dataset.theme=currentTheme;
-  const color=currentTheme==='light'?'#ffffff':'#121212';
-  const sw=document.getElementById('themeToggle');
-  if(sw){sw.setAttribute('aria-checked',String(currentTheme!=='light'));sw.setAttribute('aria-label',currentTheme==='light'?'Светлая тема':'Тёмная тема')}
+function parseRgba(str){
+  const m=String(str||'').match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*[,/]\s*([\d.]+))?\s*\)/);
+  return m?[+m[1],+m[2],+m[3],m[4]!=null?+m[4]:1]:null;
+}
+function syncTgChrome(){
+  const baseHex=currentTheme==='light'?'#ffffff':'#121212';
+  let rgb=currentTheme==='light'?[255,255,255]:[18,18,18];
+  const layers=['#scrim.on','#dlg.on:not(.context)','#dlg2.on','#viewer.on'];
+  for(let i=0;i<layers.length;i++){
+    const el=$(layers[i]);
+    if(!el)continue;
+    const ov=parseRgba(getComputedStyle(el).backgroundColor);
+    if(ov&&ov[3]>0.01){
+      const a=ov[3];
+      rgb=[
+        Math.max(0,Math.min(255,Math.round(ov[0]*a+rgb[0]*(1-a)))),
+        Math.max(0,Math.min(255,Math.round(ov[1]*a+rgb[1]*(1-a)))),
+        Math.max(0,Math.min(255,Math.round(ov[2]*a+rgb[2]*(1-a))))
+      ];
+    }
+  }
+  const hex='#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',hex);
   try{
     if(tg){
-      tg.setHeaderColor(color);
-      tg.setBackgroundColor(color);
-      if(tg.setBottomBarColor)tg.setBottomBarColor(color);
+      if(tg.setHeaderColor)tg.setHeaderColor(hex);
+      if(tg.setBackgroundColor)tg.setBackgroundColor(baseHex);
+      if(tg.setBottomBarColor)tg.setBottomBarColor(hex);
     }
   }catch(e){}
+}
+function applyTheme(){
+  document.documentElement.dataset.theme=currentTheme;
+  const sw=document.getElementById('themeToggle');
+  if(sw){sw.setAttribute('aria-checked',String(currentTheme!=='light'));sw.setAttribute('aria-label',currentTheme==='light'?'Светлая тема':'Тёмная тема')}
+  syncTgChrome();
+}
+if(window.MutationObserver){
+  const tgChromeObs=new MutationObserver(syncTgChrome);
+  ['#scrim','#dlg','#dlg2','#viewer'].forEach(sel=>{
+    const el=$(sel);
+    if(el)tgChromeObs.observe(el,{attributes:true,attributeFilter:['class']});
+  });
 }
 applyTheme();
 function setTheme(t){
@@ -4298,13 +4384,16 @@ function upProgress(){
 }
 function upHist(){
   const el=$('#uHist');if(!el)return;
+  const clr=$('#uHistClear');
+  if(clr)clr.hidden=!UP.items.some(x=>x.status!=='sending');
   if(!UP.items.length){el.innerHTML='<div class="hint">Рассылок пока не было.</div>';return}
   const lbl={sending:'Не завершена',done:'Завершена',cancelled:'Отменена'};
   el.innerHTML=UP.items.map(s=>{
     const name=(s.title||s.preview||(s.media?'Медиа-сообщение':'Без заголовка')).replace(/\s+/g,' ').slice(0,60);
     const d=new Date(s.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
     const act=(s.status==='sending'&&!UP.running)?'<div class="btns"><button class="btn pri sm" data-u="resume" data-id="'+esc(s.id)+'">Продолжить</button><button class="btn dan sm" data-u="cancel" data-id="'+esc(s.id)+'">Отменить</button></div>':'';
-    return '<div class="uc"><div class="uh"><b>'+esc(name)+'</b></div><div class="ul sub">'+d+' · '+(lbl[s.status]||s.status)+(s.media?' · вложений: '+s.media:'')+'</div><div class="ul">'+statLine(s)+'</div>'+act+'</div>';
+    const del=s.status!=='sending'?'<button class="btn dan sm" data-u="bdel" data-id="'+esc(s.id)+'" aria-label="Удалить из истории" style="flex:none;padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button>':'';
+    return '<div class="uc"><div class="uh"><b>'+esc(name)+'</b>'+del+'</div><div class="ul sub">'+d+' · '+(lbl[s.status]||s.status)+(s.media?' · вложений: '+s.media:'')+'</div><div class="ul">'+statLine(s)+'</div>'+act+'</div>';
   }).join('');
 }
 async function upLoad(){
@@ -4607,7 +4696,7 @@ function buildUpd(){
    '<p class="hint" id="uCount"></p>'+
    '<div class="btns one"><button class="btn" data-u="test">Тест себе</button><button class="btn pri" data-u="send">Разослать всем</button></div>'+
    '<div id="uProg" style="margin-top:14px"></div>'+
-   '<h3>История рассылок</h3><div id="uHist"></div>'+
+   '<div class="uh-row"><h3>История рассылок</h3><button class="btn dan sm" id="uHistClear" data-u="bclear" hidden>Очистить</button></div><div id="uHist"></div>'+
    '<h3>Быстрая настройка</h3><div class="gb">'+
    '<label>Провайдер</label><select id="qProv">'+VISIBLE.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
    '<div class="kl"><div class="kf"><label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
@@ -4689,6 +4778,29 @@ $('#updBody').addEventListener('click',async e=>{
     if(!ok)return;
     try{await upApi('POST','/admin/broadcasts/'+b.dataset.id+'/cancel');if(UP.cur&&UP.cur.id===b.dataset.id)UP.cur=null;upProgress();await upLoad()}
     catch(err){showError(err,{where:'cloud',title:'Не удалось отменить рассылку'})}
+  }
+  else if(a==='bdel'){
+    const id=b.dataset.id;
+    const ok=await dialog({title:'Удалить рассылку?',text:'Запись пропадёт из истории. Уже отправленные сообщения в Telegram останутся у пользователей.',ok:'Удалить',danger:true});
+    if(!ok)return;
+    try{
+      await upApi('DELETE','/admin/broadcasts/'+encodeURIComponent(id));
+      UP.items=UP.items.filter(x=>String(x.id)!==String(id));
+      if(UP.cur&&String(UP.cur.id)===String(id)){UP.cur=null;upProgress()}
+      upHist();toast('Удалено из истории');
+    }catch(err){showError(err,{where:'cloud',title:'Не удалось удалить запись'})}
+  }
+  else if(a==='bclear'){
+    const cnt=UP.items.filter(x=>x.status!=='sending').length;
+    if(!cnt)return;
+    const ok=await dialog({title:'Очистить историю рассылок?',text:'Будут удалены завершённые и отменённые рассылки ('+cnt+' шт.). Активные рассылки затронуты не будут.',ok:'Очистить',danger:true});
+    if(!ok)return;
+    try{
+      await upApi('DELETE','/admin/broadcasts');
+      UP.items=UP.items.filter(x=>x.status==='sending');
+      if(UP.cur&&UP.cur.status!=='sending'){UP.cur=null;upProgress()}
+      upHist();toast('История рассылок очищена');
+    }catch(err){showError(err,{where:'cloud',title:'Не удалось очистить историю'})}
   }
 });
 
