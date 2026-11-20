@@ -194,9 +194,69 @@ async function touchUser(env, user) {
   ).run();
 }
 
-/* ---------- базовый системный промпт (хранится в D1, правит только администратор) ---------- */
+/* ---------- базовый системный промпт и настройки уведомлений админа ---------- */
 const SYSTEM_PROMPT_KEY = "system_prompt";
 const SYSTEM_PROMPT_MAX = 4000;
+const ADMIN_NOTIFY_KEY = "admin_notify";
+const DEF_CODE_REQ_TEXT = "Заявка на получение кода быстрой настройки";
+
+async function getAdminNotify(env) {
+  try {
+    const row = await env.DB.prepare(
+      "SELECT value FROM app_config WHERE key = ?"
+    ).bind(ADMIN_NOTIFY_KEY).first();
+    if (!row || !row.value) return { req: true, rev: true };
+    const j = JSON.parse(row.value);
+    return { req: j.req !== false, rev: j.rev !== false };
+  } catch {
+    return { req: true, rev: true };
+  }
+}
+
+async function notifyAdminFeedback(env, { type, text, anonymous, userId, fullName, username }) {
+  const adminId = env.ADMIN_ID ? String(env.ADMIN_ID).trim() : "";
+  if (!adminId) return;
+  const cfg = await getAdminNotify(env);
+  const isReq = type === "code";
+  if (isReq && !cfg.req) return;
+  if (!isReq && !cfg.rev) return;
+
+  const head = isReq
+    ? "🔑 <b>Новая заявка на код</b>"
+    : type === "bug"
+      ? "🐞 <b>Сообщение об ошибке</b>"
+      : type === "idea"
+        ? "💡 <b>Новое предложение</b>"
+        : "💬 <b>Новый отзыв</b>";
+
+  let who = "Анонимно";
+  if (!anonymous) {
+    const parts = [];
+    if (fullName) parts.push(escHtml(fullName));
+    if (username) parts.push("@" + escHtml(String(username).replace(/^@/, "")));
+    if (userId) parts.push("ID <code>" + escHtml(userId) + "</code>");
+    who = parts.length ? parts.join(" · ") : "Пользователь";
+  }
+
+  const lines = [head, "👤 " + who];
+  const cleanText = String(text || "").trim();
+  if (cleanText && (!isReq || cleanText !== DEF_CODE_REQ_TEXT)) {
+    const cut = cleanText.length > 1200 ? cleanText.slice(0, 1200) + "…" : cleanText;
+    lines.push("", escHtml(cut));
+  }
+
+  const webAppUrl = APP_URL + "?startapp=" + (isReq ? "admin_req" : "admin_rev");
+  const btnText = isReq ? "Открыть заявки" : "Открыть отзывы";
+
+  await tgCall(env, "sendMessage", {
+    chat_id: adminId,
+    text: lines.join("\n"),
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [[{ text: btnText, web_app: { url: webAppUrl } }]]
+    }
+  });
+}
 
 async function handleConfig(request, env, url) {
   try {
@@ -218,12 +278,31 @@ async function handleConfig(request, env, url) {
           "SELECT COUNT(*) AS n FROM feedback WHERE status != 'read'"
         ).first();
         out.unread_feedback = fb ? Number(fb.n) || 0 : 0;
+        out.admin_notify = await getAdminNotify(env);
       }
       return response(out);
     }
 
-    // /admin/system-prompt — только администратор
+    // /admin/system-prompt и /admin/notify — только администратор
     if (!a.isAdmin) return response({ error: "Forbidden" }, 403);
+
+    if (url.pathname === "/admin/notify") {
+      if (request.method === "GET") {
+        return response({ admin_notify: await getAdminNotify(env) });
+      }
+      if (request.method === "PUT") {
+        const body = await request.json();
+        const cfg = { req: body.req !== false, rev: body.rev !== false };
+        await env.DB.prepare(`
+          INSERT INTO app_config (key, value, updated_at)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(key)
+          DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+        `).bind(ADMIN_NOTIFY_KEY, JSON.stringify(cfg)).run();
+        return response({ ok: true, admin_notify: cfg });
+      }
+      return response({ error: "Method not allowed" }, 405);
+    }
 
     if (request.method === "PUT") {
       const body = await request.json();
@@ -1065,6 +1144,17 @@ async function handleFeedback(request, env, url) {
         "INSERT INTO feedback (id, user_id, first_name, username, type, text, anonymous, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?)"
       ).bind(id, a.userId, fullName, username, type, text, anonymous, now).run();
 
+      try {
+        await notifyAdminFeedback(env, {
+          type,
+          text,
+          anonymous: !!anonymous,
+          userId: a.userId,
+          fullName,
+          username
+        });
+      } catch {}
+
       return response({ ok: true, id });
     }
 
@@ -1148,7 +1238,7 @@ export default {
 
     if (url.pathname === "/files/send") return handleFiles(request, env);
 
-    if (url.pathname === "/config" || url.pathname === "/admin/system-prompt") {
+    if (url.pathname === "/config" || url.pathname === "/admin/system-prompt" || url.pathname === "/admin/notify") {
       return handleConfig(request, env, url);
     }
 
