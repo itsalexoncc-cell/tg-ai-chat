@@ -168,6 +168,9 @@ async function ensureSchema(env) {
       "INSERT OR IGNORE INTO users (telegram_user_id) SELECT DISTINCT telegram_user_id FROM user_keys"
     ).run();
   } catch {}
+  // привязка кодов к заявкам и пользователям (для уже существующей таблицы setup_codes)
+  try { await env.DB.prepare("ALTER TABLE setup_codes ADD COLUMN target_user_id TEXT").run(); } catch {}
+  try { await env.DB.prepare("ALTER TABLE setup_codes ADD COLUMN request_id TEXT").run(); } catch {}
   schemaReady = true;
 }
 
@@ -898,16 +901,18 @@ async function handleSetup(request, env, url) {
       const maxUses = Math.min(100, Math.max(1, parseInt(b.max_uses) || 1));
       const days = Math.min(90, Math.max(1, parseInt(b.days) || 7));
       const enc = await encryptKey(JSON.stringify(payload), env.ENCRYPTION_SECRET);
+      const targetUid = typeof b.target_user_id === "string" && /^\d{3,20}$/.test(b.target_user_id.trim()) ? b.target_user_id.trim() : null;
+      const reqId = typeof b.request_id === "string" && /^[\w-]{8,64}$/.test(b.request_id.trim()) ? b.request_id.trim() : null;
       const code = genCode(), now = Date.now();
       await env.DB.prepare(
-        "INSERT INTO setup_codes (code, payload, iv, provider, note, max_uses, created_at, expires_at) VALUES (?,?,?,?,?,?,?,?)"
-      ).bind(code, enc.encrypted_key, enc.iv, b.provider, String(b.note || "").slice(0, 60), maxUses, now, now + days * 864e5).run();
+        "INSERT INTO setup_codes (code, payload, iv, provider, note, max_uses, created_at, expires_at, target_user_id, request_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+      ).bind(code, enc.encrypted_key, enc.iv, b.provider, String(b.note || "").slice(0, 60), maxUses, now, now + days * 864e5, targetUid, reqId).run();
       return response({ code });
     }
 
     if (p === "/admin/setup-codes" && m === "GET") {
       const { results } = await env.DB.prepare(
-        "SELECT code, provider, note, max_uses, uses, revoked, expires_at FROM setup_codes ORDER BY created_at DESC LIMIT 30"
+        "SELECT code, provider, note, max_uses, uses, revoked, created_at, expires_at, target_user_id, request_id FROM setup_codes ORDER BY created_at DESC LIMIT 30"
       ).all();
       return response({ items: results });
     }
@@ -984,12 +989,20 @@ async function handleSetup(request, env, url) {
         }
         return response({ error: "Telegram: " + (r.desc || "не удалось отправить сообщение") }, 400);
       }
-      const reqId = typeof body.request_id === "string" ? body.request_id.trim() : "";
-      if (/^[\w-]{8,64}$/.test(reqId)) {
-        try {
-          await env.DB.prepare("UPDATE feedback SET status = 'read' WHERE id = ?").bind(reqId).run();
-        } catch {}
-      }
+      const reqId = typeof body.request_id === "string" && /^[\w-]{8,64}$/.test(body.request_id.trim()) ? body.request_id.trim() : "";
+      try {
+        const ops = [
+          env.DB.prepare(
+            "UPDATE setup_codes SET target_user_id = ?, request_id = CASE WHEN ? != '' THEN ? ELSE request_id END WHERE code = ?"
+          ).bind(targetId, reqId, reqId, code)
+        ];
+        if (reqId) {
+          ops.push(env.DB.prepare("UPDATE feedback SET status = 'read' WHERE id = ?").bind(reqId));
+        } else {
+          ops.push(env.DB.prepare("UPDATE feedback SET status = 'read' WHERE user_id = ? AND type = 'code' AND status != 'read'").bind(targetId));
+        }
+        await env.DB.batch(ops);
+      } catch {}
       return response({ ok: true });
     }
 
