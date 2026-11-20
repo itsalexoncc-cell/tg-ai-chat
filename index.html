@@ -1196,8 +1196,24 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 .fb-tag.muted{background:rgba(155,155,155,.16);color:var(--muted)}
 :root[data-theme="light"] .fb-tag.active{background:#dff3e4;color:#1f7a3a}
 :root[data-theme="light"] .fb-tag.muted{background:#e5e7ef;color:var(--muted)}
-.qcard-code{font-size:16.5px;font-weight:700;letter-spacing:.04em;margin:6px 0 2px;word-break:break-all;-webkit-user-select:text;user-select:text}
-.qcard-note{font-size:15.5px;font-weight:600;line-height:1.3;margin:6px 0 2px;word-break:break-word}
+.req-card{padding:10px 12px;margin-bottom:9px;border-radius:20px}
+.rc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rc-who{min-width:0;flex:1;font-size:14.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-sub{font-size:12px;line-height:1.25;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-msg{margin-top:5px;font-size:13.5px;line-height:1.35;white-space:pre-wrap;word-break:break-word;opacity:.92;-webkit-user-select:text;user-select:text}
+.rc-codebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding:6px 11px;border-radius:14px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+.rc-codebar b{font-size:14px;font-weight:700;letter-spacing:.05em;white-space:nowrap;-webkit-user-select:text;user-select:text}
+.rc-codebar small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-codebar .rc-tr{flex:none;width:28px;height:28px;padding:0;border-radius:50%;display:grid;place-items:center}
+.rc-old{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;padding:3px 6px 3px 10px;border-radius:12px;background:rgba(127,127,127,.09);font-size:12px;color:var(--muted)}
+.rc-old span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-old b{color:var(--text);font-weight:600;letter-spacing:.03em;-webkit-user-select:text;user-select:text}
+.rc-old .rc-ox{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.rc-old .rc-ox:active{background:rgba(255,107,107,.2);color:#ff8a8a}
+.rc-acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.rc-acts .btn.sm{height:30px;padding:0 10px;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.rc-acts .rc-del{margin-left:auto;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center}
+.req-card .fb-tag{padding:2px 8px;font-size:11.5px;flex:none}
 </style>
 </head>
 <body>
@@ -4661,7 +4677,7 @@ function buildQSection(){
     '<label>Base URL (обязательно для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
     '<div id="qModels"></div>'+
     '<label>Заметка (для кого)</label><input id="qNote" maxlength="60" autocomplete="off">'+
-    '<p class="hint" style="margin:10px 2px 0;font-size:12px;line-height:1.4">Условия кода:<br>• одно использование;<br>• срок жизни 7 дней;<br>• можно отозвать, пока не использован.</p>'+
+    '<p class="hint" style="margin:8px 2px 0;font-size:12px;line-height:1.35">Одноразовый код на 7 дней · можно отозвать до активации.</p>'+
     '<div class="btns one"><button class="btn pri" data-u="qgen">Сформировать</button></div>'+
     '<div id="qRes"></div></div>';
   qModelsRender();qTargetRender();
@@ -4679,11 +4695,13 @@ async function qLoad(silent){
   fbRender();
 }
 async function qGen(){
+  const tgt=Q_TARGET?Object.assign({},Q_TARGET):null;
   const body={provider:$('#qProv').value,key:$('#qKey').value.trim(),base:$('#qBase').value.trim(),
     limit:parseInt($('#qLimit').value)||0,models:QM.all.filter(m=>QM.on.has(m)),note:$('#qNote').value.trim()};
+  if(tgt&&tgt.user_id)body.target_user_id=String(tgt.user_id);
+  if(tgt&&tgt.request_id)body.request_id=String(tgt.request_id);
   const j=await upApi('POST','/admin/setup-codes',body);
   const link=APP_LINK+'?startapp='+j.code;
-  const tgt=Q_TARGET?Object.assign({},Q_TARGET):null;
   if(tgt)Q_CODE_TARGET[j.code]=tgt;
   const sendLbl=tgt?'Отправить в бот ('+userLabel(tgt)+')':'Отправить пользователю в бот';
   $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div>'+
@@ -4712,12 +4730,17 @@ function buildSendUserList(){
   });
   return Array.from(map.values());
 }
-async function openSendCodeDialog(code){
+async function openSendCodeDialog(code,preHint){
   const d=$('#dlg');
   if(d.classList.contains('on'))return;
-  const pre=Q_CODE_TARGET[code]||Q_TARGET||null;
-  let selId=pre?String(pre.user_id):'';
+  const codeObj=Q_CODES.items.find(x=>x.code===code)||null;
+  const pre=preHint||Q_CODE_TARGET[code]||(codeObj&&codeObj.target_user_id?{user_id:String(codeObj.target_user_id),request_id:String(codeObj.request_id||'')}:null)||Q_TARGET||null;
+  let selId=pre&&pre.user_id?String(pre.user_id):'';
   let selReqId=pre&&pre.request_id?String(pre.request_id):'';
+  if(selId&&!selReqId){
+    const m=FB.items.find(x=>x.type==='code'&&String(x.user_id)===selId);
+    if(m)selReqId=String(m.id);
+  }
   let sendMode='both';
   const modeHints={
     both:'В бот придёт код и кнопка «Вставить API» (запуск в 1 тап).',
@@ -4801,13 +4824,15 @@ async function openSendCodeDialog(code){
       const sp=b.querySelector('span');if(sp)sp.textContent='Отправка…';
       try{
         await upApi('POST','/admin/setup-codes/'+encodeURIComponent(code)+'/send',{user_id:v,mode:sendMode,message:msg,request_id:selReqId});
-        if(selReqId){
-          const it=FB.items.find(x=>String(x.id)===String(selReqId));
-          if(it)it.status='read';
-          fbRender();
-        }
+        const co=Q_CODES.items.find(x=>x.code===code);
+        if(co){co.target_user_id=v;if(selReqId)co.request_id=selReqId}
+        FB.items.forEach(x=>{
+          if(x.type==='code'&&((selReqId&&String(x.id)===String(selReqId))||String(x.user_id)===String(v)))x.status='read';
+        });
         if(Q_TARGET&&String(Q_TARGET.user_id)===String(v)){Q_TARGET=null;qTargetRender()}
         delete Q_CODE_TARGET[code];
+        const qr=$('#qRes');if(qr&&qr.textContent.indexOf(code)>=0)qr.innerHTML='';
+        fbRender();
         close();hap('medium');toast('Код отправлен пользователю в бот');
       }catch(err){
         b.disabled=false;if(sp)sp.textContent='Отправить в бот';
@@ -4883,34 +4908,127 @@ function fbWho(x){
 function fbDate(ts){
   return ts?new Date(ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 }
-function fbReqCard(x){
-  const isNew=x.status!=='read';
-  return '<div class="uc fb-card'+(isNew?' unread':'')+'">'+
-    '<div class="uh"><span class="fb-tag '+(isNew?'code':'muted')+'">'+(isNew?'<span class="fb-dot"></span>Заявка':'Заявка · обработана')+'</span><span class="fb-date">'+esc(fbDate(x.created_at))+'</span></div>'+
-    '<div class="qcard-note">'+esc(fbWho(x))+'</div>'+
-    (x.text?'<div class="fb-msg" style="margin-top:4px">'+esc(x.text)+'</div>':'')+
-    '<div class="btns">'+
-      (x.user_id?'<button class="btn pri sm" data-fba="mkcode" data-id="'+esc(x.id)+'">Выдать код</button>':'')+
-      (isNew?'<button class="btn sm" data-fba="read" data-id="'+esc(x.id)+'">Прочитано</button>':'')+
-      '<button class="btn dan sm" data-fba="del" data-id="'+esc(x.id)+'" aria-label="Удалить заявку" style="margin-left:auto;padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button>'+
-    '</div></div>';
+const DEF_REQ_TEXT='Заявка на получение кода быстрой настройки';
+const isCodeDead=(x,now)=>!!(x.revoked||x.uses>=x.max_uses||x.expires_at<now);
+const codeStatusLbl=(x,now)=>x.revoked?'отозван':x.uses>=x.max_uses?'использован':x.expires_at<now?'истёк':'активен';
+function fbShortDate(ts){
+  return ts?new Date(ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 }
-function fbCodeCard(x){
-  const dead=x.revoked||x.uses>=x.max_uses||x.expires_at<Date.now();
-  const st=x.revoked?'отозван':x.uses>=x.max_uses?'использован':x.expires_at<Date.now()?'истёк':'активен';
-  const tagCls=dead?'muted':'active';
-  return '<div class="uc fb-card">'+
-    '<div class="uh"><span class="fb-tag '+tagCls+'">Код · '+st+'</span><span class="fb-date">'+esc(x.provider)+' · '+x.uses+'/'+x.max_uses+'</span></div>'+
-    (x.note?'<div class="qcard-note">'+esc(x.note)+'</div>':'')+
-    '<div class="qcard-code">'+esc(x.code)+'</div>'+
-    '<div class="btns">'+
-      (dead?'':
-        '<button class="btn pri sm" data-u="qsend" data-code="'+esc(x.code)+'">В бот</button>'+
-        '<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'">Код</button>'+
-        '<button class="btn sm" data-u="qcopy" data-t="'+esc(APP_LINK+'?startapp='+x.code)+'">Ссылка</button>'+
-        '<button class="btn dan sm" data-u="qrev" data-id="'+esc(x.code)+'">Отозвать</button>')+
-      '<button class="btn dan sm" data-u="qdel" data-id="'+esc(x.code)+'" aria-label="Удалить код" style="margin-left:auto;padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button>'+
-    '</div></div>';
+/* Объединяет заявки пользователей и выданные им коды в единые компактные карточки */
+function buildUnifiedEntries(reqs,codes,now){
+  const list=[],byUid=new Map(),byReq=new Map();
+  reqs.forEach(r=>{
+    const uid=r.user_id?String(r.user_id):'';
+    let e=uid?byUid.get(uid):null;
+    if(!e){
+      e={user_id:uid,first_name:r.first_name||'',username:r.username||'',reqs:[],codes:[],unread:false,ts:Number(r.created_at)||0};
+      list.push(e);
+      if(uid)byUid.set(uid,e);
+    }
+    e.reqs.push(r);
+    byReq.set(String(r.id),e);
+    if(!e.first_name&&r.first_name)e.first_name=r.first_name;
+    if(!e.username&&r.username)e.username=r.username;
+    if(r.status!=='read')e.unread=true;
+    if((Number(r.created_at)||0)>e.ts)e.ts=Number(r.created_at)||0;
+  });
+  const matchNote=(note,e)=>{
+    const n=String(note||'').trim().toLowerCase();
+    if(!n)return false;
+    const lbl=userLabel(e).trim().toLowerCase();
+    if(lbl&&n===lbl)return true;
+    const un=e.username?'@'+String(e.username).replace(/^@/,'').toLowerCase():'';
+    if(un&&n.indexOf(un)>=0)return true;
+    if(e.user_id&&n.indexOf(String(e.user_id))>=0)return true;
+    const fn=(e.first_name||'').trim().toLowerCase();
+    if(fn.length>=2&&n===fn)return true;
+    return false;
+  };
+  codes.forEach(c=>{
+    const qt=Q_CODE_TARGET[c.code]||null;
+    let e=null;
+    const rid=c.request_id||(qt&&qt.request_id)||'';
+    if(rid&&byReq.has(String(rid)))e=byReq.get(String(rid));
+    const tuid=c.target_user_id||(qt&&qt.user_id)||'';
+    if(!e&&tuid&&byUid.has(String(tuid)))e=byUid.get(String(tuid));
+    if(!e&&c.note)e=list.find(x=>x.reqs.length&&matchNote(c.note,x))||null;
+    if(!e&&tuid){
+      const ku=Q_USERS.find(u=>String(u.user_id)===String(tuid))||qt||{};
+      e={user_id:String(tuid),first_name:ku.first_name||'',username:ku.username||'',reqs:[],codes:[],unread:false,ts:Number(c.created_at)||0};
+      list.push(e);
+      byUid.set(String(tuid),e);
+    }
+    if(!e){
+      e={user_id:'',first_name:'',username:'',reqs:[],codes:[],unread:false,ts:Number(c.created_at)||0};
+      list.push(e);
+    }
+    e.codes.push(c);
+    const cts=Number(c.created_at)||0;
+    if(cts>e.ts)e.ts=cts;
+  });
+  list.forEach(e=>{
+    e.codes.sort((a,b)=>{
+      const da=isCodeDead(a,now)?1:0,db=isCodeDead(b,now)?1:0;
+      if(da!==db)return da-db;
+      return (Number(b.created_at)||Number(b.expires_at)||0)-(Number(a.created_at)||Number(a.expires_at)||0);
+    });
+  });
+  const rank=e=>{
+    const hasLive=e.codes.some(c=>!isCodeDead(c,now));
+    if(e.unread&&!hasLive)return 0;
+    if(e.unread&&hasLive)return 1;
+    if(hasLive)return 2;
+    return 3;
+  };
+  return list.sort((a,b)=>(rank(a)-rank(b))||(b.ts-a.ts));
+}
+function fbEntryCard(e,now){
+  const primary=e.codes[0]||null;
+  const extras=e.codes.slice(1);
+  const live=!!(primary&&!isCodeDead(primary,now));
+  const hasName=!!((e.first_name||'').trim()||(e.username||'').trim());
+  const title=hasName?userLabel(e):((primary&&primary.note)||(e.user_id?'ID '+e.user_id:'Код настройки'));
+  const subParts=[];
+  if(e.user_id&&title!=='ID '+e.user_id)subParts.push('ID '+e.user_id);
+  const dStr=fbShortDate(e.ts||(e.reqs[0]&&e.reqs[0].created_at)||(primary&&primary.created_at));
+  if(dStr)subParts.push(dStr);
+  const customReq=e.reqs.find(r=>r.text&&r.text.trim()&&r.text.trim()!==DEF_REQ_TEXT);
+  let tagCls='muted',tagTxt='Обработана';
+  if(e.unread&&!live){tagCls='code';tagTxt='Заявка'}
+  else if(live){tagCls='active';tagTxt='Активен'}
+  else if(primary){tagCls=primary.revoked?'bug':'muted';tagTxt=codeStatusLbl(primary,now);tagTxt=tagTxt[0].toUpperCase()+tagTxt.slice(1)}
+  const reqIds=e.reqs.map(r=>String(r.id)).join(',');
+  const codeIds=e.codes.map(c=>c.code).join(',');
+  const firstReqId=e.reqs[0]?String(e.reqs[0].id):'';
+  const delBtn='<button class="btn dan sm rc-del" data-fba="delentry" data-reqids="'+esc(reqIds)+'" data-codes="'+esc(codeIds)+'" aria-label="Удалить">'+ic('trash',15)+'</button>';
+  const hasActs=live||!!e.user_id||e.unread;
+  let actsHtml='';
+  if(live){
+    actsHtml='<div class="rc-acts">'+
+      '<button class="btn pri sm" data-u="qsend" data-code="'+esc(primary.code)+'" data-uid="'+esc(e.user_id)+'" data-reqid="'+esc(firstReqId)+'">В бот</button>'+
+      '<button class="btn sm" data-u="qcopy" data-t="'+esc(primary.code)+'">Код</button>'+
+      '<button class="btn sm" data-u="qcopy" data-t="'+esc(APP_LINK+'?startapp='+primary.code)+'">Ссылка</button>'+
+      '<button class="btn dan sm" data-u="qrev" data-id="'+esc(primary.code)+'">Отозвать</button>'+
+      delBtn+'</div>';
+  }else if(hasActs){
+    actsHtml='<div class="rc-acts">'+
+      (e.user_id?'<button class="btn pri sm" data-fba="mkcode" data-uid="'+esc(e.user_id)+'" data-fn="'+esc(e.first_name||'')+'" data-un="'+esc(e.username||'')+'" data-reqid="'+esc(firstReqId)+'">'+(primary?'Новый код':'Выдать код')+'</button>':'')+
+      (e.unread?'<button class="btn sm" data-fba="readentry" data-reqids="'+esc(reqIds)+'">Прочитано</button>':'')+
+      delBtn+'</div>';
+  }
+  const codeBar=primary
+    ?'<div class="rc-codebar"><b>'+esc(primary.code)+'</b><small>'+esc(primary.provider)+' · '+primary.uses+'/'+primary.max_uses+'</small>'+
+      (!hasActs?'<button class="btn dan sm rc-tr" data-fba="delentry" data-reqids="'+esc(reqIds)+'" data-codes="'+esc(codeIds)+'" aria-label="Удалить">'+ic('trash',14)+'</button>':'')+'</div>'
+    :'';
+  const extrasHtml=extras.map(c=>
+    '<div class="rc-old"><span><b>'+esc(c.code)+'</b> · '+esc(c.provider)+' · '+codeStatusLbl(c,now)+'</span>'+
+    '<button class="rc-ox" data-u="qdel" data-id="'+esc(c.code)+'" aria-label="Удалить код">'+ic('x',13)+'</button></div>'
+  ).join('');
+  return '<div class="uc fb-card req-card'+(e.unread?' unread':'')+'">'+
+    '<div class="rc-top"><div class="rc-who">'+esc(title)+'</div><span class="fb-tag '+tagCls+'">'+(e.unread?'<span class="fb-dot"></span>':'')+esc(tagTxt)+'</span></div>'+
+    (subParts.length?'<div class="rc-sub">'+esc(subParts.join(' · '))+'</div>':'')+
+    (customReq?'<div class="rc-msg">'+esc(customReq.text.trim())+'</div>':'')+
+    codeBar+extrasHtml+actsHtml+'</div>';
 }
 function fbRender(){
   const tabsEl=$('#fbTabs'),reqPane=$('#fbReqPane'),revPane=$('#fbRevPane');
@@ -4932,22 +5050,13 @@ function fbRender(){
   if(reqAllBtn)reqAllBtn.hidden=!reqUnread;
   if(revAllBtn)revAllBtn.hidden=!revUnread;
 
-  // Вкладка «Заявки»: единый список (новые заявки -> активные коды -> обработанные заявки -> завершённые коды), внизу всегда «Быстрая настройка»
-  const newReqs=reqs.filter(x=>x.status!=='read');
-  const oldReqs=reqs.filter(x=>x.status==='read');
+  // Вкладка «Заявки»: объединённые компактные карточки (заявка + код в одном окне), внизу всегда «Быстрая настройка»
   const now=Date.now();
-  const isDead=x=>x.revoked||x.uses>=x.max_uses||x.expires_at<now;
-  const liveCodes=Q_CODES.items.filter(x=>!isDead(x));
-  const deadCodes=Q_CODES.items.filter(x=>isDead(x));
   if((FB.loading||Q_CODES.loading)&&!reqs.length&&!Q_CODES.items.length){
     reqList.innerHTML='<div class="fb-empty">Загрузка заявок и кодов…</div>';
   }else{
-    const cards=[]
-      .concat(newReqs.map(fbReqCard))
-      .concat(liveCodes.map(fbCodeCard))
-      .concat(oldReqs.map(fbReqCard))
-      .concat(deadCodes.map(fbCodeCard));
-    reqList.innerHTML=cards.length?cards.join(''):'<div class="fb-empty" style="padding:22px 16px">Заявок и выданных кодов пока нет.</div>';
+    const entries=buildUnifiedEntries(reqs,Q_CODES.items,now);
+    reqList.innerHTML=entries.length?entries.map(e=>fbEntryCard(e,now)).join(''):'<div class="fb-empty" style="padding:22px 16px">Заявок и выданных кодов пока нет.</div>';
   }
 
   // Вкладка «Отзывы»: единый список без подвкладок, тип (Отзыв / Предложение / Ошибка) указан в каждой карточке
@@ -5017,10 +5126,13 @@ $('#fbPageBody').addEventListener('click',async e=>{
     else if(ua==='qmadd')qModelAdd();
     else if(ua==='qgen'){ub.disabled=true;try{await qGen()}catch(err){showError(err,{where:'cloud',title:'Не удалось создать код'})}ub.disabled=false}
     else if(ua==='qcopy'){copyText(ub.dataset.t)}
-    else if(ua==='qsend'){openSendCodeDialog(ub.dataset.code)}
+    else if(ua==='qsend'){
+      const hint=ub.dataset.uid?{user_id:ub.dataset.uid,request_id:ub.dataset.reqid||''}:null;
+      openSendCodeDialog(ub.dataset.code,hint);
+    }
     else if(ua==='qclearTarget'){Q_TARGET=null;qTargetRender();hap()}
     else if(ua==='qdel'){
-      const ok=await dialog({title:'Удалить запись?',text:'Код '+ub.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
+      const ok=await dialog({title:'Удалить код?',text:'Код '+ub.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
       if(!ok)return;
       try{await upApi('DELETE','/admin/setup-codes/'+ub.dataset.id+'?purge=1');qLoad(true)}catch(err){showError(err,{where:'cloud',title:'Не удалось удалить код'})}
     }
@@ -5035,6 +5147,17 @@ $('#fbPageBody').addEventListener('click',async e=>{
     try{
       await upApi('POST','/admin/feedback/'+encodeURIComponent(id)+'/read');
       const it=FB.items.find(x=>String(x.id)===String(id));if(it)it.status='read';
+      fbRender();hap();
+    }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось обновить статус'})}
+  }
+  else if(a==='readentry'){
+    const ids=(b.dataset.reqids||'').split(',').filter(Boolean);
+    const targets=FB.items.filter(x=>ids.indexOf(String(x.id))>=0&&x.status!=='read');
+    if(!targets.length)return;
+    b.disabled=true;
+    try{
+      await Promise.all(targets.map(x=>upApi('POST','/admin/feedback/'+encodeURIComponent(x.id)+'/read')));
+      targets.forEach(x=>{x.status='read'});
       fbRender();hap();
     }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось обновить статус'})}
   }
@@ -5062,9 +5185,9 @@ $('#fbPageBody').addEventListener('click',async e=>{
     }
   }
   else if(a==='mkcode'){
-    const it=FB.items.find(x=>String(x.id)===String(b.dataset.id));
-    if(!it||!it.user_id)return;
-    Q_TARGET={user_id:String(it.user_id),first_name:it.first_name||'',username:it.username||'',request_id:String(it.id)};
+    const uid=b.dataset.uid||'';
+    if(!uid)return;
+    Q_TARGET={user_id:uid,first_name:b.dataset.fn||'',username:b.dataset.un||'',request_id:b.dataset.reqid||''};
     buildQSection();
     qTargetRender();
     const qn=$('#qNote');
@@ -5072,6 +5195,26 @@ $('#fbPageBody').addEventListener('click',async e=>{
     const qb=$('#qBox');
     if(qb)setTimeout(()=>qb.scrollIntoView({behavior:'smooth',block:'start'}),60);
     hap();
+  }
+  else if(a==='delentry'){
+    const rids=(b.dataset.reqids||'').split(',').filter(Boolean);
+    const cids=(b.dataset.codes||'').split(',').filter(Boolean);
+    const title=rids.length&&cids.length?'Удалить заявку и код?':cids.length?'Удалить код?':'Удалить заявку?';
+    const text=cids.length
+      ?(rids.length?'Заявка и код ('+cids.join(', ')+') будут удалены. Если код уже активирован, системное подключение пользователя отключится.':'Код '+cids.join(', ')+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.')
+      :'Заявка будет удалена из панели управления без возможности восстановления.';
+    const ok=await dialog({title:title,text:text,ok:'Удалить',danger:true});
+    if(!ok)return;
+    b.disabled=true;
+    try{
+      await Promise.all([
+        ...cids.map(c=>upApi('DELETE','/admin/setup-codes/'+encodeURIComponent(c)+'?purge=1')),
+        ...rids.map(id=>upApi('DELETE','/admin/feedback/'+encodeURIComponent(id)))
+      ]);
+      if(cids.length)Q_CODES.items=Q_CODES.items.filter(x=>cids.indexOf(x.code)<0);
+      if(rids.length)FB.items=FB.items.filter(x=>rids.indexOf(String(x.id))<0);
+      fbRender();toast('Удалено');
+    }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось удалить запись'})}
   }
   else if(a==='del'){
     const id=b.dataset.id;
