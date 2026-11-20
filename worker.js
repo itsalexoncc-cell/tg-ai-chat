@@ -871,6 +871,12 @@ async function handleSetup(request, env, url) {
       return response(d ? Object.assign({ active: true }, managedMeta(d)) : { active: false });
     }
 
+    // сброс системного подключения самим пользователем
+    if (p === "/managed" && m === "DELETE") {
+      await env.DB.prepare("DELETE FROM user_managed WHERE telegram_user_id = ?").bind(a.userId).run();
+      return response({ ok: true });
+    }
+
     // проксирование запроса к провайдеру: ключ подставляется на сервере
     if (p === "/managed/proxy" && m === "POST") return await managedProxy(request, env, a.userId, url);
 
