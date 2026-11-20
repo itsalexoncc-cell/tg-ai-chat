@@ -4612,7 +4612,8 @@ async function qLoad(){
         '<div style="flex:1;min-width:0">'+
           (x.note?'<div style="font-size:17px;font-weight:500;line-height:1.2;word-break:break-word">'+esc(x.note)+'</div>':'')+
           '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px"><b style="font-size:15px;line-height:1.2">'+esc(x.code)+'</b>'+
-            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Копировать</button>'+
+            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Код</button>'+
+              '<button class="btn sm" data-u="qcopy" data-t="'+esc(APP_LINK+'?startapp='+x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Ссылка</button>'+
               '<button class="btn pri sm" data-u="qsend" data-code="'+esc(x.code)+'" style="padding:0 10px;height:26px;font-size:12px">В бот</button>')+'</div>'+
           '<div class="ul sub" style="margin-top:2px;font-size:12.5px;line-height:1.25">'+esc(x.provider)+' · '+st+' ('+x.uses+'/'+x.max_uses+')</div></div></div>';
     }).join('')||'<div class="hint">Кодов пока нет.</div>';
@@ -4658,11 +4659,23 @@ async function openSendCodeDialog(code){
   const pre=Q_CODE_TARGET[code]||Q_TARGET||null;
   let selId=pre?String(pre.user_id):'';
   let selReqId=pre&&pre.request_id?String(pre.request_id):'';
+  let sendMode='both';
+  const modeHints={
+    both:'В бот придёт код и кнопка «Подключить» (запуск в 1 тап).',
+    button:'В бот придёт только кнопка «Подключить» — без кода и ссылок.',
+    code:'В бот придёт только текстовый код для ручного ввода.'
+  };
   d.classList.remove('context');
   d.innerHTML=
     '<div class="dcard fb" role="dialog" aria-modal="true">'+
-      '<div class="fb-h"><h4>Отправить код в бот</h4><button class="ib" data-qs="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
+      '<div class="fb-h"><h4>Отправить доступ в бот</h4><button class="ib" data-qs="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
       '<div style="text-align:center"><span class="qs-code">'+esc(code)+'</span></div>'+
+      '<div class="fb-types" style="margin:0 0 6px">'+
+        '<button class="fb-type on" data-qsm="both">Кнопка + код</button>'+
+        '<button class="fb-type" data-qsm="button">Кнопка</button>'+
+        '<button class="fb-type" data-qsm="code">Только код</button>'+
+      '</div>'+
+      '<p class="hint" id="qsModeHint" style="margin:0 4px 10px;text-align:center">'+esc(modeHints.both)+'</p>'+
       '<input id="qsUid" value="'+esc(selId)+'" placeholder="Telegram ID или поиск по имени / @username" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-bottom:6px">'+
       '<div class="qs-list" id="qsUsers"><div class="qs-empty">Загрузка пользователей…</div></div>'+
       '<input id="qsMsg" maxlength="500" placeholder="Комментарий к сообщению (необязательно)" autocomplete="off" style="margin-bottom:12px">'+
@@ -4706,6 +4719,13 @@ async function openSendCodeDialog(code){
   upApi('GET','/admin/users').then(j=>{Q_USERS=Array.isArray(j.items)?j.items:[];if(listEl.isConnected)renderUsers()}).catch(()=>{if(listEl.isConnected)renderUsers()});
   d.onclick=async e=>{
     if(e.target===d){close();return}
+    const mb=e.target.closest('[data-qsm]');
+    if(mb){
+      sendMode=mb.dataset.qsm||'both';
+      d.querySelectorAll('[data-qsm]').forEach(x=>x.classList.toggle('on',x===mb));
+      const mh=$('#qsModeHint');if(mh)mh.textContent=modeHints[sendMode]||modeHints.both;
+      hap();return;
+    }
     const ub=e.target.closest('[data-qsu]');
     if(ub){
       selId=ub.dataset.qsu;selReqId=ub.dataset.qsreq||'';
@@ -4718,11 +4738,10 @@ async function openSendCodeDialog(code){
       const v=(selId||uidIn.value.trim()).trim();
       if(!/^\d{3,20}$/.test(v)){infoBox('Выберите получателя','Выберите пользователя из списка или введите его числовой Telegram ID.');return}
       const msg=($('#qsMsg')&&$('#qsMsg').value.trim())||'';
-      const link=APP_LINK+'?startapp='+code;
       b.disabled=true;
       const sp=b.querySelector('span');if(sp)sp.textContent='Отправка…';
       try{
-        await upApi('POST','/admin/setup-codes/'+encodeURIComponent(code)+'/send',{user_id:v,link:link,message:msg,request_id:selReqId});
+        await upApi('POST','/admin/setup-codes/'+encodeURIComponent(code)+'/send',{user_id:v,mode:sendMode,message:msg,request_id:selReqId});
         if(selReqId){
           const it=FB.items.find(x=>String(x.id)===String(selReqId));
           if(it)it.status='read';
@@ -5139,7 +5158,9 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
   }catch(e){failed=1}
   newChat();
   if(failed){bootHide(true);return}   // не удалось связаться с облаком — не считаем пользователя новым
-  const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+  const urlSp=(()=>{try{return new URLSearchParams(location.search).get('startapp')||''}catch(e){return ''}})();
+  const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||urlSp;
+  if(urlSp&&window.history&&history.replaceState){try{const u=new URL(location.href);u.searchParams.delete('startapp');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
   if(sp){
     let applied=false;
     try{
