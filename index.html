@@ -801,6 +801,7 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 .fb-tag.review{background:rgba(74,222,128,.15);color:#4ade80}
 .fb-tag.idea{background:rgba(96,165,250,.16);color:#7db4ff}
 .fb-tag.bug{background:rgba(255,107,107,.16);color:#ff8a8a}
+.fb-tag.code{background:rgba(192,132,252,.18);color:#d8b4fe}
 .fb-dot{width:8px;height:8px;border-radius:50%;background:#60a5fa;flex:none}
 .fb-date{font-size:12px;color:var(--muted);white-space:nowrap}
 .fb-msg{margin:8px 0 6px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
@@ -814,6 +815,7 @@ button.ufile small{flex:none;opacity:.6;font-size:12px}
 :root[data-theme="light"] .fb-tag.review{background:#dff3e4;color:#1f7a3a}
 :root[data-theme="light"] .fb-tag.idea{background:#e3efff;color:#1769c2}
 :root[data-theme="light"] .fb-tag.bug{background:#fde8e8;color:#c62828}
+:root[data-theme="light"] .fb-tag.code{background:#f3e8ff;color:#7e22ce}
 :root[data-theme="light"] .fb-dot{background:#2563eb}
 
 /* ---- Экран синхронизации ключей при запуске ---- */
@@ -1166,6 +1168,23 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 :root.has-tg-back #manBack,
 :root.has-tg-back #updBack,
 :root.has-tg-back #fbBack{display:none}
+/* Заявки на код и отправка кода пользователю в бот */
+.qtarget{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 4px;padding:10px 12px 10px 14px;border-radius:20px;background:rgba(192,132,252,.14);color:#e9d5ff;font-size:13.5px;line-height:1.35}
+.qtarget b{display:block;font-weight:600;color:var(--text)}
+.qtarget small{display:block;color:var(--muted);font-size:12px}
+.qtarget .ib{flex:none;width:30px;height:30px;color:var(--muted)}
+:root[data-theme="light"] .qtarget{background:#f3e8ff;color:#6b21a8}
+.qs-code{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--deb-bg);box-shadow:var(--deb-sh);font-size:15px;font-weight:700;letter-spacing:.05em;margin:10px 0 12px}
+.qs-list{max-height:200px;overflow-y:auto;margin:6px 0 12px;padding:4px 2px 8px;display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.qs-u{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 14px;border-radius:20px;text-align:left;background:var(--flt-btn);box-shadow:var(--flt-sh-sm);transition:transform .14s ease,background .16s ease}
+.qs-u:active{transform:scale(.98)}
+.qs-u.sel{background:var(--sel-bg);box-shadow:var(--sel-sh)}
+.qs-u .qu-n{min-width:0;flex:1}
+.qs-u .qu-n b{display:block;font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qs-u .qu-n small{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qs-u .qu-tag{flex:none;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:rgba(192,132,252,.18);color:#d8b4fe}
+:root[data-theme="light"] .qs-u .qu-tag{background:#f3e8ff;color:#7e22ce}
+.qs-empty{padding:10px 4px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -3749,15 +3768,20 @@ function dialog(o){
 }
 
 /* ---------- окно «Подключение API» ---------- */
-let connOpen=false;
+let connOpen=false,connView='';
 function closeConn(){
-  if(!connOpen)return;connOpen=false;
+  if(!connOpen)return;connOpen=false;connView='';
   const d=$('#dlg');d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(connBack);
 }
-const connBack=()=>{if(hasSetup())closeConn()};
+const connBack=()=>{if(connView==='help'||connView==='request'){openConn();return}if(hasSetup())closeConn()};
 function openConn(view){
   const d=$('#dlg');
+  connView=view||'';
   if(!connOpen){connOpen=true;if(hasSetup())pushLayer(connBack);try{inp.blur()}catch(e){}}
+  if(!hasSetup()){
+    if(connView==='help'||connView==='request'){if(layers.indexOf(connBack)<0)pushLayer(connBack)}
+    else popLayer(connBack);
+  }
   d.classList.remove('context');
   d.innerHTML=view==='help'
     ?'<div class="dcard cn"><h4 style="font-size:20px;font-weight:700;margin:0 0 12px">Как получить API-ключ?</h4>'+
@@ -3773,6 +3797,14 @@ function openConn(view){
        '<li>Скопируйте ключ, вернитесь в приложение, добавьте его в настройках и выберите модель.</li></ol>'+
        '<p class="cn-note">Условия бесплатного использования зависят от провайдера и выбранной модели. Некоторые сервисы требуют пополнения баланса.</p>'+
        '<button class="btn pri cn-b" data-cn="back">Понятно</button></div>'
+    :view==='request'
+    ?'<div class="dcard fb" role="dialog" aria-modal="true">'+
+       '<div class="fb-h"><h4>Заявка на получение кода</h4><button class="ib" data-cn="back" aria-label="Назад">'+ic('x',20)+'</button></div>'+
+       '<p class="hint" style="margin:10px 2px 12px">Заявка придёт администратору с вашим профилем Telegram. Когда код будет готов, бот пришлёт его вам прямо в чат.</p>'+
+       '<textarea class="fb-ta" id="cnReqText" maxlength="500" placeholder="Комментарий (необязательно): например, как вас зовут или какие модели нужны…"></textarea>'+
+       '<div class="fb-meta"><span>Поле можно оставить пустым</span><span id="cnReqCnt">0 / 500</span></div>'+
+       '<button class="btn pri cn-b" data-cn="sendreq">Отправить заявку</button>'+
+       '<button class="cn-l" data-cn="back">Назад</button></div>'
     :'<div class="dcard cn"><div class="cn-h"><h4>Подключение API</h4><span class="cn-st">Не подключено</span></div>'+
        '<div class="cn-ic">'+ic('plug',30)+'</div>'+
        '<div class="cn-t">Для начала работы подключите API</div>'+
@@ -3781,17 +3813,34 @@ function openConn(view){
        '<button class="cn-l" data-cn="help">Как получить API-ключ?</button>'+
        '<div class="cn-sep"></div>'+
        '<div class="cn-code"><input id="cnCode" placeholder="Код или ссылка быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-       '<button class="btn cn-b" data-cn="redeem">Применить код</button></div>'+
+       '<button class="btn cn-b" data-cn="redeem">Применить код</button>'+
+       '<button class="btn ghost cn-b" data-cn="reqcode" style="margin-top:8px">Отправить заявку на код</button></div>'+
        '<div class="cn-f">Подключение занимает всего несколько минут</div></div>';
   d.classList.add('on');
   const card=d.querySelector('.dcard');if(card)card.scrollTop=0;
+  if(view==='request'){
+    const ta=$('#cnReqText'),cnt=$('#cnReqCnt');
+    if(ta&&cnt)ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / 500'});
+  }
   d.onclick=async e=>{
-    if(e.target===d){if(hasSetup())closeConn();return}
+    if(e.target===d){if(connView==='help'||connView==='request')openConn();else if(hasSetup())closeConn();return}
     const b=e.target.closest('[data-cn]');if(!b)return;
     const a=b.dataset.cn;
     if(a==='have'){closeConn();openSettings();openManual(true)}
     else if(a==='help')openConn('help');
+    else if(a==='reqcode')openConn('request');
     else if(a==='back')openConn();
+    else if(a==='sendreq'){
+      const ta=$('#cnReqText'),text=ta?ta.value.trim():'';
+      b.disabled=true;b.textContent='Отправка…';
+      const ok=await submitCodeRequest(text);
+      if(ok){
+        openConn();
+        await notice({icon:'ok',title:'Заявка отправлена',text:'Администратор получил вашу заявку на код настройки. Когда код будет готов, бот пришлёт его вам прямо в чат Telegram.'});
+      }else{
+        b.disabled=false;b.textContent='Отправить заявку';
+      }
+    }
     else if(a==='redeem'){
       const ci=$('#cnCode'),v=ci?ci.value.trim():'';
       if(!v){infoBox('Вставьте код','Скопируйте код быстрой настройки или ссылку, которую вам прислали, и вставьте в поле.');return}
@@ -3917,6 +3966,58 @@ function openFeedback(){
     }
   };
   setTimeout(()=>{try{ta.focus()}catch(e){}},80);
+}
+async function submitCodeRequest(comment){
+  const left=Math.ceil((30000-(Date.now()-fbLastSent))/1000);
+  if(fbLastSent&&left>0){toast('Подождите '+left+' сек. перед следующей отправкой');return false}
+  try{
+    await cloudJson('POST','/feedback',{type:'code',text:comment||'Заявка на получение кода быстрой настройки',anonymous:false});
+    fbLastSent=Date.now();
+    if(isAdmin){unreadFeedback++;syncFbBadges()}
+    hap('medium');
+    return true;
+  }catch(err){
+    if(err&&err.status===404){
+      infoBox('Заявки пока не подключены','Сервер приложения ещё не обновлён для приёма заявок. Попробуйте чуть позже.');
+    }else{
+      showError(err,{where:'cloud',title:'Не удалось отправить заявку',noNav:true});
+    }
+    return false;
+  }
+}
+function openCodeRequest(){
+  if(connOpen){openConn('request');return}
+  const d=$('#dlg');
+  if(d.classList.contains('on'))return;
+  d.classList.remove('context');
+  d.innerHTML=
+    '<div class="dcard fb" role="dialog" aria-modal="true">'+
+      '<div class="fb-h"><h4>Заявка на получение кода</h4><button class="ib" data-cr="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
+      '<p class="hint" style="margin:10px 2px 12px">Заявка придёт администратору с вашим профилем Telegram. Когда код будет готов, бот пришлёт его вам прямо в чат.</p>'+
+      '<textarea class="fb-ta" id="crText" maxlength="500" placeholder="Комментарий (необязательно): например, как вас зовут или какие модели нужны…"></textarea>'+
+      '<div class="fb-meta"><span>Поле можно оставить пустым</span><span id="crCnt">0 / 500</span></div>'+
+      '<button class="btn pri cn-b" id="crSendBtn" data-cr="send">Отправить заявку</button>'+
+    '</div>';
+  d.classList.add('on');
+  const ta=$('#crText'),cnt=$('#crCnt');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(close)};
+  pushLayer(close);
+  ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / 500'});
+  d.onclick=async e=>{
+    if(e.target===d){close();return}
+    const b=e.target.closest('[data-cr]');if(!b)return;
+    if(b.dataset.cr==='close'){close();return}
+    if(b.dataset.cr==='send'){
+      b.disabled=true;b.textContent='Отправка…';
+      const ok=await submitCodeRequest(ta.value.trim());
+      if(ok){
+        close();
+        await notice({icon:'ok',title:'Заявка отправлена',text:'Администратор получил вашу заявку на код настройки. Когда код будет готов, бот пришлёт его вам прямо в чат Telegram.'});
+      }else{
+        b.disabled=false;b.textContent='Отправить заявку';
+      }
+    }
+  };
 }
 
 /* swipe gestures */
@@ -4068,7 +4169,7 @@ function renderSettings(){
    '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
    '<p class="hint">Ключи, модели и лимиты провайдеров.</p>'+
       '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button></div>'+
+   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button><button class="btn" data-act="reqcode" style="width:100%;text-align:center">Отправить заявку на код</button></div>'+
    '<p class="hint" style="margin:8px 0 0">Данные сохраняются в скрытое системное подключение.</p></div>'+
 '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
    '<p class="hint" style="margin:6px 0 0">Добавляется ко всем запросам.</p>'+
@@ -4240,6 +4341,7 @@ onSet('click',async e=>{
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
   else if(a==='openfb'){openFeedback()}
+  else if(a==='reqcode'){openCodeRequest()}
   else if(a==='openmanual'){openManual()}
   else if(a==='bal'){fetchBal(pid,false)}
   else if(a==='setredeem'){
@@ -4482,6 +4584,20 @@ async function upRun(id){
   if(UP.cur&&UP.cur.status==='done'){hap('medium');toast('Рассылка завершена')}
 }
 /* ---------- быстрая настройка (генератор кодов) ---------- */
+let Q_TARGET=null;
+const Q_CODE_TARGET={};
+let Q_USERS=[];
+const userLabel=u=>{
+  const name=(u.first_name||'').trim(),un=u.username?'@'+String(u.username).replace(/^@/,''):'';
+  return [name,un].filter(Boolean).join(' ')||('ID '+u.user_id);
+};
+function qTargetRender(){
+  const el=$('#qTarget');if(!el)return;
+  if(!Q_TARGET){el.innerHTML='';return}
+  const sub=[Q_TARGET.username?'@'+String(Q_TARGET.username).replace(/^@/,''):'','ID '+Q_TARGET.user_id].filter(Boolean).join(' · ');
+  el.innerHTML='<div class="qtarget"><div style="min-width:0;flex:1"><b>Для: '+esc(Q_TARGET.first_name||('ID '+Q_TARGET.user_id))+'</b><small>'+esc(sub)+'</small></div>'+
+    '<button class="ib" data-u="qclearTarget" aria-label="Убрать получателя">'+ic('x',16)+'</button></div>';
+}
 async function qLoad(){
   const el=$('#qList');if(!el)return;
   try{
@@ -4495,8 +4611,9 @@ async function qLoad(){
           '<button class="btn dan sm" data-u="qdel" data-id="'+esc(x.code)+'" aria-label="Удалить запись" style="padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button></div>'+
         '<div style="flex:1;min-width:0">'+
           (x.note?'<div style="font-size:17px;font-weight:500;line-height:1.2;word-break:break-word">'+esc(x.note)+'</div>':'')+
-          '<div style="display:flex;align-items:center;gap:8px;margin-top:2px"><b style="font-size:15px;line-height:1.2">'+esc(x.code)+'</b>'+
-            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Копировать</button>')+'</div>'+
+          '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px"><b style="font-size:15px;line-height:1.2">'+esc(x.code)+'</b>'+
+            (dead?'':'<button class="btn sm" data-u="qcopy" data-t="'+esc(x.code)+'" style="padding:0 9px;height:26px;font-size:12px">Копировать</button>'+
+              '<button class="btn pri sm" data-u="qsend" data-code="'+esc(x.code)+'" style="padding:0 10px;height:26px;font-size:12px">В бот</button>')+'</div>'+
           '<div class="ul sub" style="margin-top:2px;font-size:12.5px;line-height:1.25">'+esc(x.provider)+' · '+st+' ('+x.uses+'/'+x.max_uses+')</div></div></div>';
     }).join('')||'<div class="hint">Кодов пока нет.</div>';
   }catch(e){}
@@ -4506,10 +4623,120 @@ async function qGen(){
     limit:parseInt($('#qLimit').value)||0,models:QM.all.filter(m=>QM.on.has(m)),note:$('#qNote').value.trim()};
   const j=await upApi('POST','/admin/setup-codes',body);
   const link=APP_LINK+'?startapp='+j.code;
-  $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div><div class="btns one"><button class="btn" data-u="qcopy" data-t="'+esc(j.code)+'">Копировать код</button><button class="btn pri" data-u="qcopy" data-t="'+esc(link)+'">Копировать ссылку</button></div>';
+  const tgt=Q_TARGET?Object.assign({},Q_TARGET):null;
+  if(tgt)Q_CODE_TARGET[j.code]=tgt;
+  const sendLbl=tgt?'Отправить в бот ('+userLabel(tgt)+')':'Отправить пользователю в бот';
+  $('#qRes').innerHTML='<div class="qcode">'+j.code+'</div>'+
+    '<div class="btns one"><button class="btn" data-u="qcopy" data-t="'+esc(j.code)+'">Копировать код</button><button class="btn" data-u="qcopy" data-t="'+esc(link)+'">Копировать ссылку</button></div>'+
+    '<div class="btns" style="margin-top:8px"><button class="btn pri" data-u="qsend" data-code="'+esc(j.code)+'" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px">'+ic('send',16)+'<span>'+esc(sendLbl)+'</span></button></div>';
   ['qKey','qLimit','qBase','qNote'].forEach(id=>{const e=$('#'+id);if(e)e.value=''});
   QM.all=[];QM.on=new Set();qModelsRender();
   qLoad();
+}
+function buildSendUserList(){
+  const map=new Map();
+  FB.items.forEach(x=>{
+    if(x.type!=='code'||!x.user_id)return;
+    const id=String(x.user_id);
+    if(!map.has(id))map.set(id,{user_id:id,first_name:x.first_name||'',username:x.username||'',req:true,request_id:String(x.id),unread:x.status!=='read'});
+  });
+  Q_USERS.forEach(u=>{
+    if(!u||!u.user_id)return;
+    const id=String(u.user_id);
+    if(!map.has(id))map.set(id,{user_id:id,first_name:u.first_name||'',username:u.username||'',req:false,request_id:''});
+    else{
+      const ex=map.get(id);
+      if(!ex.first_name&&u.first_name)ex.first_name=u.first_name;
+      if(!ex.username&&u.username)ex.username=u.username;
+    }
+  });
+  return Array.from(map.values());
+}
+async function openSendCodeDialog(code){
+  const d=$('#dlg');
+  if(d.classList.contains('on'))return;
+  const pre=Q_CODE_TARGET[code]||Q_TARGET||null;
+  let selId=pre?String(pre.user_id):'';
+  let selReqId=pre&&pre.request_id?String(pre.request_id):'';
+  d.classList.remove('context');
+  d.innerHTML=
+    '<div class="dcard fb" role="dialog" aria-modal="true">'+
+      '<div class="fb-h"><h4>Отправить код в бот</h4><button class="ib" data-qs="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
+      '<div style="text-align:center"><span class="qs-code">'+esc(code)+'</span></div>'+
+      '<input id="qsUid" value="'+esc(selId)+'" placeholder="Telegram ID или поиск по имени / @username" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-bottom:6px">'+
+      '<div class="qs-list" id="qsUsers"><div class="qs-empty">Загрузка пользователей…</div></div>'+
+      '<input id="qsMsg" maxlength="500" placeholder="Комментарий к сообщению (необязательно)" autocomplete="off" style="margin-bottom:12px">'+
+      '<button class="btn pri cn-b" id="qsSendBtn" data-qs="send" style="display:flex;align-items:center;justify-content:center;gap:8px">'+ic('send',16)+'<span>Отправить в бот</span></button>'+
+    '</div>';
+  d.classList.add('on');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(close)};
+  pushLayer(close);
+  const uidIn=$('#qsUid'),listEl=$('#qsUsers');
+  const renderUsers=()=>{
+    const q=(uidIn.value||'').trim().toLowerCase();
+    const all=buildSendUserList();
+    const filt=all.filter(u=>{
+      if(!q)return true;
+      return String(u.user_id).toLowerCase().indexOf(q)>=0||
+        String(u.first_name||'').toLowerCase().indexOf(q)>=0||
+        String(u.username||'').toLowerCase().indexOf(q)>=0;
+    });
+    if(!filt.length){
+      listEl.innerHTML='<div class="qs-empty">'+(all.length?'Совпадений нет — можно ввести числовой Telegram ID вручную':'Введите числовой Telegram ID пользователя вручную')+'</div>';
+      return;
+    }
+    listEl.innerHTML=filt.slice(0,30).map(u=>{
+      const on=selId&&String(u.user_id)===String(selId);
+      const sub=[u.username?'@'+String(u.username).replace(/^@/,''):'','ID '+u.user_id].filter(Boolean).join(' · ');
+      return '<button class="qs-u'+(on?' sel':'')+'" data-qsu="'+esc(u.user_id)+'" data-qsreq="'+esc(u.request_id||'')+'">'+
+        '<span class="qu-n"><b>'+esc(u.first_name||('Пользователь '+u.user_id))+'</b><small>'+esc(sub)+'</small></span>'+
+        (u.req?'<span class="qu-tag">'+(u.unread?'Новая заявка':'Заявка')+'</span>':'')+'</button>';
+    }).join('');
+  };
+  uidIn.addEventListener('input',()=>{
+    const v=uidIn.value.trim();
+    if(/^\d{3,20}$/.test(v)){
+      selId=v;
+      const m=buildSendUserList().find(u=>String(u.user_id)===v);
+      selReqId=m&&m.request_id?m.request_id:'';
+    }else{selId='';selReqId=''}
+    renderUsers();
+  });
+  renderUsers();
+  upApi('GET','/admin/users').then(j=>{Q_USERS=Array.isArray(j.items)?j.items:[];if(listEl.isConnected)renderUsers()}).catch(()=>{if(listEl.isConnected)renderUsers()});
+  d.onclick=async e=>{
+    if(e.target===d){close();return}
+    const ub=e.target.closest('[data-qsu]');
+    if(ub){
+      selId=ub.dataset.qsu;selReqId=ub.dataset.qsreq||'';
+      uidIn.value=selId;
+      renderUsers();hap();return;
+    }
+    const b=e.target.closest('[data-qs]');if(!b)return;
+    if(b.dataset.qs==='close'){close();return}
+    if(b.dataset.qs==='send'){
+      const v=(selId||uidIn.value.trim()).trim();
+      if(!/^\d{3,20}$/.test(v)){infoBox('Выберите получателя','Выберите пользователя из списка или введите его числовой Telegram ID.');return}
+      const msg=($('#qsMsg')&&$('#qsMsg').value.trim())||'';
+      const link=APP_LINK+'?startapp='+code;
+      b.disabled=true;
+      const sp=b.querySelector('span');if(sp)sp.textContent='Отправка…';
+      try{
+        await upApi('POST','/admin/setup-codes/'+encodeURIComponent(code)+'/send',{user_id:v,link:link,message:msg,request_id:selReqId});
+        if(selReqId){
+          const it=FB.items.find(x=>String(x.id)===String(selReqId));
+          if(it)it.status='read';
+          fbRender();
+        }
+        if(Q_TARGET&&String(Q_TARGET.user_id)===String(v)){Q_TARGET=null;qTargetRender()}
+        delete Q_CODE_TARGET[code];
+        close();hap('medium');toast('Код отправлен пользователю в бот');
+      }catch(err){
+        b.disabled=false;if(sp)sp.textContent='Отправить в бот';
+        showError(err,{where:'cloud',title:'Не удалось отправить код',noNav:true});
+      }
+    }
+  };
 }
 /* модели в генераторе: тот же вид, что в настройках у «Свой endpoint» */
 const QM={all:[],on:new Set()};
@@ -4559,7 +4786,7 @@ async function qLoadModels(){
 }
 /* ---------- отдельная страница «Обращения» в панели управления ---------- */
 const FB={items:[],filter:'all',loading:false,loaded:false,notReady:false};
-const FB_LBL={review:'Отзыв',idea:'Предложение',bug:'Ошибка'};
+const FB_LBL={review:'Отзыв',idea:'Предложение',bug:'Ошибка',code:'Заявка на код'};
 function syncFbBadges(){
   const n=unreadFeedback>0?String(unreadFeedback):'';
   ['#adminFbBadge','#fbBadge','#fbPageBadge'].forEach(sel=>{
@@ -4574,9 +4801,11 @@ function fbRender(){
   if(FB.loaded)unreadFeedback=unread;
   syncFbBadges();
   if(bar){
+    const codeCnt=FB.loaded?FB.items.filter(x=>x.type==='code'&&x.status!=='read').length:0;
     const tabs=[
       ['all','Все'+(FB.loaded?' ('+FB.items.length+')':'')],
       ['new','Новые'+(unread?' ('+unread+')':'')],
+      ['code','Заявки'+(codeCnt?' ('+codeCnt+')':'')],
       ['review','Отзывы'],
       ['idea','Идеи'],
       ['bug','Ошибки']
@@ -4589,7 +4818,7 @@ function fbRender(){
   if(FB.notReady){list.innerHTML='<div class="fb-empty">На сервере ещё не добавлены маршруты отзывов. Обновите Cloudflare Worker, чтобы получать сообщения пользователей.</div>';return}
   const shown=FB.items.filter(x=>{
     if(FB.filter==='new')return x.status!=='read';
-    if(FB.filter==='review'||FB.filter==='idea'||FB.filter==='bug')return x.type===FB.filter;
+    if(FB.filter==='review'||FB.filter==='idea'||FB.filter==='bug'||FB.filter==='code')return x.type===FB.filter;
     return true;
   });
   if(!shown.length){
@@ -4613,6 +4842,7 @@ function fbRender(){
       '<div class="fb-msg">'+esc(x.text||'')+'</div>'+
       '<div class="ul sub">'+esc(who)+'</div>'+
       '<div class="btns">'+
+        (t==='code'&&x.user_id?'<button class="btn pri sm" data-fba="mkcode" data-id="'+esc(x.id)+'">Выдать код</button>':'')+
         (isNew?'<button class="btn sm" data-fba="read" data-id="'+esc(x.id)+'">Прочитано</button>':'')+
         '<button class="btn sm" data-fba="copy" data-id="'+esc(x.id)+'">Копировать</button>'+
         '<button class="btn dan sm" data-fba="del" data-id="'+esc(x.id)+'" aria-label="Удалить обращение" style="margin-left:auto;padding:0;width:32px;height:32px;display:grid;place-items:center">'+ic('trash',16)+'</button>'+
@@ -4673,6 +4903,18 @@ $('#fbPageBody').addEventListener('click',async e=>{
       hap();
     }
   }
+  else if(a==='mkcode'){
+    const it=FB.items.find(x=>String(x.id)===String(b.dataset.id));
+    if(!it||!it.user_id)return;
+    Q_TARGET={user_id:String(it.user_id),first_name:it.first_name||'',username:it.username||'',request_id:String(it.id)};
+    closeFbPage();
+    qTargetRender();
+    const qn=$('#qNote');
+    if(qn)qn.value=userLabel(Q_TARGET).slice(0,60);
+    const qb=$('#qBox');
+    if(qb)setTimeout(()=>qb.scrollIntoView({behavior:'smooth',block:'start'}),120);
+    hap();
+  }
   else if(a==='del'){
     const id=b.dataset.id;
     const ok=await dialog({title:'Удалить обращение?',text:'Сообщение будет удалено из панели управления без возможности восстановления.',ok:'Удалить',danger:true});
@@ -4688,7 +4930,7 @@ function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
    '<h3>Обратная связь</h3><button class="manbtn" data-u="openfbpage"><span>Обращения пользователей</span><span class="mright"><span class="fb-badge" id="fbBadge" hidden></span><span class="chev" id="fbUpdChev"></span></span></button>'+
-   '<p class="hint">Отзывы, предложения и сообщения об ошибках от пользователей.</p>'+
+   '<p class="hint">Отзывы, предложения, ошибки и заявки на коды от пользователей.</p>'+
    '<h3>Базовый промпт</h3><div class="gb"><label>Для всех пользователей</label>'+
    '<textarea rows="4" id="adminSys" placeholder="Пусто — без базового промпта"></textarea>'+
    '<p class="hint" style="margin:6px 0 0">Применяется ко всем пользователям и скрыт от них.</p>'+
@@ -4704,7 +4946,8 @@ function buildUpd(){
    '<div class="btns one"><button class="btn" data-u="test">Тест себе</button><button class="btn pri" data-u="send">Разослать всем</button></div>'+
    '<div id="uProg" style="margin-top:14px"></div>'+
    '<div class="uh-row"><h3>История рассылок</h3><button class="btn dan sm" id="uHistClear" data-u="bclear" hidden>Очистить</button></div><div id="uHist"></div>'+
-   '<h3>Быстрая настройка</h3><div class="gb">'+
+   '<h3 id="qBox">Быстрая настройка</h3><div class="gb">'+
+   '<div id="qTarget"></div>'+
    '<label>Провайдер</label><select id="qProv">'+VISIBLE.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
    '<div class="kl"><div class="kf"><label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
    '<div class="lf"><label>Лимит</label><input id="qLimit" inputmode="numeric" maxlength="10" placeholder="0"></div></div>'+
@@ -4715,7 +4958,7 @@ function buildUpd(){
    '<div class="btns one"><button class="btn pri" data-u="qgen">Сформировать</button></div>'+
    '<div id="qRes"></div></div><div id="qList" style="margin-top:12px"></div>';
   const fc=$('#fbUpdChev');if(fc)fc.innerHTML=ic('next',18);
-  upPrev();upProgress();upHist();qModelsRender();syncFbBadges();
+  upPrev();upProgress();upHist();qModelsRender();qTargetRender();syncFbBadges();
 }
 function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
@@ -4773,6 +5016,8 @@ $('#updBody').addEventListener('click',async e=>{
   else if(a==='qmadd')qModelAdd();
   else if(a==='qgen'){b.disabled=true;try{await qGen()}catch(err){showError(err,{where:'cloud',title:'Не удалось создать код'})}b.disabled=false}
   else if(a==='qcopy'){copyText(b.dataset.t)}
+  else if(a==='qsend'){openSendCodeDialog(b.dataset.code)}
+  else if(a==='qclearTarget'){Q_TARGET=null;qTargetRender();hap()}
   else if(a==='qdel'){
     const ok=await dialog({title:'Удалить запись?',text:'Код '+b.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
     if(!ok)return;
