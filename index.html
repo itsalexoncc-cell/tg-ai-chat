@@ -1476,7 +1476,7 @@ async function syncManaged(){
   const d=await cloudJson('GET','/managed');
   const c=S.providers.managed;
   if(d.active)setManagedMeta(d);
-  else if(c.meta){c.meta=null;delete c.models;delete c.enabled}
+  else if(c.meta){c.meta=null;c.limit=0;delete c.models;delete c.enabled;delete c.bal}
 }
 async function cloudJson(method,path,body){
   if(!tg||!tg.initData)throw needTg();
@@ -4169,8 +4169,11 @@ function renderSettings(){
    '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
    '<p class="hint">Ключи, модели и лимиты провайдеров.</p>'+
       '<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-   '<div class="btns"><button class="btn pri" data-act="setredeem" style="width:100%;text-align:center">Применить код</button><button class="btn" data-act="reqcode" style="width:100%;text-align:center">Отправить заявку на код</button></div>'+
-   '<p class="hint" style="margin:8px 0 0">Данные сохраняются в скрытое системное подключение.</p></div>'+
+   '<div class="btns" style="flex-wrap:nowrap;align-items:center"><button class="btn pri" data-act="setredeem" style="flex:1;text-align:center">Применить код</button>'+
+   (isAvail('managed')?'<button class="btn dan" data-act="resetmanaged" aria-label="Сбросить системное подключение" title="Сбросить системное подключение" style="flex:none;width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center">'+ic('trash',18)+'</button>':'')+
+   '</div>'+
+   '<div class="btns" style="margin-top:8px"><button class="btn" data-act="reqcode" style="width:100%;text-align:center">Отправить заявку на код</button></div>'+
+   '<p class="hint" style="margin:8px 0 0">'+(isAvail('managed')?'Активно системное подключение ('+esc(provName('managed'))+'). Нажмите на корзину, чтобы сбросить его.':'Данные сохраняются в скрытое системное подключение.')+'</p></div>'+
 '<h3>Общее</h3><div class="gb"><label>Свой промпт (для всех чатов)</label><textarea rows="3" data-g="system" placeholder="Например: отвечай на английском">'+esc(S.system)+'</textarea>'+
    '<p class="hint" style="margin:6px 0 0">Добавляется ко всем запросам.</p>'+
    '<label>Максимум токенов в ответе (Claude, Gemini)</label><input inputmode="numeric" data-g="maxTokens" value="'+esc(S.maxTokens)+'">'+
@@ -4351,6 +4354,28 @@ onSet('click',async e=>{
     try{if(await redeemCode(v)){toast('Готово! Системное подключение обновлено');renderSettings()}}
     catch(err){showError(err,{where:'cloud',title:'Не удалось применить код',noNav:true})}
     b.disabled=false;
+  }
+  else if(a==='resetmanaged'){
+    if(!isAvail('managed'))return;
+    const ok=await dialog({title:'Сбросить системный ключ?',text:'Скрытое системное подключение ('+provName('managed')+') будет удалено из вашего аккаунта, а его счётчик токенов обнулится.',ok:'Сбросить',danger:true});
+    if(!ok)return;
+    b.disabled=true;
+    try{
+      await cloudJson('DELETE','/managed');
+      const c=S.providers.managed;
+      c.meta=null;c.key='';c.base='';c.name='';c.limit=0;
+      c.used={in:0,out:0};c.by={};delete c.models;delete c.enabled;delete c.bal;
+      clearWebCaps('managed');
+      if(S.lastModel&&S.lastModel.indexOf('managed|')===0)S.lastModel='';
+      const av=avail();
+      if(cur&&(!cur.model||!av.includes(cur.model)))cur.model=av.includes(S.lastModel)?S.lastModel:(av[0]||'');
+      try{const stored=JSON.parse(JSON.stringify(S));PROVIDERS.forEach(p=>{if(stored.providers[p.id])stored.providers[p.id].key=''});localStorage.setItem(KEY,JSON.stringify(stored))}catch(e){}
+      save();renderTop();renderSettings();
+      hap('medium');toast('Системное подключение сброшено');
+    }catch(err){
+      b.disabled=false;
+      showError(err,{where:'cloud',title:'Не удалось сбросить системный ключ',noNav:true});
+    }
   }
   else if(a==='clearkey'){
     const ok=await dialog({title:'Очистить поля?',text:'Удалятся ключ и Base URL, лимит сбросится.',ok:'Очистить',danger:true});
