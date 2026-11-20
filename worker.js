@@ -953,17 +953,17 @@ async function handleSetup(request, env, url) {
       const webAppUrl = APP_URL + "?startapp=" + encodeURIComponent(code);
       const lines = [];
       if (mode === "button") {
-        lines.push("🔑 <b>Доступ к AI Chat готов!</b>");
+        lines.push("🔑 <b>Доступ к VEYRA AI готов!</b>");
         if (comment) lines.push("", escHtml(comment));
-        lines.push("", "Нажмите кнопку «Подключить» ниже, чтобы автоматически применить настройку.");
+        lines.push("", "Нажмите кнопку «Вставить API» ниже, для автоматического применения настройки.");
       } else if (mode === "code") {
         lines.push("🔑 <b>Ваш код быстрой настройки готов!</b>", "", "Код: <code>" + escHtml(code) + "</code>");
         if (comment) lines.push("", escHtml(comment));
         lines.push("", "Скопируйте код и вставьте его в приложении в разделе «Быстрая настройка».");
       } else {
-        lines.push("🔑 <b>Доступ к AI Chat готов!</b>", "", "Код: <code>" + escHtml(code) + "</code>");
+        lines.push("🔑 <b>Доступ к VEYRA AI готов!</b>", "", "Код: <code>" + escHtml(code) + "</code>");
         if (comment) lines.push("", escHtml(comment));
-        lines.push("", "Нажмите кнопку «Подключить» ниже, чтобы применить автоматически, или скопируйте код вручную.");
+        lines.push("", "Нажмите кнопку «Вставить API» ниже, для автоматического применения настройки, или скопируйте код вручную.");
       }
       const payload = {
         chat_id: targetId,
@@ -972,7 +972,7 @@ async function handleSetup(request, env, url) {
       };
       if (mode !== "code") {
         payload.reply_markup = {
-          inline_keyboard: [[{ text: "Подключить", web_app: { url: webAppUrl } }]]
+          inline_keyboard: [[{ text: "Вставить API", web_app: { url: webAppUrl } }]]
         };
       }
       const r = R(await tgCall(env, "sendMessage", payload));
