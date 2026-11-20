@@ -156,7 +156,10 @@ async function ensureSchema(env) {
     env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_recipients_status ON broadcast_recipients (broadcast_id, status)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS setup_codes (code TEXT PRIMARY KEY, payload TEXT NOT NULL, iv TEXT NOT NULL, provider TEXT, note TEXT, max_uses INTEGER NOT NULL DEFAULT 1, uses INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS user_managed (telegram_user_id TEXT PRIMARY KEY, code TEXT, payload TEXT NOT NULL, iv TEXT NOT NULL, updated_at INTEGER NOT NULL)"),
-    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_managed_code ON user_managed (code)")
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_managed_code ON user_managed (code)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS feedback (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, first_name TEXT, username TEXT, type TEXT NOT NULL DEFAULT 'review', text TEXT NOT NULL, anonymous INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'new', created_at INTEGER NOT NULL)"),
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback (created_at DESC)"),
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_feedback_user_time ON feedback (user_id, created_at)")
   ]);
   // однократный перенос уже существующих пользователей (у кого сохранены ключи)
   try {
@@ -205,7 +208,14 @@ async function handleConfig(request, env, url) {
       const row = await env.DB.prepare(
         "SELECT value FROM app_config WHERE key = ?"
       ).bind(SYSTEM_PROMPT_KEY).first();
-      return response({ system_prompt: row ? row.value : null, admin: a.isAdmin });
+      const out = { system_prompt: row ? row.value : null, admin: a.isAdmin };
+      if (a.isAdmin) {
+        const fb = await env.DB.prepare(
+          "SELECT COUNT(*) AS n FROM feedback WHERE status != 'read'"
+        ).first();
+        out.unread_feedback = fb ? Number(fb.n) || 0 : 0;
+      }
+      return response(out);
     }
 
     // /admin/system-prompt — только администратор
@@ -560,6 +570,31 @@ async function handleAdmin(request, env, url) {
       return st ? response(st) : response({ error: "Рассылка не найдена" }, 404);
     }
 
+    const dm = p.match(/^\/admin\/broadcasts\/([\w-]{8,64})$/);
+    if (dm && m === "DELETE") {
+      const id = dm[1];
+      const row = await env.DB.prepare("SELECT status FROM broadcasts WHERE id = ?").bind(id).first();
+      if (!row) return response({ error: "Рассылка не найдена" }, 404);
+      if (row.status === "sending") {
+        return response({ error: "Сначала отмените активную рассылку" }, 409);
+      }
+      await env.DB.batch([
+        env.DB.prepare("DELETE FROM broadcast_recipients WHERE broadcast_id = ?").bind(id),
+        env.DB.prepare("DELETE FROM broadcasts WHERE id = ?").bind(id)
+      ]);
+      return response({ ok: true });
+    }
+
+    if (p === "/admin/broadcasts" && m === "DELETE") {
+      await env.DB.batch([
+        env.DB.prepare(
+          "DELETE FROM broadcast_recipients WHERE broadcast_id IN (SELECT id FROM broadcasts WHERE status != 'sending')"
+        ),
+        env.DB.prepare("DELETE FROM broadcasts WHERE status != 'sending'")
+      ]);
+      return response({ ok: true });
+    }
+
     return response({ error: "Not found" }, 404);
   } catch (e) {
     return response({ error: "Server error: " + ((e && e.message) || "unknown") }, 500);
@@ -888,6 +923,101 @@ async function handleSetup(request, env, url) {
   }
 }
 
+/* =====================================================================
+   ОТЗЫВЫ И ПРЕДЛОЖЕНИЯ
+   ===================================================================== */
+const FEEDBACK_TYPES = new Set(["review", "idea", "bug"]);
+const FEEDBACK_MAX_LEN = 2000;
+const FEEDBACK_COOLDOWN_MS = 30000;
+
+async function handleFeedback(request, env, url) {
+  try {
+    const a = await authUser(request, env);
+    if (a.error) return a.error;
+    await ensureSchema(env);
+
+    const p = url.pathname, m = request.method;
+
+    // Отправка отзыва/предложения любым авторизованным пользователем
+    if (p === "/feedback") {
+      if (m !== "POST") return response({ error: "Method not allowed" }, 405);
+      let body = {};
+      try { body = await request.json(); } catch { return response({ error: "Некорректный формат запроса" }, 400); }
+
+      const type = FEEDBACK_TYPES.has(body.type) ? body.type : "review";
+      const text = typeof body.text === "string" ? body.text.trim() : "";
+      const anonymous = body.anonymous ? 1 : 0;
+
+      if (text.length < 3) return response({ error: "Сообщение слишком короткое" }, 400);
+      if (text.length > FEEDBACK_MAX_LEN) {
+        return response({ error: "Сообщение слишком длинное (максимум " + FEEDBACK_MAX_LEN + " символов)" }, 400);
+      }
+
+      const now = Date.now();
+      const last = await env.DB.prepare(
+        "SELECT created_at FROM feedback WHERE user_id = ? ORDER BY created_at DESC LIMIT 1"
+      ).bind(a.userId).first();
+
+      if (last && now - Number(last.created_at) < FEEDBACK_COOLDOWN_MS) {
+        const wait = Math.ceil((FEEDBACK_COOLDOWN_MS - (now - Number(last.created_at))) / 1000);
+        return response({ error: "Подождите " + wait + " сек. перед следующей отправкой" }, 429);
+      }
+
+      const id = crypto.randomUUID();
+      const fullName = [a.user.first_name, a.user.last_name].filter(Boolean).join(" ").slice(0, 120) || null;
+      const username = a.user.username ? String(a.user.username).slice(0, 64) : null;
+
+      await env.DB.prepare(
+        "INSERT INTO feedback (id, user_id, first_name, username, type, text, anonymous, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?)"
+      ).bind(id, a.userId, fullName, username, type, text, anonymous, now).run();
+
+      return response({ ok: true, id });
+    }
+
+    // Все маршруты /admin/feedback* доступны только администратору
+    if (!a.isAdmin) return response({ error: "Forbidden" }, 403);
+
+    if (p === "/admin/feedback" && m === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT id, user_id, first_name, username, type, text, anonymous, status, created_at FROM feedback ORDER BY created_at DESC LIMIT 100"
+      ).all();
+      const items = results.map(r => ({
+        id: r.id,
+        type: r.type,
+        text: r.text,
+        anonymous: !!r.anonymous,
+        user_id: r.anonymous ? null : r.user_id,
+        first_name: r.anonymous ? null : r.first_name,
+        username: r.anonymous ? null : r.username,
+        status: r.status,
+        created_at: r.created_at
+      }));
+      return response({ items });
+    }
+
+    if (p === "/admin/feedback/read-all" && m === "POST") {
+      await env.DB.prepare("UPDATE feedback SET status = 'read' WHERE status != 'read'").run();
+      return response({ ok: true });
+    }
+
+    const mr = p.match(/^\/admin\/feedback\/([\w-]{8,64})\/read$/);
+    if (mr && m === "POST") {
+      await env.DB.prepare("UPDATE feedback SET status = 'read' WHERE id = ?").bind(mr[1]).run();
+      return response({ ok: true });
+    }
+
+    const md = p.match(/^\/admin\/feedback\/([\w-]{8,64})$/);
+    if (md && m === "DELETE") {
+      await env.DB.prepare("DELETE FROM feedback WHERE id = ?").bind(md[1]).run();
+      return response({ ok: true });
+    }
+
+    return response({ error: "Not found" }, 404);
+  } catch {
+    return response({ error: "Server error" }, 500);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
@@ -926,6 +1056,10 @@ export default {
 
     if (url.pathname === "/config" || url.pathname === "/admin/system-prompt") {
       return handleConfig(request, env, url);
+    }
+
+    if (url.pathname === "/feedback" || url.pathname === "/admin/feedback" || url.pathname.startsWith("/admin/feedback/")) {
+      return handleFeedback(request, env, url);
     }
 
     if (url.pathname === "/admin/media" || url.pathname.startsWith("/admin/broadcasts")) {
