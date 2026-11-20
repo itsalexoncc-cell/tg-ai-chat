@@ -917,6 +917,72 @@ async function handleSetup(request, env, url) {
       await env.DB.batch(ops);
       return response({ ok: true });
     }
+
+    if (p === "/admin/users" && m === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT telegram_user_id AS user_id, first_name, username FROM users WHERE blocked = 0 ORDER BY last_seen DESC LIMIT 100"
+      ).all();
+      return response({ items: results });
+    }
+
+    const ms = p.match(/^\/admin\/setup-codes\/([A-Z0-9-]{11})\/send$/);
+    if (ms && m === "POST") {
+      const code = ms[1];
+      let body = {};
+      try { body = await request.json(); } catch { return response({ error: "Некорректный формат запроса" }, 400); }
+      const targetId = String(body.user_id || "").trim();
+      if (!/^\d{3,20}$/.test(targetId)) {
+        return response({ error: "Укажите корректный Telegram ID пользователя" }, 400);
+      }
+      const row = await env.DB.prepare(
+        "SELECT code, provider, revoked, uses, max_uses, expires_at FROM setup_codes WHERE code = ?"
+      ).bind(code).first();
+      if (!row) return response({ error: "Код не найден" }, 404);
+      if (row.revoked || row.uses >= row.max_uses || row.expires_at <= Date.now()) {
+        return response({ error: "Этот код уже недействителен, использован или отозван" }, 400);
+      }
+      const rawLink = typeof body.link === "string" ? body.link.trim() : "";
+      const safeLink = /^https:\/\/t\.me\/[\w/?=&.-]+$/i.test(rawLink) ? rawLink : "";
+      const comment = typeof body.message === "string" ? body.message.trim().slice(0, 500) : "";
+      const lines = [
+        "🔑 <b>Ваш код быстрой настройки готов!</b>",
+        "",
+        "Код: <code>" + escHtml(code) + "</code>"
+      ];
+      if (comment) lines.push("", escHtml(comment));
+      if (safeLink) {
+        lines.push("", "Нажмите кнопку ниже, чтобы применить автоматически, либо скопируйте код и вставьте его в приложении.");
+      } else {
+        lines.push("", "Скопируйте код и вставьте его в приложении в разделе «Быстрая настройка».");
+      }
+      const payload = {
+        chat_id: targetId,
+        text: lines.join("\n"),
+        parse_mode: "HTML"
+      };
+      if (safeLink) {
+        payload.reply_markup = {
+          inline_keyboard: [[{ text: "⚡ Применить код", url: safeLink }]]
+        };
+      }
+      const r = R(await tgCall(env, "sendMessage", payload));
+      if (!r.ok) {
+        if (r.code === 403 || (r.code === 400 && /chat not found|user is deactivated|PEER_ID_INVALID/i.test(r.desc))) {
+          return response({
+            error: "Бот не может написать этому пользователю: он не запускал бота (/start) или заблокировал его. Скопируйте и отправьте код вручную."
+          }, 400);
+        }
+        return response({ error: "Telegram: " + (r.desc || "не удалось отправить сообщение") }, 400);
+      }
+      const reqId = typeof body.request_id === "string" ? body.request_id.trim() : "";
+      if (/^[\w-]{8,64}$/.test(reqId)) {
+        try {
+          await env.DB.prepare("UPDATE feedback SET status = 'read' WHERE id = ?").bind(reqId).run();
+        } catch {}
+      }
+      return response({ ok: true });
+    }
+
     return response({ error: "Not found" }, 404);
   } catch (e) {
     return response({ error: "Server error" }, 500);
@@ -926,7 +992,7 @@ async function handleSetup(request, env, url) {
 /* =====================================================================
    ОТЗЫВЫ И ПРЕДЛОЖЕНИЯ
    ===================================================================== */
-const FEEDBACK_TYPES = new Set(["review", "idea", "bug"]);
+const FEEDBACK_TYPES = new Set(["review", "idea", "bug", "code"]);
 const FEEDBACK_MAX_LEN = 2000;
 const FEEDBACK_COOLDOWN_MS = 30000;
 
@@ -945,10 +1011,15 @@ async function handleFeedback(request, env, url) {
       try { body = await request.json(); } catch { return response({ error: "Некорректный формат запроса" }, 400); }
 
       const type = FEEDBACK_TYPES.has(body.type) ? body.type : "review";
-      const text = typeof body.text === "string" ? body.text.trim() : "";
-      const anonymous = body.anonymous ? 1 : 0;
+      let text = typeof body.text === "string" ? body.text.trim() : "";
+      const anonymous = type === "code" ? 0 : (body.anonymous ? 1 : 0);
 
-      if (text.length < 3) return response({ error: "Сообщение слишком короткое" }, 400);
+      if (type === "code") {
+        if (!text) text = "Заявка на получение кода быстрой настройки";
+        try { await touchUser(env, a.user); } catch {}
+      } else if (text.length < 3) {
+        return response({ error: "Сообщение слишком короткое" }, 400);
+      }
       if (text.length > FEEDBACK_MAX_LEN) {
         return response({ error: "Сообщение слишком длинное (максимум " + FEEDBACK_MAX_LEN + " символов)" }, 400);
       }
@@ -1066,7 +1137,7 @@ export default {
       return handleAdmin(request, env, url);
     }
 
-    if (url.pathname.startsWith("/setup/") || url.pathname.startsWith("/managed") || url.pathname.startsWith("/admin/setup-codes")) {
+    if (url.pathname === "/admin/users" || url.pathname.startsWith("/setup/") || url.pathname.startsWith("/managed") || url.pathname.startsWith("/admin/setup-codes")) {
       return handleSetup(request, env, url);
     }
 
