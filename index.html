@@ -1590,6 +1590,7 @@ const configP=(async function(){
     if(j.admin_notify&&typeof j.admin_notify==='object')adminNotify={req:j.admin_notify.req!==false,rev:j.admin_notify.rev!==false};
     syncFbBadges();
     if(typeof syncNotifySw==='function')syncNotifySw();
+    if(typeof syncDrawerWal==='function')syncDrawerWal();
     if($('#settings')&&$('#settings').classList.contains('open'))renderSettings();
     if(isAdmin&&typeof bgReady!=='undefined'&&bgReady&&typeof bgPreloadAdmin==='function')bgPreloadAdmin();
   }catch(e){}
@@ -4101,7 +4102,7 @@ function openConn(view){
 
 /* ---------- drawer ---------- */
 let dOpen=false;
-function syncDrawerWal(){const b=$('#btnDrawerWal');if(!b)return;const c=S.providers.managed,show=isAvail('managed')||(c.credits&&c.credits.enabled)||isAdmin;b.hidden=!show;if(show)$('#drWalBal').textContent=fmtCr((c.credits&&c.credits.balance)||0)}
+function syncDrawerWal(){const b=$('#btnDrawerWal');if(!b)return;const c=S.providers.managed,show=!isAdmin&&(isAvail('managed')||(c.credits&&c.credits.enabled));b.hidden=!show;if(show)$('#drWalBal').textContent=fmtCr((c.credits&&c.credits.balance)||0)}
 function openDrawer(){if(dOpen)return;dOpen=true;$('#q').value='';renderDrawer();syncDrawerWal();$('#drawer').classList.add('open');$('#scrim').classList.add('on');pushLayer(closeDrawer);inp.blur()}
 function closeDrawer(){if(!dOpen)return;dOpen=false;$('#drawer').classList.remove('open');$('#scrim').classList.remove('on');popLayer(closeDrawer)}
 $('#btnMenu').addEventListener('click',openDrawer);
@@ -4468,7 +4469,7 @@ function fmtCr(n){return Math.max(0,Math.round(Number(n)||0)).toLocaleString('ru
 function renderUsage(){
   const el=$('#usage');if(!el)return;
   const own=VISIBLE.filter(p=>{const c=S.providers[p.id];return isAvail(p.id)||c.used.in+c.used.out>0});
-  const walBtn='<button class="manbtn wal-btn" data-act="openwal"><span class="wal-mid"><span class="wal-ic-o">'+ic('wallet',20)+'</span><span>Кошелёк</span><span class="wal-ic-g">'+ic('dollar',20)+'</span></span><span class="chev">'+ic('next',18)+'</span></button>';
+  const walBtn=isAdmin?'':'<button class="manbtn wal-btn" data-act="openwal"><span class="wal-mid"><span class="wal-ic-o">'+ic('wallet',20)+'</span><span>Кошелёк</span><span class="wal-ic-g">'+ic('dollar',20)+'</span></span><span class="chev">'+ic('next',18)+'</span></button>';
   const ownHtml=own.map(p=>{
     const c=S.providers[p.id],tot=c.used.in+c.used.out;
     let line='',bar='';
@@ -4483,6 +4484,7 @@ function renderUsage(){
     return '<div class="uc" data-pid="'+p.id+'"><div class="uh"><b>'+esc(provName(p.id))+'</b>'+(p.balance&&c.key?'<button class="ib" data-act="bal" aria-label="Обновить">'+ic('refresh',18)+'</button>':'')+'</div>'+
       '<div class="ul">Вход: <em>'+fmt(c.used.in)+'</em> · Выход: <em>'+fmt(c.used.out)+'</em> · Всего: <em>'+fmt(tot)+'</em></div>'+line+bar+top+'</div>';
   }).join('');
+  if(!walBtn&&!own.length){el.innerHTML='<div class="uc"><div class="ul">Пока нет данных. Добавьте API ключ ниже.</div></div>';return}
   el.innerHTML=walBtn+ownHtml+(own.length?'<p class="hint">Баланс OpenRouter и DeepSeek приходит с сервиса, у остальных считается по лимиту.</p>':'');
 }
 function renderUsageSafe(){try{renderUsage()}catch(e){}}
@@ -6344,7 +6346,7 @@ function bgPreloadAdmin(){
 function startBgPreload(){
   bgReady=true;
   if(!tg||!tg.initData)return;
-  if(!bgWalStarted){
+  if(!bgWalStarted&&(!isAdmin||isAvail('managed'))){
     bgWalStarted=true;
     setTimeout(()=>{loadWallet(true).catch(()=>{})},80);
   }
