@@ -1313,34 +1313,50 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 .tx-sr b{display:block;font-size:13px;font-weight:600}
 .tx-sr small{display:block;font-size:11px;color:var(--muted)}
 /* Финансовая админка */
-.sh .fin-tpill{margin-left:auto;flex:none;height:40px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:rgba(46,49,60,.74);color:var(--text);box-shadow:var(--flt-sh-sm);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:transform .14s ease,background .18s ease}
-.sh .fin-tpill:active{transform:scale(.95)}
-.sh .fin-tpill .ft-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;flex:none}
-.sh .fin-tpill.on{background:rgba(251,191,36,.22);color:#fbbf24}
-.sh .fin-tpill.on .ft-dot{background:#fbbf24}
-:root[data-theme="light"] .sh .fin-tpill{background:rgba(238,242,250,.76);color:var(--text)}
-:root[data-theme="light"] .sh .fin-tpill.on{background:rgba(251,191,36,.24);color:#9a5b00}
-:root[data-theme="light"] .sh .fin-tpill.on .ft-dot{background:#d97706}
+.fsw .ico{font-size:15px;line-height:1;opacity:.42;filter:grayscale(.4);transition:opacity .2s,filter .2s,transform .2s}
+.fsw:not(.live) .ftest{opacity:1;filter:none;transform:scale(1.08)}
+.fsw.live .flive{opacity:1;filter:none;transform:scale(1.08)}
+.fsw .sw i,:root:not([data-theme="light"]) .fsw .sw i{transform:translateX(0)}
+.fsw.live .sw i,:root:not([data-theme="light"]) .fsw.live .sw i{transform:translateX(20px)}
 .fin-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:2px 0 8px;padding:4px 0 10px}
 .fin-tab{height:38px;padding:0 6px;border:0;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .14s ease,background .16s ease,color .16s ease}
 .fin-tab:active{transform:scale(.96)}
 .fin-tab.on{background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
 :root[data-theme="light"] .fin-tab.on{color:#fff}
-.fin-bar2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px;padding:4px 0 8px}
-.fin-actbtn{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 12px;border:0;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--text);background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .14s ease,background .16s ease,color .16s ease}
+.fin-bar1{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:2px 0 6px}
+.fin-actbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 16px;border:0;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--text);background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);white-space:nowrap;transition:transform .14s ease,background .16s ease}
 .fin-actbtn:active{transform:scale(.97)}
-.fin-actbtn.on{background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
-:root[data-theme="light"] .fin-actbtn.on{color:#fff}
-.fin-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(127,127,127,.22)}
-.fin-actbtn.on .fin-cnt{background:rgba(127,127,127,.26)}
-.fin-kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px}
-.kpi{padding:12px 14px;border-radius:22px;background:var(--flt-bg);box-shadow:var(--flt-sh)}
-.kpi.wide{grid-column:1/-1}
-.kpi small{display:block;font-size:12px;color:var(--muted)}
-.kpi b{display:block;font-size:19px;font-weight:800;margin-top:4px;line-height:1.2}
-.kpi span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
-.kpi b.pos{color:var(--ok)}
-.kpi b.neg{color:var(--danger)}
+/* Крупные чистые блоки Сводки */
+.fin-card{padding:16px 18px 18px;margin-bottom:14px;border-radius:26px;background:var(--flt-bg);box-shadow:var(--flt-sh)}
+.fin-ch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.fin-ch h4{margin:0;font-size:14.5px;font-weight:600;color:var(--muted);letter-spacing:.01em}
+.fin-hero{margin:2px 0 12px}
+.fin-big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.fin-big.pos{color:var(--ok)}
+.fin-big.neg{color:var(--danger)}
+.fin-big-sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.35}
+.fin-warn{margin-top:10px;padding:8px 12px;border-radius:14px;background:rgba(255,107,107,.14);color:#ff8a8a;font-size:12.5px;line-height:1.35}
+:root[data-theme="light"] .fin-warn{background:#fde8e8;color:#b4232b}
+.fin-inrow{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+.fin-inrow input{flex:1;min-width:0;height:44px;border-radius:999px;background:var(--deb-bg);border:0;box-shadow:var(--deb-sh);padding:0 16px;font-size:15.5px}
+.fin-inrow .btn{flex:none;height:44px;padding:0 18px}
+.fin-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.fin-stat{padding:10px 12px;border-radius:18px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+.fin-stat small{display:block;font-size:11.5px;color:var(--muted)}
+.fin-stat b{display:block;font-size:16.5px;font-weight:700;margin-top:3px;line-height:1.2}
+.fin-stat span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+.fin-ledger{margin-top:12px;padding-top:6px;border-top:1px solid var(--line)}
+.fin-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:8px 0;font-size:14px}
+.fin-row+.fin-row{border-top:1px dashed var(--line)}
+.fin-row-l{color:var(--muted);min-width:0}
+.fin-row-l small{display:block;font-size:11.5px;opacity:.8;margin-top:1px}
+.fin-row-r{font-weight:600;text-align:right;white-space:nowrap}
+.fin-row-r.pos{color:var(--ok)}
+.fin-row-r.neg{color:var(--danger)}
+.fin-margin{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;vertical-align:middle;background:rgba(74,222,128,.16);color:#4ade80}
+.fin-margin.neg{background:rgba(255,107,107,.16);color:#ff8a8a}
+:root[data-theme="light"] .fin-margin{background:#dff3e4;color:#1f7a3a}
+:root[data-theme="light"] .fin-margin.neg{background:#fde8e8;color:#b4232b}
 .pay-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
 .pay-tag.real{background:rgba(74,222,128,.16);color:#4ade80}
 .pay-tag.test{background:rgba(251,191,36,.16);color:#f5b942}
@@ -1429,7 +1445,7 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
   </section>
 
   <section id="finPage">
-    <div class="sh"><button class="ib" id="finBack" aria-label="Назад"></button><h2>Финансы</h2><button class="fin-tpill on" id="finTestBtn" role="switch" aria-checked="true" aria-label="Тестовый режим оплаты"><span class="ft-dot"></span><span id="finTestLbl">Тест</span></button><button class="ib" id="finRefresh" aria-label="Обновить"></button></div>
+    <div class="sh"><button class="ib" id="finBack" aria-label="Назад"></button><h2>Финансы</h2><div class="tsw fsw" id="finTestSw"><span class="ico ftest" data-fmode="1" aria-label="Тестовый режим">🧪</span><button class="sw" id="finTestToggle" role="switch" aria-checked="false" aria-label="Переключатель режима оплаты"><i></i></button><span class="ico flive" data-fmode="0" aria-label="Обычный режим Stars">⭐</span></div><button class="ib" id="finRefresh" aria-label="Обновить"></button></div>
     <div id="finBody">
       <div class="fin-tabs" id="finTabs"></div>
       <div id="finContent"></div>
@@ -5391,7 +5407,7 @@ function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
    '<h3>Монетизация</h3><button class="manbtn" data-u="openfinpage"><span>Финансы и VEYRA Credits</span><span class="chev" id="finUpdChev"></span></button>'+
-   '<p class="hint">Балансы пользователей, цены моделей, пакеты Stars, тестовый режим и статистика.</p>'+
+   '<p class="hint">Сводка, кошелёк провайдера, балансы, история оплат и пакеты Stars.</p>'+
    '<h3>Обратная связь</h3><button class="manbtn" data-u="openfbpage"><span>Обращения пользователей</span><span class="mright"><span class="fb-badge" id="fbBadge" hidden></span><span class="chev" id="fbUpdChev"></span></span></button>'+
    '<div class="gb ntf-box">'+
      '<div class="ntf-row"><div class="ntf-lbl"><b>Уведомления о заявках</b><small>Присылать в бот при новой заявке на код</small></div><button class="ntf-sw" id="ntfReq" data-u="ntftog" data-k="req" role="switch" aria-checked="true" aria-label="Уведомления о заявках"><i></i></button></div>'+
@@ -5755,78 +5771,107 @@ $('#walBody').addEventListener('click',async e=>{
 });
 
 /* ---------- Финансовая админ-панель (Этап 6) ---------- */
-const FIN={tab:'stats',days:30,payView:false,stats:null,users:[],q:'',pricing:[],recentModels:[],starRate:0.013,packages:[],testMode:true,loading:false};
+const FIN={tab:'stats',days:30,payDays:0,stats:null,users:[],q:'',payments:[],packages:[],testMode:true,loading:false};
 const FIN_PERS=[[1,'Сегодня'],[7,'7 дней'],[30,'30 дней'],[0,'Всё время']];
-const fmtUsd=n=>'$'+(Number(n)||0).toFixed(Math.abs(Number(n)||0)<1?4:2);
+const fmtUsd=n=>{const v=Number(n)||0,a=Math.abs(v);return (v<0?'−':'')+'$'+a.toFixed(a>0&&a<1?4:2)};
 
-function syncFinTestBtn(){
-  const b=$('#finTestBtn'),lbl=$('#finTestLbl');
-  if(!b)return;
-  b.classList.toggle('on',!!FIN.testMode);
-  b.setAttribute('aria-checked',String(!!FIN.testMode));
-  if(lbl)lbl.textContent=FIN.testMode?'Тест':'Live ⭐';
+function syncFinTestSw(){
+  const sw=$('#finTestSw'),bt=$('#finTestToggle');
+  if(!sw)return;
+  const live=!FIN.testMode;
+  sw.classList.toggle('live',live);
+  if(bt){
+    bt.setAttribute('aria-checked',String(live));
+    bt.setAttribute('aria-label',live?'Обычный режим Stars':'Тестовый режим оплаты');
+  }
 }
-async function toggleFinTestMode(btn){
-  const next=!FIN.testMode;
-  if(btn)btn.disabled=true;
+let finModeBusy=false;
+async function setFinTestMode(nextTest){
+  nextTest=!!nextTest;
+  if(finModeBusy||nextTest===FIN.testMode)return;
+  finModeBusy=true;
+  const prev=FIN.testMode;
+  FIN.testMode=nextTest;
+  if(FIN.stats)FIN.stats.test_mode=FIN.testMode;
+  syncFinTestSw();hap();
   try{
-    const j=await upApi('PUT','/admin/finance/test-mode',{enabled:next});
+    const j=await upApi('PUT','/admin/finance/test-mode',{enabled:nextTest});
     FIN.testMode=!!j.test_mode;
     if(FIN.stats)FIN.stats.test_mode=FIN.testMode;
-    syncFinTestBtn();renderFin();hap();
-    toast(FIN.testMode?'Тестовый режим оплаты включён':'Боевой режим Telegram Stars включён!');
-  }catch(err){showError(err,{where:'cloud',title:'Не удалось переключить режим',noNav:true})}
-  if(btn)btn.disabled=false;
+    syncFinTestSw();
+    toast(FIN.testMode?'🧪 Тестовый режим оплаты включён':'⭐ Обычный режим Telegram Stars включён!');
+  }catch(err){
+    FIN.testMode=prev;
+    if(FIN.stats)FIN.stats.test_mode=prev;
+    syncFinTestSw();
+    showError(err,{where:'cloud',title:'Не удалось переключить режим',noNav:true});
+  }
+  finModeBusy=false;
 }
 function renderFinTabs(){
   const el=$('#finTabs');if(!el)return;
-  const tabs=[['stats','Сводка'],['users','Балансы'],['pricing','Цены'],['packs','Пакеты']];
+  const tabs=[['stats','Сводка'],['users','Балансы'],['payments','Оплаты'],['packs','Пакеты']];
   el.innerHTML=tabs.map(t=>'<button class="fin-tab'+(FIN.tab===t[0]?' on':'')+'" data-fin="tab" data-t="'+t[0]+'">'+t[1]+'</button>').join('');
 }
-function renderFinPayments(s){
-  const list=Array.isArray(s&&s.payments)?s.payments:[];
-  const hasTests=list.some(x=>x.is_test)||(s&&s.test_count>0);
-  const head='<div class="uh-row" style="margin-top:6px"><h3>История оплат</h3>'+(hasTests?'<button class="btn dan sm" data-fin="cleartests">Очистить тесты</button>':'')+'</div>';
-  if(!list.length)return head+'<div class="fb-empty" style="padding:28px 12px">Оплат за выбранный период пока нет.</div>';
-  return head+'<div class="tx-list">'+list.map(p=>{
-    const who=[p.first_name||('ID '+p.user_id),p.username?'@'+String(p.username).replace(/^@/,''):''].filter(Boolean).join(' · ');
-    const isT=!!p.is_test;
-    return '<div class="tx"><div class="tx-l">'+
-      '<div style="display:flex;align-items:center;gap:6px"><b style="min-width:0">'+esc(who)+'</b><span class="pay-tag '+(isT?'test':'real')+'">'+(isT?'🧪 Тест':'⭐ Оплата')+'</span></div>'+
-      '<small>'+esc(fbDate(p.paid_at||p.created_at))+' · +'+fmtCr(p.credits)+' Cr</small></div>'+
-      '<div class="tx-r"><b class="pos">'+fmtCr(p.stars)+' ⭐</b><small>'+fmtUsd(p.usd_value)+'</small></div></div>';
-  }).join('')+'</div>';
-}
 function renderFin(){
-  renderFinTabs();syncFinTestBtn();
+  renderFinTabs();syncFinTestSw();
   const el=$('#finContent');if(!el)return;
 
   if(FIN.tab==='stats'){
     const s=FIN.stats;
     const perObj=FIN_PERS.find(x=>x[0]===FIN.days)||FIN_PERS[2];
-    const payCnt=s&&Array.isArray(s.payments)?s.payments.length:0;
     const barHtml=
-      '<div class="fin-bar2">'+
-        '<button class="fin-actbtn" data-fin="permenu"><span>'+esc(perObj[1])+'</span>'+ic('chev',15)+'</button>'+
-        '<button class="fin-actbtn'+(FIN.payView?' on':'')+'" data-fin="payview"><span>История оплат</span>'+(payCnt?'<span class="fin-cnt">'+payCnt+'</span>':'')+'</button>'+
+      '<div class="fin-bar1">'+
+        '<button class="fin-actbtn" data-fin="permenu"><span>Период: '+esc(perObj[1])+'</span>'+ic('chev',15)+'</button>'+
       '</div>';
-    if(!s){el.innerHTML=barHtml+'<div class="fb-empty">Загрузка статистики…</div>';return}
-    if(FIN.payView){
-      el.innerHTML=barHtml+renderFinPayments(s);
-      return;
-    }
+    if(!s){el.innerHTML=barHtml+'<div class="fb-empty">Загрузка сводки…</div>';return}
+
+    const pw=s.provider_wallet||{base_tokens:0,set_at:0,spent_since_set:0,remaining_tokens:0,cost_per_1m_usd:0};
+    const hasPw=pw.base_tokens>0;
+    const pc=hasPw?Math.min(100,pw.remaining_tokens/pw.base_tokens*100):0;
+    const lowCov=hasPw&&s.total_balances>pw.remaining_tokens;
+
+    const pwHero=hasPw
+      ?'<div class="fin-hero">'+
+          '<div class="fin-big'+(pc<15||pw.remaining_tokens<=0?' neg':'')+'">~ '+fmtCr(pw.remaining_tokens)+'</div>'+
+          '<div class="fin-big-sub">токенов осталось у провайдера · из '+fmtCr(pw.base_tokens)+(pw.spent_since_set?' (−'+fmtCr(pw.spent_since_set)+')':'')+'</div>'+
+          '<div class="bar" style="margin-top:10px"><i class="'+(pc<15||pw.remaining_tokens<=0?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>'+
+          (lowCov?'<div class="fin-warn">У пользователей на балансе ('+fmtCr(s.total_balances)+') больше кредитов, чем осталось у провайдера.</div>':'')+
+        '</div>'
+      :'<div class="fin-hero">'+
+          '<div class="fin-big-sub" style="margin-top:0">Внесите текущий остаток токенов у вашего провайдера — приложение будет автоматически вычитать из него каждый запрос.</div>'+
+          '<div class="fin-inrow"><input id="pwQuickBal" inputmode="numeric" placeholder="Например: 5000000" autocomplete="off"><button class="btn pri" data-fin="pwquick">Сохранить</button></div>'+
+        '</div>';
+
+    const profVal=Number(s.profit_usd)||0;
+    const profCls=profVal>0?'pos':(profVal<0?'neg':'');
+    const margin=s.revenue_usd>0?Math.round((profVal/s.revenue_usd)*100):null;
+    const costHint=pw.cost_per_1m_usd>0
+      ?(fmt(s.period_tokens)+' ток. × $'+pw.cost_per_1m_usd+' / 1M')
+      :(fmt(s.period_tokens)+' ток. · укажите $/1M в «Расчёт»');
+
     el.innerHTML=
       barHtml+
-      '<div class="fin-kpi">'+
-        '<div class="kpi"><small>Выручка</small><b>'+fmtCr(s.revenue_stars)+' ⭐</b><span>'+fmtUsd(s.revenue_usd)+' · '+s.paid_count+' опл.</span></div>'+
-        '<div class="kpi"><small>Списано кредитов</small><b>'+fmt(s.credits_spent)+'</b><span>'+fmt(s.prompt_tokens)+' / '+fmt(s.completion_tokens)+' ток.</span></div>'+
-        '<div class="kpi wide"><small>Выдано VEYRA Credits</small><b>'+fmtCr(s.total_granted_all)+'</b><span>Остаток у пользователей: '+fmtCr(s.total_balances)+' · '+s.wallet_users+' чел.</span></div>'+
+      '<div class="fin-card">'+
+        '<div class="fin-ch"><h4>Кошелёк провайдера и кредиты</h4><button class="btn sm" data-fin="pwedit">'+(hasPw?'Изменить':'Настроить')+'</button></div>'+
+        pwHero+
+        '<div class="fin-split">'+
+          '<div class="fin-stat"><small>Выдано кредитов</small><b>'+fmtCr(s.total_granted_all)+'</b><span>На руках: '+fmtCr(s.total_balances)+' ('+s.wallet_users+' чел.)</span></div>'+
+          '<div class="fin-stat"><small>Израсходовано ('+esc(perObj[1].toLowerCase())+')</small><b>'+fmtCr(s.credits_spent)+'</b><span>Всего: '+fmtCr(s.total_spent_all)+' · '+s.requests_count+' запр.</span></div>'+
+        '</div>'+
       '</div>'+
-      '<h3>Расход по моделям</h3>'+
-      (s.top_models&&s.top_models.length
-        ?s.top_models.map(m=>'<div class="uc" style="padding:10px 14px;margin-bottom:8px"><div class="uh"><b style="font-size:14px">'+esc(m.model)+'</b><small style="color:var(--muted)">−'+fmtCr(m.cr)+' Cr</small></div>'+
-          '<div class="ul sub">'+esc(m.provider)+' · '+m.reqs+' запр. · '+fmt(m.pin)+' / '+fmt(m.pout)+' ток.</div></div>').join('')
-        :'<div class="hint">Данных о запросах за этот период пока нет.</div>');
+      '<div class="fin-card">'+
+        '<div class="fin-ch"><h4>Сводка по прибыли · '+esc(perObj[1])+'</h4><button class="btn sm" data-fin="pwedit">Расчёт</button></div>'+
+        '<div class="fin-hero">'+
+          '<div class="fin-big '+profCls+'">'+(profVal>0?'+':'')+fmtUsd(profVal)+(margin!==null?'<span class="fin-margin'+(margin<0?' neg':'')+'">'+margin+'%</span>':'')+'</div>'+
+          '<div class="fin-big-sub">Чистая прибыль за выбранный период</div>'+
+        '</div>'+
+        '<div class="fin-ledger">'+
+          '<div class="fin-row"><div class="fin-row-l">Выручка (Telegram Stars)<small>'+s.paid_count+' опл. · '+s.paying_users+' покуп.'+(s.paid_count?' · ср. чек '+s.avg_check_stars+' ⭐':'')+'</small></div><div class="fin-row-r pos">+'+fmtUsd(s.revenue_usd)+' ('+fmtCr(s.revenue_stars)+' ⭐)</div></div>'+
+          '<div class="fin-row"><div class="fin-row-l">Расходы API<small>'+esc(costHint)+'</small></div><div class="fin-row-r'+(s.api_cost_usd>0?' neg':'')+'">'+(s.api_cost_usd>0?'−':'')+fmtUsd(s.api_cost_usd)+'</div></div>'+
+          '<div class="fin-row"><div class="fin-row-l">Курс и списание<small>Базовая ставка 1 токен = 1 Credit</small></div><div class="fin-row-r">1 ⭐ = $'+s.star_usd_rate+'</div></div>'+
+        '</div>'+
+      '</div>';
     return;
   }
 
@@ -5853,33 +5898,25 @@ function renderFin(){
     return;
   }
 
-  if(FIN.tab==='pricing'){
-    const recChips=FIN.recentModels.slice(0,10).map(m=>'<button class="fb-chip" data-fin="pickm" data-m="'+esc(m)+'">'+esc(m.split('/').pop())+'</button>').join('');
-    el.innerHTML=
-      '<h3>Настройка цены модели</h3><div class="gb">'+
-        '<label>Модель (точное ID)</label><input id="prModel" placeholder="Например: google/gemini-2.5-flash" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-        (recChips?'<div class="fin-chips">'+recChips+'</div>':'')+
-        '<div class="fin-grid2">'+
-          '<div><label>Кредиты / 1 вх. ток.</label><input id="prIn" inputmode="decimal" value="1" placeholder="1"></div>'+
-          '<div><label>Кредиты / 1 вых. ток.</label><input id="prOut" inputmode="decimal" value="1" placeholder="1"></div>'+
-        '</div>'+
-        '<div class="fin-grid2">'+
-          '<div><label>Себест. вход $/1M</label><input id="prCostIn" inputmode="decimal" value="0" placeholder="0.30"></div>'+
-          '<div><label>Себест. выход $/1M</label><input id="prCostOut" inputmode="decimal" value="0" placeholder="2.50"></div>'+
-        '</div>'+
-        '<p class="hint" style="margin:8px 0 0">По умолчанию для всех моделей: 1 токен = 1 VEYRA Credit.</p>'+
-        '<div class="btns one"><button class="btn pri" data-fin="prsave">Сохранить цену</button></div>'+
-      '</div>'+
-      '<h3>Настроенные модели</h3>'+
-      (FIN.pricing.length
-        ?FIN.pricing.map(x=>'<div class="uc" style="padding:10px 14px;margin-bottom:8px"><div class="uh"><b style="font-size:14px">'+esc(x.model)+'</b>'+
-            '<div style="display:flex;gap:6px"><button class="btn sm" data-fin="predit" data-m="'+esc(x.model)+'">Изм.</button>'+
-            '<button class="btn dan sm" data-fin="prdel" data-m="'+esc(x.model)+'" style="width:32px;height:32px;padding:0;display:grid;place-items:center">'+ic('trash',15)+'</button></div></div>'+
-            '<div class="ul sub">Списание: ×'+x.price_in+' вх. / ×'+x.price_out+' вых. · Себест.: $'+x.cost_in_usd+' / $'+x.cost_out_usd+' за 1M</div></div>').join('')
-        :'<div class="hint">Особые тарифы не заданы — все модели списывают 1:1 по токенам провайдера.</div>')+
-      '<h3>Курс Telegram Stars</h3><div class="gb">'+
-        '<label>Выплата за 1 ⭐ (в USD)</label><input id="prStarRate" inputmode="decimal" value="'+esc(FIN.starRate)+'">'+
-        '<div class="btns one"><button class="btn" data-fin="ratesave">Сохранить курс</button></div></div>';
+  if(FIN.tab==='payments'){
+    const perObj=FIN_PERS.find(x=>x[0]===FIN.payDays)||FIN_PERS[3];
+    const list=FIN.payments||[];
+    const hasTests=list.some(x=>x.is_test);
+    const barHtml=
+      '<div class="fin-bar1">'+
+        '<button class="fin-actbtn" data-fin="paypermenu"><span>'+esc(perObj[1])+'</span>'+ic('chev',15)+'</button>'+
+        (hasTests?'<button class="btn dan sm" data-fin="cleartests">Очистить тесты</button>':'')+
+      '</div>';
+    if(FIN.loading&&!list.length){el.innerHTML=barHtml+'<div class="fb-empty">Загрузка оплат…</div>';return}
+    if(!list.length){el.innerHTML=barHtml+'<div class="fb-empty">Оплат за выбранный период пока нет.</div>';return}
+    el.innerHTML=barHtml+'<div class="tx-list">'+list.map(p=>{
+      const who=[p.first_name||('ID '+p.user_id),p.username?'@'+String(p.username).replace(/^@/,''):''].filter(Boolean).join(' · ');
+      const isT=!!p.is_test;
+      return '<div class="tx"><div class="tx-l">'+
+        '<div style="display:flex;align-items:center;gap:6px"><b style="min-width:0">'+esc(who)+'</b><span class="pay-tag '+(isT?'test':'real')+'">'+(isT?'🧪 Тест':'⭐ Оплата')+'</span></div>'+
+        '<small>'+esc(fbDate(p.paid_at||p.created_at))+' · +'+fmtCr(p.credits)+' Cr</small></div>'+
+        '<div class="tx-r"><b class="pos">'+fmtCr(p.stars)+' ⭐</b><small>'+fmtUsd(p.usd_value)+'</small></div></div>';
+    }).join('')+'</div>';
     return;
   }
 
@@ -5901,15 +5938,14 @@ async function loadFin(silent){
   try{
     if(FIN.tab==='stats'){
       const j=await upApi('GET','/admin/finance/stats?days='+FIN.days);
-      FIN.stats=j;FIN.testMode=!!j.test_mode;FIN.starRate=j.star_usd_rate||0.013;
+      FIN.stats=j;FIN.testMode=!!j.test_mode;
     }else if(FIN.tab==='users'){
       const j=await upApi('GET','/admin/finance/users');
       FIN.users=Array.isArray(j.items)?j.items:[];
-    }else if(FIN.tab==='pricing'){
-      const j=await upApi('GET','/admin/finance/pricing');
-      FIN.pricing=Array.isArray(j.items)?j.items:[];
-      FIN.recentModels=Array.isArray(j.recent_models)?j.recent_models:[];
-      FIN.starRate=j.star_usd_rate||0.013;
+    }else if(FIN.tab==='payments'){
+      const j=await upApi('GET','/admin/finance/payments?days='+FIN.payDays);
+      FIN.payments=Array.isArray(j.items)?j.items:[];
+      FIN.testMode=!!j.test_mode;
     }else if(FIN.tab==='packs'){
       const j=await upApi('GET','/admin/finance/packages');
       FIN.packages=Array.isArray(j.packages)?j.packages:[];
@@ -5928,6 +5964,73 @@ function openFinPage(){
 function closeFinPage(){
   if(!$('#finPage').classList.contains('open'))return;
   $('#finPage').classList.remove('open');popLayer(closeFinPage);
+}
+function openProviderWalletModal(){
+  const d=$('#dlg');if(d.classList.contains('on'))return;
+  const s=FIN.stats||{};
+  const pw=s.provider_wallet||{base_tokens:0,remaining_tokens:0,cost_per_1m_usd:0};
+  let mode='set';
+  d.classList.remove('context');
+  d.innerHTML=
+    '<div class="dcard fb" role="dialog" aria-modal="true">'+
+      '<div class="fb-h"><h4>Кошелёк провайдера и расчёт</h4><button class="ib" data-pw="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
+      '<div class="fb-types" style="grid-template-columns:1fr 1fr;margin:12px 0 8px">'+
+        '<button class="fb-type on" data-pwm="set">Задать остаток</button>'+
+        '<button class="fb-type" data-pwm="add">Добавить токены</button>'+
+      '</div>'+
+      '<label style="display:block;margin:6px 0 5px;color:var(--muted);font-size:13px" id="pwBalLbl">Текущий баланс у провайдера (токенов)</label>'+
+      '<input id="pwBal" inputmode="numeric" value="'+(pw.remaining_tokens||pw.base_tokens||'')+'" placeholder="Например: 5000000" autocomplete="off">'+
+      '<div class="fin-grid2">'+
+        '<div><label style="display:block;margin:0 0 5px;color:var(--muted);font-size:13px">Цена $/1M токенов</label><input id="pwCost" inputmode="decimal" value="'+(pw.cost_per_1m_usd||0)+'" placeholder="0.50"></div>'+
+        '<div><label style="display:block;margin:0 0 5px;color:var(--muted);font-size:13px">Курс 1 ⭐ ($)</label><input id="pwRate" inputmode="decimal" value="'+(s.star_usd_rate||0.013)+'" placeholder="0.013"></div>'+
+      '</div>'+
+      '<p class="hint" style="margin:4px 2px 12px">После сохранения все новые запросы пользователей будут вычитаться из этого баланса. Цена $/1M нужна для расчёта расходов API и чистой прибыли.</p>'+
+      '<button class="btn pri cn-b" data-pw="save">Сохранить</button>'+
+    '</div>';
+  d.classList.add('on');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(close)};
+  pushLayer(close);
+  d.onclick=async e=>{
+    if(e.target===d){close();return}
+    const mb=e.target.closest('[data-pwm]');
+    if(mb){
+      mode=mb.dataset.pwm==='add'?'add':'set';
+      d.querySelectorAll('[data-pwm]').forEach(x=>x.classList.toggle('on',x===mb));
+      const lbl=$('#pwBalLbl'),inpBal=$('#pwBal');
+      if(lbl)lbl.textContent=mode==='add'?'Сколько токенов добавить к остатку':'Текущий баланс у провайдера (токенов)';
+      if(inpBal)inpBal.value=mode==='add'?'':(pw.remaining_tokens||pw.base_tokens||'');
+      hap();return;
+    }
+    const b=e.target.closest('[data-pw]');if(!b)return;
+    if(b.dataset.pw==='close'){close();return}
+    if(b.dataset.pw==='save'){
+      const rawBal=$('#pwBal').value.trim();
+      const rawCost=String($('#pwCost').value||'').replace(',','.').trim();
+      const rawRate=String($('#pwRate').value||'').replace(',','.').trim();
+      const payload={mode:mode};
+      if(rawBal!==''){
+        const bv=parseInt(rawBal.replace(/\s+/g,''));
+        if(!Number.isFinite(bv)||bv<0){infoBox('Проверьте баланс','Введите число токенов, например 5000000.');return}
+        payload.base_tokens=bv;
+      }
+      if(rawCost!==''){
+        const cv=parseFloat(rawCost);
+        if(!Number.isFinite(cv)||cv<0){infoBox('Проверьте цену','Введите стоимость 1 млн токенов в USD, например 0.50.');return}
+        payload.cost_per_1m_usd=cv;
+      }
+      if(rawRate!==''){
+        const rv=parseFloat(rawRate);
+        if(!Number.isFinite(rv)||rv<=0){infoBox('Проверьте курс','Например: 0.013');return}
+        payload.star_usd_rate=rv;
+      }
+      b.disabled=true;
+      try{
+        await upApi('PUT','/admin/finance/provider-wallet',payload);
+        close();hap('medium');toast('Кошелёк провайдера обновлён');
+        loadFin(true);
+      }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось сохранить настройки',noNav:true})}
+    }
+  };
 }
 function openAdjustDialog(uid,name,dir){
   const d=$('#dlg');if(d.classList.contains('on'))return;
@@ -6026,7 +6129,11 @@ function openPkgModal(idx){
 }
 $('#finBack').innerHTML=ic('back',24);
 $('#finBack').addEventListener('click',closeFinPage);
-$('#finTestBtn').addEventListener('click',e=>toggleFinTestMode(e.currentTarget));
+$('#finTestSw').addEventListener('click',e=>{
+  const m=e.target.closest('[data-fmode]');
+  if(m)setFinTestMode(m.dataset.fmode==='1');
+  else setFinTestMode(!FIN.testMode);
+});
 $('#finRefresh').innerHTML=ic('refresh',20);
 $('#finRefresh').addEventListener('click',()=>{hap();loadFin(false)});
 $('#finBody').addEventListener('input',e=>{
@@ -6041,7 +6148,22 @@ $('#finBody').addEventListener('click',async e=>{
     const v=await sheet(b,items);
     if(v!=null&&+v!==FIN.days){FIN.days=+v;hap();loadFin(false)}
   }
-  else if(a==='payview'){FIN.payView=!FIN.payView;hap();renderFin()}
+  else if(a==='paypermenu'){
+    const items=FIN_PERS.map(x=>({id:String(x[0]),label:x[1],icon:FIN.payDays===x[0]?'check':''}));
+    const v=await sheet(b,items);
+    if(v!=null&&+v!==FIN.payDays){FIN.payDays=+v;hap();loadFin(false)}
+  }
+  else if(a==='pwquick'){
+    const i=$('#pwQuickBal'),v=parseInt(String(i&&i.value||'').replace(/\s+/g,''))||0;
+    if(v<=0){infoBox('Укажите баланс','Введите количество токенов у провайдера, например 5000000.');return}
+    b.disabled=true;
+    try{
+      await upApi('PUT','/admin/finance/provider-wallet',{base_tokens:v,mode:'set'});
+      hap('medium');toast('Баланс провайдера сохранён');
+      loadFin(true);
+    }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось сохранить баланс',noNav:true})}
+  }
+  else if(a==='pwedit'){openProviderWalletModal()}
   else if(a==='cleartests'){
     const ok=await dialog({title:'Очистить тестовые оплаты?',text:'Удалятся записи о тестовых платежах из истории. Реальные платежи и балансы не затронутся.',ok:'Очистить',danger:true});
     if(!ok)return;
@@ -6051,44 +6173,6 @@ $('#finBody').addEventListener('click',async e=>{
   else if(a==='adj'){openAdjustDialog(b.dataset.uid,b.dataset.nm,+b.dataset.dir)}
   else if(a==='adjbyid'){openAdjustDialog('','Пользователь по ID',1)}
   else if(a==='utx'){openUserTxModal(b.dataset.uid,b.dataset.nm)}
-  else if(a==='pickm'){const i=$('#prModel');if(i){i.value=b.dataset.m;i.focus()}hap()}
-  else if(a==='predit'){
-    const x=FIN.pricing.find(r=>r.model===b.dataset.m);if(!x)return;
-    $('#prModel').value=x.model;$('#prIn').value=x.price_in;$('#prOut').value=x.price_out;
-    $('#prCostIn').value=x.cost_in_usd;$('#prCostOut').value=x.cost_out_usd;
-    $('#finBody').scrollTo({top:0,behavior:'smooth'});
-  }
-  else if(a==='prsave'){
-    const model=$('#prModel').value.trim();
-    if(!model){infoBox('Укажите модель','Введите точное название модели или выберите её из списка.');return}
-    b.disabled=true;
-    try{
-      await upApi('PUT','/admin/finance/pricing',{
-        model:model,
-        price_in:parseFloat(String($('#prIn').value).replace(',','.'))||0,
-        price_out:parseFloat(String($('#prOut').value).replace(',','.'))||0,
-        cost_in_usd:parseFloat(String($('#prCostIn').value).replace(',','.'))||0,
-        cost_out_usd:parseFloat(String($('#prCostOut').value).replace(',','.'))||0
-      });
-      toast('Тариф сохранён');loadFin(true);
-    }catch(err){showError(err,{where:'cloud',title:'Не удалось сохранить тариф',noNav:true})}
-    b.disabled=false;
-  }
-  else if(a==='prdel'){
-    const m=b.dataset.m;
-    const ok=await dialog({title:'Сбросить тариф модели?',text:'«'+m+'» снова будет списывать 1:1 по токенам.',ok:'Сбросить',danger:true});
-    if(!ok)return;
-    try{await upApi('DELETE','/admin/finance/pricing?model='+encodeURIComponent(m));toast('Тариф сброшен');loadFin(true)}
-    catch(err){showError(err,{where:'cloud',title:'Не удалось удалить тариф',noNav:true})}
-  }
-  else if(a==='ratesave'){
-    const r=parseFloat(String($('#prStarRate').value).replace(',','.'));
-    if(!Number.isFinite(r)||r<=0){infoBox('Некорректный курс','Например: 0.013');return}
-    b.disabled=true;
-    try{const j=await upApi('PUT','/admin/finance/pricing',{star_usd_rate:r});FIN.starRate=j.star_usd_rate;toast('Курс сохранён')}
-    catch(err){showError(err,{where:'cloud',title:'Не удалось сохранить курс',noNav:true})}
-    b.disabled=false;
-  }
   else if(a==='pkadd'){openPkgModal(null)}
   else if(a==='pkedit'){openPkgModal(+b.dataset.i)}
   else if(a==='pkdel'){
