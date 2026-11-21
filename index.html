@@ -1141,6 +1141,7 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
   transition:transform .14s ease,background .16s ease;
 }
 .sh > .ib:active{transform:scale(.94);background:rgba(58,62,76,.86)}
+.ib.spin svg{animation:spin .8s linear infinite}
 .sh h2{
   margin:0;display:block;height:40px;line-height:40px;padding:0 16px;
   border-radius:999px;min-width:0;
@@ -1590,6 +1591,7 @@ const configP=(async function(){
     syncFbBadges();
     if(typeof syncNotifySw==='function')syncNotifySw();
     if($('#settings')&&$('#settings').classList.contains('open'))renderSettings();
+    if(isAdmin&&typeof bgReady!=='undefined'&&bgReady&&typeof bgPreloadAdmin==='function')bgPreloadAdmin();
   }catch(e){}
 })();
 
@@ -1754,14 +1756,35 @@ function modelsReadyText(){
 async function loadCloudKeys(){
   if(!tg||!tg.initData){bootHide(true);showError(needTg(),{where:'cloud'});return 1}
   let migrated=0,loaded=0,failed=0;
-  await Promise.all(VISIBLE.map(async p=>{
-    const c=S.providers[p.id];
+  const toMig=VISIBLE.filter(p=>S.providers[p.id].key);
+  const keysTask=(async()=>{
     try{
-      if(c.key){await cloudKeyRequest('PUT',p.id,c.key);migrated++}
-      else{const data=await cloudKeyRequest('GET',p.id);if(data.key){c.key=data.key;loaded++}}
-    }catch(e){failed++}
-  }));
-  try{await syncManaged()}catch(e){failed++}
+      if(toMig.length){
+        await Promise.all(toMig.map(async p=>{
+          await cloudKeyRequest('PUT',p.id,S.providers[p.id].key);migrated++;
+        }));
+      }
+      const data=await cloudJson('GET','/keys?all=1');
+      if(data&&data.keys&&typeof data.keys==='object'){
+        VISIBLE.forEach(p=>{
+          const k=data.keys[p.id];
+          if(k&&!S.providers[p.id].key){S.providers[p.id].key=k;loaded++}
+        });
+        return;
+      }
+      throw new Error('fallback');
+    }catch(err){
+      // совместимость со старой версией воркера без ?all=1
+      if(err&&err.status===401){failed++;return}
+      await Promise.all(VISIBLE.map(async p=>{
+        const c=S.providers[p.id];
+        if(c.key)return;
+        try{const data=await cloudKeyRequest('GET',p.id);if(data.key){c.key=data.key;loaded++}}
+        catch(e){failed++}
+      }));
+    }
+  })();
+  await Promise.all([keysTask,syncManaged().catch(()=>{failed++})]);
   save();
   if(failed){bootHide(true);syncFailedNotice()}
   else if((migrated||loaded)&&!bootVisible())toast('Ключи синхронизированы с облаком');
@@ -1781,7 +1804,7 @@ function syncFailedNotice(){
     if(!f&&hasSetup())closeConn();
     renderTop();
     if(!f){
-      if(hasSetup())await bootUnlock('Ключи синхронизированы',modelsReadyText());
+      if(hasSetup()){await bootUnlock('Ключи синхронизированы',modelsReadyText());startBgPreload()}
       else bootHide(false);
     }
   });
@@ -2724,7 +2747,7 @@ function finishGen(g){
 
   if(G===g){G=null;busy=false;abortC=null}
   chat.updated=Date.now();save();
-  if(g.pid==='managed'){setTimeout(()=>{syncManaged().then(()=>{save();renderUsageSafe()}).catch(()=>{})},400)}
+  if(g.pid==='managed'){WAL.ts=0;FIN.ts.stats=0;FIN.ts.users=0;setTimeout(()=>{loadWallet(true).catch(()=>{})},450)}
 
   if(cur!==chat)return;
   renderTop();
@@ -4735,9 +4758,12 @@ function upHist(){
     return '<div class="uc"><div class="uh"><b>'+esc(name)+'</b>'+del+'</div><div class="ul sub">'+d+' · '+(lbl[s.status]||s.status)+(s.media?' · вложений: '+s.media:'')+'</div><div class="ul">'+statLine(s)+'</div>'+act+'</div>';
   }).join('');
 }
-async function upLoad(){
-  try{const j=await upApi('GET','/admin/broadcasts');UP.items=j.items||[];UP.users=j.users||null;upHist();upCount()}
-  catch(e){showError(e,{where:'cloud',title:'Не удалось загрузить историю рассылок'})}
+async function upLoad(silent){
+  try{
+    const j=await upApi('GET','/admin/broadcasts');
+    UP.items=j.items||[];UP.users=j.users||null;UP.ts=Date.now();
+    if(UP.built){upHist();upCount()}
+  }catch(e){if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить историю рассылок'})}
 }
 function upContent(){
   const title=$('#uTitle').value.trim(),text=$('#uText').value.trim();
@@ -4852,7 +4878,7 @@ async function qLoad(silent){
   try{
     const j=await upApi('GET','/admin/setup-codes');
     Q_CODES.items=Array.isArray(j.items)?j.items:[];
-    Q_CODES.loaded=true;
+    Q_CODES.loaded=true;Q_CODES.ts=Date.now();
   }catch(e){
     if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить выданные коды'});
   }
@@ -5254,7 +5280,7 @@ async function fbLoad(silent){
   try{
     const j=await upApi('GET','/admin/feedback');
     FB.items=Array.isArray(j.items)?j.items:[];
-    FB.loaded=true;
+    FB.loaded=true;FB.ts=Date.now();
   }catch(e){
     if(e&&e.status===404){FB.notReady=true;FB.items=[];FB.loaded=false}
     else if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить обращения'});
@@ -5267,7 +5293,9 @@ function openFbPage(tab){
   if($('#fbPage').classList.contains('open')){fbRender();return}
   buildQSection();
   $('#fbPage').classList.add('open');pushLayer(closeFbPage);
-  fbRender();fbLoad(true);qLoad(true);
+  fbRender();
+  if(!FB.loaded||Date.now()-(FB.ts||0)>30000)fbLoad(true);
+  if(!Q_CODES.loaded||Date.now()-(Q_CODES.ts||0)>30000)qLoad(true);
 }
 function closeFbPage(){
   if(!$('#fbPage').classList.contains('open'))return;
@@ -5437,7 +5465,9 @@ function openUpd(){
   if(!isAdmin||$('#upd').classList.contains('open'))return;
   buildUpd();
   $('#adminSys').value=remoteSystem!==null?remoteSystem:DEFAULT_SYSTEM;
-  syncNotifySw();$('#upd').classList.add('open');pushLayer(closeUpd);fbLoad(true);upLoad();
+  syncNotifySw();$('#upd').classList.add('open');pushLayer(closeUpd);
+  if(!FB.loaded||Date.now()-(FB.ts||0)>30000)fbLoad(true);
+  if(!UP.ts||Date.now()-UP.ts>30000)upLoad(true);
 }
 function closeUpd(){
   if(!$('#upd').classList.contains('open'))return;
@@ -5526,7 +5556,7 @@ $('#updBody').addEventListener('click',async e=>{
 
 
 /* ---------- Кошелёк VEYRA Credits и пополнение (Этапы 4 и 5) ---------- */
-const WAL={data:null,loading:false,scrollHist:false};
+const WAL={data:null,loading:false,scrollHist:false,ts:0,inflight:null};
 const TX_LBL={
   grant:'Промокод / бонус',
   purchase:'Покупка (Telegram Stars)',
@@ -5636,8 +5666,9 @@ function renderWallet(){
   const cr=d||c.credits||{balance:0,total_granted:0,total_spent:0};
   const bal=Math.max(0,Number(cr.balance)||0),gr=Math.max(bal,Number(cr.total_granted)||0);
   const pc=gr>0?Math.min(100,bal/gr*100):0;
-  const pkgs=(d&&Array.isArray(d.packages))?d.packages:[];
-  const testMode=!!(d&&d.test_mode);
+  const cachedMeta=(S.walMeta&&typeof S.walMeta==='object')?S.walMeta:null;
+  const pkgs=(d&&Array.isArray(d.packages))?d.packages:(cachedMeta&&Array.isArray(cachedMeta.packages)?cachedMeta.packages:[]);
+  const testMode=d?!!d.test_mode:!!(cachedMeta&&cachedMeta.test_mode);
 
   const pkgHtml=pkgs.length
     ?'<div class="pkg-grid">'+pkgs.map((p,idx)=>{
@@ -5681,22 +5712,40 @@ function renderWallet(){
   }
 }
 async function loadWallet(silent){
-  WAL.loading=true;renderWallet();
-  try{
-    const j=await cloudJson('GET','/credits');
-    WAL.data=j;
-    S.providers.managed.credits={enabled:j.enabled,balance:j.balance,reserved:j.reserved,available:j.available,total_granted:j.total_granted,total_spent:j.total_spent};
-    save();renderUsageSafe();syncDrawerWal();
-  }catch(e){
-    if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить кошелёк',noNav:true});
-  }
-  WAL.loading=false;renderWallet();
+  if(WAL.inflight)return WAL.inflight;
+  WAL.loading=true;
+  const walOpen=$('#wallet')&&$('#wallet').classList.contains('open');
+  const rb=$('#walRefresh');
+  if(rb&&!silent)rb.classList.add('spin');
+  if(walOpen&&!WAL.data)renderWallet();
+  const p=(async()=>{
+    try{
+      const j=await cloudJson('GET','/credits');
+      WAL.data=j;WAL.ts=Date.now();
+      S.providers.managed.credits={enabled:j.enabled,balance:j.balance,reserved:j.reserved,available:j.available,total_granted:j.total_granted,total_spent:j.total_spent};
+      if(Array.isArray(j.packages))S.walMeta={packages:j.packages,test_mode:!!j.test_mode};
+      save();renderUsageSafe();syncDrawerWal();
+    }catch(e){
+      if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить кошелёк',noNav:true});
+    }finally{
+      WAL.loading=false;WAL.inflight=null;
+      if(rb)rb.classList.remove('spin');
+      if($('#wallet')&&$('#wallet').classList.contains('open'))renderWallet();
+    }
+  })();
+  WAL.inflight=p;
+  return p;
 }
 function openWallet(scrollHist){
   WAL.scrollHist=!!scrollHist;
-  if($('#wallet').classList.contains('open')){loadWallet(true);return}
+  if($('#wallet').classList.contains('open')){
+    if(!WAL.ts||Date.now()-WAL.ts>15000)loadWallet(true);
+    return;
+  }
   $('#wallet').classList.add('open');pushLayer(closeWallet);
-  renderWallet();loadWallet(false);
+  renderWallet();
+  if(!WAL.data)loadWallet(false);
+  else if(Date.now()-WAL.ts>25000)loadWallet(true);
 }
 function closeWallet(){
   if(!$('#wallet').classList.contains('open'))return;
@@ -5771,7 +5820,7 @@ $('#walBody').addEventListener('click',async e=>{
 });
 
 /* ---------- Финансовая админ-панель (Этап 6) ---------- */
-const FIN={tab:'stats',days:30,payDays:0,stats:null,users:[],q:'',payments:[],packages:[],testMode:true,loading:false};
+const FIN={tab:'stats',days:30,payDays:0,stats:null,users:[],q:'',payments:[],packages:[],testMode:true,loading:false,ts:{stats:0,users:0,payments:0,packs:0},inflightAll:null,inflight:{}};const FIN_TTL=45000;
 const FIN_PERS=[[1,'Сегодня'],[7,'7 дней'],[30,'30 дней'],[0,'Всё время']];
 const fmtUsd=n=>{const v=Number(n)||0,a=Math.abs(v);return (v<0?'−':'')+'$'+a.toFixed(a>0&&a<1?4:2)};
 
@@ -5798,6 +5847,7 @@ async function setFinTestMode(nextTest){
     const j=await upApi('PUT','/admin/finance/test-mode',{enabled:nextTest});
     FIN.testMode=!!j.test_mode;
     if(FIN.stats)FIN.stats.test_mode=FIN.testMode;
+    WAL.ts=0;if(WAL.data)WAL.data.test_mode=FIN.testMode;if(S.walMeta)S.walMeta.test_mode=FIN.testMode;save();
     syncFinTestSw();
     toast(FIN.testMode?'🧪 Тестовый режим оплаты включён':'⭐ Обычный режим Telegram Stars включён!');
   }catch(err){
@@ -5933,33 +5983,89 @@ function renderFin(){
   }
 }
 
-async function loadFin(silent){
-  FIN.loading=true;renderFin();
-  try{
-    if(FIN.tab==='stats'){
-      const j=await upApi('GET','/admin/finance/stats?days='+FIN.days);
-      FIN.stats=j;FIN.testMode=!!j.test_mode;
-    }else if(FIN.tab==='users'){
-      const j=await upApi('GET','/admin/finance/users');
-      FIN.users=Array.isArray(j.items)?j.items:[];
-    }else if(FIN.tab==='payments'){
-      const j=await upApi('GET','/admin/finance/payments?days='+FIN.payDays);
-      FIN.payments=Array.isArray(j.items)?j.items:[];
-      FIN.testMode=!!j.test_mode;
-    }else if(FIN.tab==='packs'){
-      const j=await upApi('GET','/admin/finance/packages');
-      FIN.packages=Array.isArray(j.packages)?j.packages:[];
-      FIN.testMode=!!j.test_mode;
+async function loadFinAll(silent){
+  if(FIN.inflightAll)return FIN.inflightAll;
+  const open=$('#finPage')&&$('#finPage').classList.contains('open');
+  const rb=$('#finRefresh');
+  if(rb&&!silent)rb.classList.add('spin');
+  FIN.loading=true;
+  if(open&&!FIN.ts[FIN.tab])renderFin();
+  const p=(async()=>{
+    try{
+      const j=await upApi('GET','/admin/finance/all?days='+FIN.days+'&pay_days='+FIN.payDays);
+      const now=Date.now();
+      if(j.stats){FIN.stats=j.stats;FIN.ts.stats=now}
+      if(Array.isArray(j.users)){FIN.users=j.users;FIN.ts.users=now}
+      if(Array.isArray(j.payments)){FIN.payments=j.payments;FIN.ts.payments=now}
+      if(Array.isArray(j.packages)){FIN.packages=j.packages;FIN.ts.packs=now}
+      if(j.test_mode!=null)FIN.testMode=!!j.test_mode;
+    }catch(e){
+      // совместимость со старой версией воркера без /admin/finance/all
+      if(e&&e.status===404){
+        const now=Date.now();
+        await Promise.all([
+          upApi('GET','/admin/finance/stats?days='+FIN.days).then(j=>{FIN.stats=j;FIN.testMode=!!j.test_mode;FIN.ts.stats=now}).catch(()=>{}),
+          upApi('GET','/admin/finance/users').then(j=>{FIN.users=Array.isArray(j.items)?j.items:[];FIN.ts.users=now}).catch(()=>{}),
+          upApi('GET','/admin/finance/payments?days='+FIN.payDays).then(j=>{FIN.payments=Array.isArray(j.items)?j.items:[];FIN.ts.payments=now}).catch(()=>{}),
+          upApi('GET','/admin/finance/packages').then(j=>{FIN.packages=Array.isArray(j.packages)?j.packages:[];FIN.ts.packs=now}).catch(()=>{})
+        ]);
+      }else if(!silent){
+        showError(e,{where:'cloud',title:'Не удалось загрузить данные финансов',noNav:true});
+      }
+    }finally{
+      FIN.loading=false;FIN.inflightAll=null;
+      if(rb)rb.classList.remove('spin');
+      syncFinTestSw();
+      if($('#finPage')&&$('#finPage').classList.contains('open'))renderFin();
     }
-  }catch(e){
-    if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить данные финансов',noNav:true});
-  }
-  FIN.loading=false;renderFin();
+  })();
+  FIN.inflightAll=p;
+  return p;
+}
+async function loadFin(silent,tabOverride){
+  const tab=tabOverride||FIN.tab;
+  if(FIN.inflight[tab])return FIN.inflight[tab];
+  const open=$('#finPage')&&$('#finPage').classList.contains('open');
+  const rb=$('#finRefresh');
+  const hasData=!!FIN.ts[tab];
+  if(rb&&!silent)rb.classList.add('spin');
+  FIN.loading=true;
+  if(open&&!hasData)renderFin();
+  const p=(async()=>{
+    try{
+      if(tab==='stats'){
+        const j=await upApi('GET','/admin/finance/stats?days='+FIN.days);
+        FIN.stats=j;FIN.testMode=!!j.test_mode;FIN.ts.stats=Date.now();
+      }else if(tab==='users'){
+        const j=await upApi('GET','/admin/finance/users');
+        FIN.users=Array.isArray(j.items)?j.items:[];FIN.ts.users=Date.now();
+      }else if(tab==='payments'){
+        const j=await upApi('GET','/admin/finance/payments?days='+FIN.payDays);
+        FIN.payments=Array.isArray(j.items)?j.items:[];FIN.testMode=!!j.test_mode;FIN.ts.payments=Date.now();
+      }else if(tab==='packs'){
+        const j=await upApi('GET','/admin/finance/packages');
+        FIN.packages=Array.isArray(j.packages)?j.packages:[];FIN.testMode=!!j.test_mode;FIN.ts.packs=Date.now();
+      }
+    }catch(e){
+      if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить данные финансов',noNav:true});
+    }finally{
+      FIN.loading=false;FIN.inflight[tab]=null;
+      if(rb)rb.classList.remove('spin');
+      syncFinTestSw();
+      if($('#finPage')&&$('#finPage').classList.contains('open'))renderFin();
+    }
+  })();
+  FIN.inflight[tab]=p;
+  return p;
 }
 function openFinPage(){
   if(!isAdmin||$('#finPage').classList.contains('open'))return;
   $('#finPage').classList.add('open');pushLayer(closeFinPage);
-  loadFin(false);
+  renderFin();
+  const stale=!FIN.ts[FIN.tab]||(Date.now()-FIN.ts[FIN.tab]>FIN_TTL);
+  const anyMissing=!FIN.ts.stats||!FIN.ts.users||!FIN.ts.payments||!FIN.ts.packs;
+  if(anyMissing)loadFinAll(!!FIN.ts[FIN.tab]);
+  else if(stale)loadFin(true);
 }
 function closeFinPage(){
   if(!$('#finPage').classList.contains('open'))return;
@@ -6068,8 +6174,8 @@ function openAdjustDialog(uid,name,dir){
       try{
         await upApi('POST','/admin/finance/users/'+encodeURIComponent(targetId)+'/adjust',{amount:delta,reason:reason,notify:notify});
         close();hap('medium');toast(isAdd?'Начислено +'+fmtCr(rawAmt)+' Cr':'Списано −'+fmtCr(rawAmt)+' Cr');
-        loadFin(true);
-        if(user&&String(user.id)===targetId)syncManaged().then(()=>{save();renderUsageSafe();syncDrawerWal()}).catch(()=>{});
+        FIN.ts.stats=0;FIN.ts.users=0;loadFin(true,'users');loadFin(true,'stats');
+        if(user&&String(user.id)===targetId){WAL.ts=0;loadWallet(true).catch(()=>{})}
       }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось изменить баланс',noNav:true})}
     }
   };
@@ -6122,7 +6228,7 @@ function openPkgModal(idx){
       b.disabled=true;
       try{
         const j=await upApi('PUT','/admin/finance/packages',{packages:next});
-        FIN.packages=j.packages||next;close();renderFin();toast('Пакеты сохранены');
+        FIN.packages=j.packages||next;FIN.ts.packs=Date.now();WAL.ts=0;close();renderFin();toast('Пакеты сохранены');
       }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось сохранить пакеты',noNav:true})}
     }
   };
@@ -6135,14 +6241,14 @@ $('#finTestSw').addEventListener('click',e=>{
   else setFinTestMode(!FIN.testMode);
 });
 $('#finRefresh').innerHTML=ic('refresh',20);
-$('#finRefresh').addEventListener('click',()=>{hap();loadFin(false)});
+$('#finRefresh').addEventListener('click',()=>{hap();loadFinAll(false)});
 $('#finBody').addEventListener('input',e=>{
   if(e.target.id==='finSearch'){FIN.q=e.target.value;renderFin();const s=$('#finSearch');if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length)}}
 });
 $('#finBody').addEventListener('click',async e=>{
   const b=e.target.closest('[data-fin]');if(!b)return;
   const a=b.dataset.fin;
-  if(a==='tab'){FIN.tab=b.dataset.t;hap();loadFin(false)}
+  if(a==='tab'){FIN.tab=b.dataset.t;hap();renderFin();if(!FIN.ts[FIN.tab])loadFin(false);else if(Date.now()-FIN.ts[FIN.tab]>FIN_TTL)loadFin(true)}
   else if(a==='permenu'){
     const items=FIN_PERS.map(x=>({id:String(x[0]),label:x[1],icon:FIN.days===x[0]?'check':''}));
     const v=await sheet(b,items);
@@ -6167,7 +6273,7 @@ $('#finBody').addEventListener('click',async e=>{
   else if(a==='cleartests'){
     const ok=await dialog({title:'Очистить тестовые оплаты?',text:'Удалятся записи о тестовых платежах из истории. Реальные платежи и балансы не затронутся.',ok:'Очистить',danger:true});
     if(!ok)return;
-    try{await upApi('DELETE','/admin/finance/test-payments');toast('Тестовые оплаты очищены');loadFin(true)}
+    try{await upApi('DELETE','/admin/finance/test-payments');toast('Тестовые оплаты очищены');FIN.ts.payments=0;FIN.ts.stats=0;loadFin(true,'payments');loadFin(true,'stats')}
     catch(err){showError(err,{where:'cloud',title:'Не удалось очистить',noNav:true})}
   }
   else if(a==='adj'){openAdjustDialog(b.dataset.uid,b.dataset.nm,+b.dataset.dir)}
@@ -6181,13 +6287,13 @@ $('#finBody').addEventListener('click',async e=>{
     const ok=await dialog({title:'Удалить пакет?',text:'«'+p.title+'» ('+p.stars+' ⭐) будет удалён.',ok:'Удалить',danger:true});
     if(!ok)return;
     const next=FIN.packages.filter((_,k)=>k!==i);
-    try{const j=await upApi('PUT','/admin/finance/packages',{packages:next});FIN.packages=j.packages||next;renderFin();toast('Пакет удалён')}
+    try{const j=await upApi('PUT','/admin/finance/packages',{packages:next});FIN.packages=j.packages||next;FIN.ts.packs=Date.now();WAL.ts=0;renderFin();toast('Пакет удалён')}
     catch(err){showError(err,{where:'cloud',title:'Не удалось удалить пакет',noNav:true})}
   }
   else if(a==='pkreset'){
     const ok=await dialog({title:'Сбросить пакеты по умолчанию?',ok:'Сбросить'});
     if(!ok)return;
-    try{const j=await upApi('PUT','/admin/finance/packages',{reset:true});FIN.packages=j.packages||[];renderFin();toast('Пакеты восстановлены')}
+    try{const j=await upApi('PUT','/admin/finance/packages',{reset:true});FIN.packages=j.packages||[];FIN.ts.packs=Date.now();WAL.ts=0;renderFin();toast('Пакеты восстановлены')}
     catch(err){showError(err,{where:'cloud',title:'Не удалось сбросить пакеты',noNav:true})}
   }
 });
@@ -6221,6 +6327,28 @@ async function redeemCode(raw){
     if(list.length){c.enabled=list;cur.model='managed|'+list[0];S.lastModel=cur.model;save();renderTop()}
   }
   return true;
+}
+
+/* ---------- фоновая предзагрузка после синхронизации ключей ---------- */
+let bgReady=false,bgWalStarted=false,bgAdminStarted=false;
+function bgPreloadAdmin(){
+  if(!isAdmin||bgAdminStarted||!tg||!tg.initData)return;
+  bgAdminStarted=true;
+  setTimeout(()=>{
+    loadFinAll(true).catch(()=>{});
+    if(!FB.loaded)fbLoad(true).catch(()=>{});
+    if(!Q_CODES.loaded)qLoad(true).catch(()=>{});
+    if(!UP.ts)upLoad(true).catch(()=>{});
+  },120);
+}
+function startBgPreload(){
+  bgReady=true;
+  if(!tg||!tg.initData)return;
+  if(!bgWalStarted){
+    bgWalStarted=true;
+    setTimeout(()=>{loadWallet(true).catch(()=>{})},80);
+  }
+  if(isAdmin)bgPreloadAdmin();
 }
 
 /* ---------- init ---------- */
@@ -6284,6 +6412,7 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
     if(isAdmin){
       bootHide(true);
       openFbPage(sp==='admin_rev'?'rev':'req');
+      startBgPreload();
       return;
     }
   }
@@ -6304,14 +6433,17 @@ try{tg&&tg.onEvent&&tg.onEvent('viewportChanged',kbFix)}catch(e){}
     }
     if(applied){
       await bootUnlock('Настройка применена',modelsReadyText());
+      startBgPreload();
       return;
     }
   }
   if(hasSetup()){
     await bootUnlock('Ключи синхронизированы',modelsReadyText());
+    startBgPreload();
   }else{
     bootHide(false);
     openConn();
+    startBgPreload();
   }
 })();
 gcFiles();
