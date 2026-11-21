@@ -705,6 +705,14 @@ svg{display:block}
 .cn-t{text-align:center;font-size:18px;font-weight:700;margin-bottom:8px}
 .dcard.cn p.cn-p{text-align:center;color:var(--muted);margin:0 0 18px}
 .cn-b{display:block;width:100%;height:50px;border-radius:999px;font-size:16px}
+.cn-have{position:relative;display:flex;align-items:center;margin-top:14px}
+.cn-have .cn-b{padding:0 48px}
+.cn-ibtn{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:700;font-size:16px;line-height:1;background:rgba(18,18,18,.12);color:#121212;border:1.5px solid rgba(18,18,18,.28);transition:transform .14s ease,background .16s ease}
+.cn-ibtn:active{transform:translateY(-50%) scale(.92);background:rgba(18,18,18,.22)}
+:root[data-theme="light"] .cn-ibtn{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.45)}
+:root[data-theme="light"] .cn-ibtn:active{background:rgba(255,255,255,.28)}
+.cn-promo{text-align:center}
+.cn-promo::placeholder{text-align:center}
 .cn-l{display:block;width:100%;padding:14px 0 6px;text-align:center;color:var(--muted);font-size:15px;font-weight:500}
 .cn-l:active{opacity:.6}
 .cn-f{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);text-align:center;color:var(--muted);font-size:13px;opacity:.85}
@@ -1520,16 +1528,19 @@ async function saveCloudKey(provider,key){
 /* статус системного подключения с сервера (только имя, лимит и список моделей — без ключа и адреса) */
 function setManagedMeta(d){
   const c=S.providers.managed,prev=c.meta;
-  c.meta={provider:d.provider,name:d.name||'',limit:d.limit||0};
+  const initCr=Math.max(0,Number(d.initial_credits!=null?d.initial_credits:d.limit)||0);
+  c.meta={provider:d.provider,name:d.name||'',limit:initCr};
   if(!prev||prev.provider!==d.provider||(d.models&&d.models.length&&JSON.stringify(d.models)!==JSON.stringify(c.models))){
     delete c.models;delete c.enabled;
     if(d.models&&d.models.length){c.models=d.models.slice();c.enabled=d.models.slice()}
   }
-  c.limit=d.limit>0?d.limit:0;
+  c.limit=initCr;
+  if(d.credits&&typeof d.credits==='object')c.credits=d.credits;
 }
 async function syncManaged(){
   const d=await cloudJson('GET','/managed');
   const c=S.providers.managed;
+  if(d.credits&&typeof d.credits==='object')c.credits=d.credits;
   if(d.active)setManagedMeta(d);
   else if(c.meta){c.meta=null;c.limit=0;delete c.models;delete c.enabled;delete c.bal}
 }
@@ -1726,7 +1737,7 @@ async function apiErr(res){
   if(body&&typeof body.code==='string'&&APP_CODES.indexOf(body.code)>=0){er.cloud=true;er.code=body.code}   // ответил наш сервер, а не провайдер ИИ
   return er;
 }
-const APP_CODES=['session','forbidden','no_managed','upstream','bot_blocked','too_large','bad_request','server'];
+const APP_CODES=['session','forbidden','no_managed','no_credits','upstream','bot_blocked','too_large','bad_request','server'];
 const needTg=()=>{const er=new Error('need telegram');er.cloud=true;er.code='need_telegram';return er};
 /* Ошибка собственного сервера (Worker) */
 function cloudErr(res,j){
@@ -1746,6 +1757,7 @@ function classify(e,ctx){
     if(e.code==='bot_blocked')return 'botblock';
     if(e.code==='need_telegram')return 'needtg';
     if(e.code==='no_managed')return 'nomanaged';
+    if(e.code==='no_credits')return 'nocredits';
     if(e.code==='upstream')return 'server';
     if(st===401)return 'session';
     if(st===403)return 'forbidden';
@@ -1891,7 +1903,11 @@ function copyFor(kind,ctx,e){
     case 'nomanaged':
       return {icon:'lock',title:'Системное подключение отключено',
         text:'Код быстрой настройки, по которому подключён ассистент, больше не действует: администратор мог его отозвать или удалить.',
-        tips:['Подключите свой API-ключ в настройках или запросите у администратора новый код.'],acts:['settings','close']};
+        tips:['Подключите свой API-ключ в настройках или примените новый промокод.'],acts:['settings','close']};
+    case 'nocredits':
+      return {icon:'warn',title:'Закончились VEYRA Credits',
+        text:'На вашем балансе не осталось VEYRA Credits. Пополните баланс или примените новый промокод, чтобы продолжить общение.',
+        tips:['Откройте настройки, чтобы проверить баланс VEYRA Credits или ввести промокод.','Либо переключитесь на свой API-ключ.'],acts:['settings','model','close']};
     case 'cloudserver':
       return {icon:'warn',title:'Сервер приложения временно недоступен',text:'Это сбой на стороне приложения, не ваш. Повторите попытку чуть позже.',acts:['ok']};
     case 'msg': {
@@ -2553,6 +2569,7 @@ function finishGen(g){
 
   if(G===g){G=null;busy=false;abortC=null}
   chat.updated=Date.now();save();
+  if(g.pid==='managed'){setTimeout(()=>{syncManaged().then(()=>{save();renderUsageSafe()}).catch(()=>{})},400)}
 
   if(cur!==chat)return;
   renderTop();
@@ -3863,13 +3880,10 @@ function openConn(view){
     :'<div class="dcard cn"><div class="cn-h"><h4>Подключение API</h4><span class="cn-st">Не подключено</span></div>'+
        '<div class="cn-ic">'+ic('plug',30)+'</div>'+
        '<div class="cn-t">Для начала работы подключите API</div>'+
-       '<p class="cn-p">Чтобы ассистент мог отвечать на ваши сообщения, необходимо добавить собственный API-ключ и выбрать модель нейросети.</p>'+
-       '<button class="btn pri cn-b" data-cn="have">У меня есть API-ключ</button>'+
-       '<button class="cn-l" data-cn="help">Как получить API-ключ?</button>'+
+       '<div class="cn-have"><button class="btn pri cn-b" data-cn="have">У меня есть API-ключ</button><button class="cn-ibtn" data-cn="help" aria-label="Как получить API-ключ?">i</button></div>'+
        '<div class="cn-sep"></div>'+
-       '<div class="cn-code"><input id="cnCode" placeholder="Код или ссылка быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-       '<button class="btn cn-b" data-cn="redeem">Применить код</button>'+
-       '<button class="btn ghost cn-b" data-cn="reqcode" style="margin-top:8px">Отправить заявку на код</button></div>'+
+       '<div class="cn-code"><input id="cnCode" class="cn-promo" placeholder="Промокод" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+       '<button class="btn cn-b" data-cn="redeem">Применить код</button></div>'+
        '<div class="cn-f">Подключение занимает всего несколько минут</div></div>';
   d.classList.add('on');
   const card=d.querySelector('.dcard');if(card)card.scrollTop=0;
@@ -4206,6 +4220,7 @@ function openSettings(){
   if($('#settings').classList.contains('open'))return;
   renderSettings();$('#settings').classList.add('open');pushLayer(closeSettings);
   VISIBLE.forEach(p=>{if(p.balance&&S.providers[p.id].key)fetchBal(p.id,true)});
+  if(isAvail('managed'))syncManaged().then(()=>{save();renderUsageSafe()}).catch(()=>{});
 }
 function closeSettings(){
   if(!$('#settings').classList.contains('open'))return;
@@ -4223,7 +4238,7 @@ function renderSettings(){
    '<p class="hint">Баланс OpenRouter и DeepSeek приходит с сервиса, у остальных считается по лимиту.</p>'+
    '<h3>Свои API-ключи</h3><button class="manbtn" data-act="openmanual"><span>Ручная настройка API</span><span class="chev" id="manChev"></span></button>'+
    '<p class="hint">Ключи, модели и лимиты провайдеров.</p>'+
-   (!isAdmin?'<h3>Быстрая настройка</h3><div class="gb"><label>Код или ссылка</label><input id="setCode" placeholder="Вставьте код быстрой настройки" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+   (!isAdmin?'<h3>Быстрая настройка</h3><div class="gb"><label>Промокод или ссылка</label><input id="setCode" class="cn-promo" placeholder="Промокод" autocomplete="off" autocapitalize="off" spellcheck="false">'+
    '<div class="btns" style="flex-wrap:nowrap;align-items:center"><button class="btn pri" data-act="setredeem" style="flex:1;text-align:center">Применить код</button>'+
    (isAvail('managed')?'<button class="btn dan" data-act="resetmanaged" aria-label="Сбросить системное подключение" title="Сбросить системное подключение" style="flex:none;width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center">'+ic('trash',18)+'</button>':'')+
    '</div>'+
@@ -4275,12 +4290,23 @@ async function adminRequest(method,text){
   if(!res.ok)throw cloudErr(res,j);
   return j;
 }
+function fmtCr(n){return Math.max(0,Math.round(Number(n)||0)).toLocaleString('ru-RU')}
 function renderUsage(){
   const el=$('#usage');if(!el)return;
-  const items=PROVIDERS.filter(p=>{const c=S.providers[p.id];return isAvail(p.id)||c.used.in+c.used.out>0});
+  const items=PROVIDERS.filter(p=>{const c=S.providers[p.id];return isAvail(p.id)||c.used.in+c.used.out>0||(p.managed&&c.credits&&c.credits.enabled)});
   if(!items.length){el.innerHTML='<div class="uc"><div class="ul">Пока нет данных. Добавьте API ключ ниже.</div></div>';return}
   el.innerHTML=items.map(p=>{
     const c=S.providers[p.id],tot=c.used.in+c.used.out;
+    if(p.managed&&c.credits&&c.credits.enabled){
+      const cr=c.credits,bal=Math.max(0,Number(cr.balance)||0),gr=Math.max(bal,Number(cr.total_granted)||0);
+      const pc=gr>0?Math.min(100,bal/gr*100):0;
+      const top=Object.keys(c.by).sort((a,b)=>(c.by[b].in+c.by[b].out)-(c.by[a].in+c.by[a].out)).slice(0,4)
+        .map(m=>'<div class="ul sub">'+esc(m)+' — '+fmt(c.by[m].in+c.by[m].out)+'</div>').join('');
+      return '<div class="uc" data-pid="managed"><div class="uh"><b>VEYRA Credits</b><button class="ib" data-act="crref" aria-label="Обновить баланс">'+ic('refresh',18)+'</button></div>'+
+        '<div class="ul">Баланс: <em>'+fmtCr(bal)+'</em> VEYRA Credits</div>'+
+        '<div class="ul sub">Начислено: '+fmtCr(cr.total_granted)+' · Потрачено: '+fmtCr(cr.total_spent)+'</div>'+
+        (gr>0?'<div class="bar"><i class="'+(pc<15||bal<=0?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>':'')+top+'</div>';
+    }
     let line='',bar='';
     if(p.balance&&c.bal){line='<div class="ul">Баланс: <em>'+esc(c.bal.text)+'</em></div>'}
     if(c.limit>0){
@@ -4402,6 +4428,7 @@ onSet('click',async e=>{
   else if(a==='reqcode'){openCodeRequest()}
   else if(a==='openmanual'){openManual()}
   else if(a==='bal'){fetchBal(pid,false)}
+  else if(a==='crref'){b.disabled=true;syncManaged().then(()=>{save();renderUsageSafe();toast('Баланс обновлён')}).catch(err=>showError(err,{where:'cloud',title:'Не удалось обновить баланс',noNav:true})).finally(()=>{b.disabled=false})}
   else if(a==='setredeem'){
     const i=$('#setCode'),v=i?i.value.trim():'';
     if(!v){infoBox('Вставьте код','Скопируйте код быстрой настройки или ссылку, которую вам прислали, и вставьте в поле.');return}
@@ -4687,8 +4714,8 @@ function buildQSection(){
     '<h3 id="qBox">Быстрая настройка</h3><div class="gb">'+
     '<div id="qTarget"></div>'+
     '<label>Провайдер</label><select id="qProv">'+VISIBLE.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select>'+
-    '<div class="kl"><div class="kf"><label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
-    '<div class="lf"><label>Лимит</label><input id="qLimit" inputmode="numeric" maxlength="10" placeholder="0"></div></div>'+
+    '<label>API ключ</label><input id="qKey" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<label>Начальный баланс (VEYRA Credits)</label><input id="qLimit" inputmode="numeric" maxlength="10" placeholder="200000 (0 — безлимит)">'+
     '<label>Base URL (обязательно для своего endpoint)</label><input id="qBase" autocapitalize="off" spellcheck="false" placeholder="https://…/v1">'+
     '<div id="qModels"></div>'+
     '<label>Заметка (для кого)</label><input id="qNote" maxlength="60" autocomplete="off">'+
@@ -4711,8 +4738,9 @@ async function qLoad(silent){
 }
 async function qGen(){
   const tgt=Q_TARGET?Object.assign({},Q_TARGET):null;
+  const initCr=Math.max(0,parseInt($('#qLimit').value)||0);
   const body={provider:$('#qProv').value,key:$('#qKey').value.trim(),base:$('#qBase').value.trim(),
-    limit:parseInt($('#qLimit').value)||0,models:QM.all.filter(m=>QM.on.has(m)),note:$('#qNote').value.trim()};
+    limit:initCr,initial_credits:initCr,models:QM.all.filter(m=>QM.on.has(m)),note:$('#qNote').value.trim()};
   if(tgt&&tgt.user_id)body.target_user_id=String(tgt.user_id);
   if(tgt&&tgt.request_id)body.request_id=String(tgt.request_id);
   const j=await upApi('POST','/admin/setup-codes',body);
@@ -5031,8 +5059,9 @@ function fbEntryCard(e,now){
       (e.unread?'<button class="btn sm" data-fba="readentry" data-reqids="'+esc(reqIds)+'">Прочитано</button>':'')+
       delBtn+'</div>';
   }
+  const pCr=primary?Math.max(0,Number(primary.initial_credits)||0):0;
   const codeBar=primary
-    ?'<div class="rc-codebar"><b>'+esc(primary.code)+'</b><small>'+esc(primary.provider)+' · '+primary.uses+'/'+primary.max_uses+'</small>'+
+    ?'<div class="rc-codebar"><b>'+esc(primary.code)+'</b><small>'+esc(primary.provider)+(pCr?' · '+fmt(pCr)+' Cr':'')+' · '+primary.uses+'/'+primary.max_uses+'</small>'+
       (!hasActs?'<button class="btn dan sm rc-tr" data-fba="delentry" data-reqids="'+esc(reqIds)+'" data-codes="'+esc(codeIds)+'" aria-label="Удалить">'+ic('trash',14)+'</button>':'')+'</div>'
     :'';
   const extrasHtml=extras.map(c=>
@@ -5209,6 +5238,8 @@ $('#fbPageBody').addEventListener('click',async e=>{
     qTargetRender();
     const qn=$('#qNote');
     if(qn)qn.value=userLabel(Q_TARGET).slice(0,60);
+    const ql=$('#qLimit');
+    if(ql&&!ql.value.trim())ql.value='200000';
     const qb=$('#qBox');
     if(qb)setTimeout(()=>qb.scrollIntoView({behavior:'smooth',block:'start'}),60);
     hap();
@@ -5384,7 +5415,8 @@ async function redeemCode(raw){
   const code=(m?m[1]:String(raw||'')).trim();
   const info=await cloudJson('POST','/setup/check',{code:code});
   if(info.existing){
-    const ok=await dialog({title:'Перезаписать подключение?',text:'Системное подключение уже настроено. Оно будет заменено данными из нового кода, счётчик токенов обнулится.',ok:'Перезаписать'});
+    const addTxt=info.initial_credits>0?' На баланс будет дополнительно начислено '+fmtCr(info.initial_credits)+' VEYRA Credits.':'';
+    const ok=await dialog({title:'Применить новый промокод?',text:'Системное подключение обновится данными из нового промокода.'+addTxt,ok:'Применить'});
     if(!ok)return false;
   }
   const d=await cloudJson('POST','/setup/redeem',{code:code});
