@@ -1234,6 +1234,83 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 .ntf-sw.on{background:linear-gradient(155deg,#22c55e 0%,#16a34a 100%);box-shadow:inset 0 1px 2px rgba(255,255,255,.25),0 4px 12px -3px rgba(22,163,74,.5)}
 .ntf-sw.on i{background:#fff;transform:translateX(20px)}
 :root[data-theme="light"] .ntf-sw i{background:linear-gradient(155deg,#ffffff 0%,#f0f3fa 100%);box-shadow:0 2px 5px rgba(15,23,42,.28),0 1px 2px rgba(15,23,42,.16)}
+/* ---- Кошелёк пользователя (#wallet) и Финансовая админка (#finPage) ---- */
+#wallet,#finPage{position:absolute;inset:0;background:var(--bg);z-index:38;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:block}
+#finPage{z-index:39}
+#wallet.open,#finPage.open{transform:none}
+#wallet .sh,#finPage .sh{
+  position:absolute;top:0;left:0;right:0;z-index:8;
+  display:flex;align-items:center;gap:8px;
+  padding:max(12px,env(safe-area-inset-top)) 16px 10px;
+  pointer-events:none;background:transparent;
+}
+#wallet .sh > *,#finPage .sh > *{pointer-events:auto}
+#walBody,#finBody{
+  position:absolute;inset:0;overflow-y:auto;
+  padding:calc(max(12px,env(safe-area-inset-top)) + 60px) 16px max(34px,env(safe-area-inset-bottom));
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+#walBody h3,#finBody h3{margin:20px 0 8px 6px;font-size:13px;color:#8a8a8a;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+:root[data-theme="light"] #walBody h3,:root[data-theme="light"] #finBody h3{color:var(--muted)}
+:root.has-tg-back #walBack,:root.has-tg-back #finBack{display:none}
+.dr-wal{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 12px 2px;padding:10px 14px;border-radius:20px;background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);width:calc(100% - 24px);text-align:left;transition:transform .14s ease}
+.dr-wal:active{transform:scale(.98)}
+.dr-wal b{display:block;font-size:14.5px;font-weight:600}
+.dr-wal small{display:block;font-size:12px;color:var(--muted)}
+.dr-wal .dr-topup{flex:none;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
+:root[data-theme="light"] .dr-wal .dr-topup{color:#fff}
+.wal-hero{padding:18px 18px 16px;text-align:center}
+.wal-lbl{font-size:13px;color:var(--muted);font-weight:500}
+.wal-num{font-size:32px;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px;line-height:1.15}
+.wal-unit{font-size:13px;color:var(--muted);font-weight:600}
+.wal-sub{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.wal-mode{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(251,191,36,.16);color:#f5b942}
+:root[data-theme="light"] .wal-mode{background:#fff1d6;color:#9a5b00}
+.pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 4px}
+.pkg{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:14px 13px;border-radius:24px;background:var(--flt-bg);box-shadow:var(--flt-sh);text-align:left;transition:transform .14s ease}
+.pkg:active{transform:scale(.97)}
+.pkg.pop{background:var(--sel-bg);box-shadow:var(--sel-sh)}
+.pkg-b{display:inline-block;align-self:flex-start;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(74,222,128,.16);color:#4ade80}
+:root[data-theme="light"] .pkg-b{background:#dff3e4;color:#1f7a3a}
+.pkg-t{font-size:12.5px;color:var(--muted);font-weight:500}
+.pkg-cr{font-size:18px;font-weight:800;line-height:1.2}
+.pkg-cr small{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:1px}
+.pkg-st{display:inline-flex;align-items:center;justify-content:center;gap:4px;margin-top:2px;height:34px;border-radius:999px;background:var(--pri-bg);color:#121212;font-size:14px;font-weight:700;box-shadow:var(--pri-sh)}
+:root[data-theme="light"] .pkg-st{color:#fff}
+.tx-list{display:flex;flex-direction:column;gap:8px}
+.tx{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:20px;background:var(--flt-bg);box-shadow:var(--flt-sh-sm)}
+.tx-l{min-width:0;flex:1}
+.tx-l b{display:block;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-l small{display:block;font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-r{flex:none;text-align:right}
+.tx-r b{display:block;font-size:14.5px;font-weight:700}
+.tx-r b.pos{color:var(--ok)}
+.tx-r b.neg{color:var(--text);opacity:.88}
+.tx-r small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+/* Финансовая админка */
+.fin-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:2px 0 10px;padding:2px 0 6px}
+.fin-tab{height:38px;padding:0 6px;border:0;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--flt-bg-hi);box-shadow:var(--flt-sh-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .14s ease,background .16s ease,color .16s ease}
+.fin-tab:active{transform:scale(.96)}
+.fin-tab.on{background:var(--pri-bg);color:#121212;box-shadow:var(--pri-sh)}
+:root[data-theme="light"] .fin-tab.on{color:#fff}
+.fin-kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}
+.kpi{padding:12px 14px;border-radius:22px;background:var(--flt-bg);box-shadow:var(--flt-sh)}
+.kpi small{display:block;font-size:12px;color:var(--muted)}
+.kpi b{display:block;font-size:19px;font-weight:800;margin-top:4px;line-height:1.2}
+.kpi span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.kpi b.pos{color:var(--ok)}
+.kpi b.neg{color:var(--danger)}
+.fin-per{display:flex;gap:6px;margin:0 0 10px;overflow-x:auto;scrollbar-width:none;padding:4px 0 6px}
+.fin-per::-webkit-scrollbar{display:none}
+.fin-u{padding:11px 13px;border-radius:22px;background:var(--flt-bg);box-shadow:var(--flt-sh-sm);margin-bottom:9px}
+.fin-u-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fin-u-who{min-width:0;flex:1}
+.fin-u-who b{display:block;font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin-u-who small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.fin-u-bal{flex:none;text-align:right;font-size:14.5px;font-weight:700}
+.fin-u-bal small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.fin-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.fin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 </style>
 </head>
 <body>
@@ -1267,6 +1344,7 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
     </div>
     <button class="newc" id="btnNew"></button>
     <div class="list" id="chatList"></div>
+    <button class="dr-wal" id="btnDrawerWal" hidden><span><b id="drWalBal">0</b><small>VEYRA Credits</small></span><span class="dr-topup">Пополнить</span></button>
     <button class="prof" id="btnSettings"><div class="av" id="av">A</div><div class="pn" id="pname">Гость</div><span id="gIc"></span></button>
   </aside>
 
@@ -1298,6 +1376,19 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
         <div class="uh-row" id="fbRevHead" style="margin-top:4px"><h3>Отзывы</h3><button class="btn sm" id="fbRevReadAll" data-fba="readall" data-scope="rev" hidden>Прочитать все</button></div>
         <div id="fbRevList"></div>
       </div>
+    </div>
+  </section>
+
+  <section id="wallet">
+    <div class="sh"><button class="ib" id="walBack" aria-label="Назад"></button><h2>VEYRA Credits</h2><button class="ib" id="walRefresh" aria-label="Обновить" style="margin-left:auto"></button></div>
+    <div id="walBody"></div>
+  </section>
+
+  <section id="finPage">
+    <div class="sh"><button class="ib" id="finBack" aria-label="Назад"></button><h2>Финансы</h2><button class="ib" id="finRefresh" aria-label="Обновить" style="margin-left:auto"></button></div>
+    <div id="finBody">
+      <div class="fin-tabs" id="finTabs"></div>
+      <div id="finContent"></div>
     </div>
   </section>
 
@@ -1788,6 +1879,7 @@ function classify(e,ctx){
 const ACT={
   retry:{id:'retry',label:'Повторить',kind:'pri'},
   model:{id:'model',label:'Выбрать другую модель',kind:'pri'},
+  topup:{id:'topup',label:'Пополнить баланс',kind:'pri'},
   settings:{id:'settings',label:'Открыть настройки',kind:'pri'},
   text:{id:'text',label:'Отправить без файлов',kind:''},
   noweb:{id:'noweb',label:'Отправить без поиска',kind:'pri'},
@@ -1907,7 +1999,7 @@ function copyFor(kind,ctx,e){
     case 'nocredits':
       return {icon:'warn',title:'Закончились VEYRA Credits',
         text:'На вашем балансе не осталось VEYRA Credits. Пополните баланс или примените новый промокод, чтобы продолжить общение.',
-        tips:['Откройте настройки, чтобы проверить баланс VEYRA Credits или ввести промокод.','Либо переключитесь на свой API-ключ.'],acts:['settings','model','close']};
+        tips:['Нажмите «Пополнить баланс», чтобы выбрать пакет VEYRA Credits и сразу продолжить работу.','Либо переключитесь на свой API-ключ.'],acts:['topup','model','close']};
     case 'cloudserver':
       return {icon:'warn',title:'Сервер приложения временно недоступен',text:'Это сбой на стороне приложения, не ваш. Повторите попытку чуть позже.',acts:['ok']};
     case 'msg': {
@@ -1952,7 +2044,8 @@ async function showError(e,ctx){
   if(e&&e.name==='AbortError')return null;
   const info=errInfo(e,ctx);
   const act=await notice(info.dialog);
-  if(act==='model')openPicker();
+  if(act==='topup')openWallet();
+  else if(act==='model')openPicker();
   else if(act==='settings')openSettings();
   else if(act==='newchat')startNew();
   return act;
@@ -3546,7 +3639,8 @@ async function showGenError(g){
   if(info.kind==='noweb'&&g.webMode){capSetWeb(g.pid,g.model,false);syncWebBtn()}
   const act=await notice(info.dialog);
   const o=g.opts||{};
-  if(act==='model')openPicker();
+  if(act==='topup')openWallet();
+  else if(act==='model')openPicker();
   else if(act==='settings')openSettings();
   else if(act==='newchat')startNew();
   else if(act==='retry')generate({force:o.force,noWeb:o.noWeb});
@@ -3922,7 +4016,8 @@ function openConn(view){
 
 /* ---------- drawer ---------- */
 let dOpen=false;
-function openDrawer(){if(dOpen)return;dOpen=true;$('#q').value='';renderDrawer();$('#drawer').classList.add('open');$('#scrim').classList.add('on');pushLayer(closeDrawer);inp.blur()}
+function syncDrawerWal(){const b=$('#btnDrawerWal');if(!b)return;const c=S.providers.managed,show=isAvail('managed')||(c.credits&&c.credits.enabled)||isAdmin;b.hidden=!show;if(show)$('#drWalBal').textContent=fmtCr((c.credits&&c.credits.balance)||0)}
+function openDrawer(){if(dOpen)return;dOpen=true;$('#q').value='';renderDrawer();syncDrawerWal();$('#drawer').classList.add('open');$('#scrim').classList.add('on');pushLayer(closeDrawer);inp.blur()}
 function closeDrawer(){if(!dOpen)return;dOpen=false;$('#drawer').classList.remove('open');$('#scrim').classList.remove('on');popLayer(closeDrawer)}
 $('#btnMenu').addEventListener('click',openDrawer);
 $('#scrim').addEventListener('click',closeDrawer);
@@ -3971,6 +4066,7 @@ function menuSheet(chat,anchor){
   });
 }
 $('#btnSettings').addEventListener('click',()=>{closeDrawer();openSettings()});
+$('#btnDrawerWal').addEventListener('click',()=>{closeDrawer();openWallet()});
 
 /* ---------- форма отзывов и предложений (для пользователей) ---------- */
 const FB_TYPES=[
@@ -4096,7 +4192,7 @@ document.addEventListener('touchend',e=>{
   const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(Math.abs(dy)>70||Date.now()-st>700)return;
   if(V.open)return;
-  if(!dOpen&&!bootVisible()&&!$('#settings').classList.contains('open')&&!$('#upd').classList.contains('open')&&!$('#fbPage').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
+  if(!dOpen&&!bootVisible()&&!$('#settings').classList.contains('open')&&!$('#upd').classList.contains('open')&&!$('#fbPage').classList.contains('open')&&!$('#wallet').classList.contains('open')&&!$('#finPage').classList.contains('open')&&!popOpen&&sx<44&&dx>70)openDrawer();
   else if(dOpen&&dx<-70)closeDrawer();
 },{passive:true});
 
@@ -4293,19 +4389,20 @@ async function adminRequest(method,text){
 function fmtCr(n){return Math.max(0,Math.round(Number(n)||0)).toLocaleString('ru-RU')}
 function renderUsage(){
   const el=$('#usage');if(!el)return;
-  const items=PROVIDERS.filter(p=>{const c=S.providers[p.id];return isAvail(p.id)||c.used.in+c.used.out>0||(p.managed&&c.credits&&c.credits.enabled)});
+  const items=PROVIDERS.filter(p=>{const c=S.providers[p.id];return isAvail(p.id)||c.used.in+c.used.out>0||(p.managed&&((c.credits&&c.credits.enabled)||isAdmin))});
   if(!items.length){el.innerHTML='<div class="uc"><div class="ul">Пока нет данных. Добавьте API ключ ниже.</div></div>';return}
   el.innerHTML=items.map(p=>{
     const c=S.providers[p.id],tot=c.used.in+c.used.out;
-    if(p.managed&&c.credits&&c.credits.enabled){
-      const cr=c.credits,bal=Math.max(0,Number(cr.balance)||0),gr=Math.max(bal,Number(cr.total_granted)||0);
+    if(p.managed&&((c.credits&&c.credits.enabled)||isAdmin||isAvail('managed'))){
+      const cr=c.credits||{balance:0,total_granted:0,total_spent:0},bal=Math.max(0,Number(cr.balance)||0),gr=Math.max(bal,Number(cr.total_granted)||0);
       const pc=gr>0?Math.min(100,bal/gr*100):0;
       const top=Object.keys(c.by).sort((a,b)=>(c.by[b].in+c.by[b].out)-(c.by[a].in+c.by[a].out)).slice(0,4)
         .map(m=>'<div class="ul sub">'+esc(m)+' — '+fmt(c.by[m].in+c.by[m].out)+'</div>').join('');
       return '<div class="uc" data-pid="managed"><div class="uh"><b>VEYRA Credits</b><button class="ib" data-act="crref" aria-label="Обновить баланс">'+ic('refresh',18)+'</button></div>'+
         '<div class="ul">Баланс: <em>'+fmtCr(bal)+'</em> VEYRA Credits</div>'+
         '<div class="ul sub">Начислено: '+fmtCr(cr.total_granted)+' · Потрачено: '+fmtCr(cr.total_spent)+'</div>'+
-        (gr>0?'<div class="bar"><i class="'+(pc<15||bal<=0?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>':'')+top+'</div>';
+        (gr>0?'<div class="bar"><i class="'+(pc<15||bal<=0?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>':'')+
+        '<div class="btns one"><button class="btn pri sm" data-act="openwal">Пополнить</button><button class="btn sm" data-act="openwalhist">История</button></div>'+top+'</div>';
     }
     let line='',bar='';
     if(p.balance&&c.bal){line='<div class="ul">Баланс: <em>'+esc(c.bal.text)+'</em></div>'}
@@ -4424,6 +4521,8 @@ onSet('click',async e=>{
   }
   else if(a==='madd'){addModel(pv,pid)}
   else if(a==='openupd'){openUpd()}
+  else if(a==='openwal'){openWallet()}
+  else if(a==='openwalhist'){openWallet(true)}
   else if(a==='openfb'){openFeedback()}
   else if(a==='reqcode'){openCodeRequest()}
   else if(a==='openmanual'){openManual()}
@@ -5283,6 +5382,8 @@ function syncNotifySw(){
 function buildUpd(){
   if(UP.built)return;UP.built=true;
   $('#updBody').innerHTML=
+   '<h3>Монетизация</h3><button class="manbtn" data-u="openfinpage"><span>Финансы и VEYRA Credits</span><span class="chev" id="finUpdChev"></span></button>'+
+   '<p class="hint">Балансы пользователей, цены моделей, пакеты Stars, тестовый режим и статистика.</p>'+
    '<h3>Обратная связь</h3><button class="manbtn" data-u="openfbpage"><span>Обращения пользователей</span><span class="mright"><span class="fb-badge" id="fbBadge" hidden></span><span class="chev" id="fbUpdChev"></span></span></button>'+
    '<div class="gb ntf-box">'+
      '<div class="ntf-row"><div class="ntf-lbl"><b>Уведомления о заявках</b><small>Присылать в бот при новой заявке на код</small></div><button class="ntf-sw" id="ntfReq" data-u="ntftog" data-k="req" role="switch" aria-checked="true" aria-label="Уведомления о заявках"><i></i></button></div>'+
@@ -5305,6 +5406,7 @@ function buildUpd(){
    '<div id="uProg" style="margin-top:14px"></div>'+
    '<div class="uh-row"><h3>История рассылок</h3><button class="btn dan sm" id="uHistClear" data-u="bclear" hidden>Очистить</button></div><div id="uHist"></div>';
   const fc=$('#fbUpdChev');if(fc)fc.innerHTML=ic('next',18);
+  const fnc=$('#finUpdChev');if(fnc)fnc.innerHTML=ic('next',18);
   upPrev();upProgress();upHist();syncFbBadges();syncNotifySw();
 }
 function openUpd(){
@@ -5350,6 +5452,7 @@ $('#updBody').addEventListener('click',async e=>{
     b.disabled=false;
   }
   else if(a==='openfbpage'){openFbPage()}
+  else if(a==='openfinpage'){openFinPage()}
   else if(a==='ntftog'){
     const k=b.dataset.k;if(k!=='req'&&k!=='rev')return;
     const prev=Object.assign({},adminNotify);
@@ -5394,6 +5497,494 @@ $('#updBody').addEventListener('click',async e=>{
       if(UP.cur&&UP.cur.status!=='sending'){UP.cur=null;upProgress()}
       upHist();toast('История рассылок очищена');
     }catch(err){showError(err,{where:'cloud',title:'Не удалось очистить историю'})}
+  }
+});
+
+
+/* ---------- Кошелёк VEYRA Credits и пополнение (Этапы 4 и 5) ---------- */
+const WAL={data:null,loading:false,scrollHist:false};
+const TX_LBL={
+  grant:'Промокод / бонус',
+  purchase:'Покупка (Telegram Stars)',
+  test_purchase:'Тестовая покупка',
+  admin_grant:'Начисление админом',
+  admin_debit:'Списание админом',
+  spend:'Запрос к ИИ'
+};
+function txDesc(tx){
+  let meta={};try{meta=JSON.parse(tx.meta||'{}')||{}}catch(e){}
+  if(tx.type==='spend'){
+    const m=meta.model?String(meta.model).split('/').pop():'Модель';
+    const io=(meta.in||meta.out)?(' · '+fmt(meta.in||0)+' / '+fmt(meta.out||0)+' ток.'):'';
+    return {t:m,s:fbDate(tx.created_at)+io};
+  }
+  if(tx.type==='purchase'||tx.type==='test_purchase'){
+    return {t:TX_LBL[tx.type]+(meta.stars?' ('+meta.stars+' ⭐)':''),s:fbDate(tx.created_at)};
+  }
+  if(tx.type==='grant'&&meta.code){
+    return {t:'Промокод '+meta.code,s:fbDate(tx.created_at)};
+  }
+  return {t:TX_LBL[tx.type]||tx.type,s:fbDate(tx.created_at)+(meta.reason?' · '+meta.reason:'')};
+}
+function renderTxList(list){
+  if(!list||!list.length)return '<div class="hint" style="text-align:center;padding:18px 8px">Операций пока нет.</div>';
+  return '<div class="tx-list">'+list.map(tx=>{
+    const d=txDesc(tx),amt=Number(tx.amount)||0,pos=amt>=0;
+    return '<div class="tx"><div class="tx-l"><b>'+esc(d.t)+'</b><small>'+esc(d.s)+'</small></div>'+
+      '<div class="tx-r"><b class="'+(pos?'pos':'neg')+'">'+(pos?'+':'−')+fmtCr(Math.abs(amt))+'</b>'+
+      '<small>Остаток: '+fmtCr(tx.balance_after)+'</small></div></div>';
+  }).join('')+'</div>';
+}
+function renderWallet(){
+  const el=$('#walBody');if(!el)return;
+  const d=WAL.data,c=S.providers.managed;
+  const cr=d||c.credits||{balance:0,total_granted:0,total_spent:0};
+  const bal=Math.max(0,Number(cr.balance)||0),gr=Math.max(bal,Number(cr.total_granted)||0);
+  const pc=gr>0?Math.min(100,bal/gr*100):0;
+  const pkgs=(d&&Array.isArray(d.packages))?d.packages:[];
+  const testMode=!!(d&&d.test_mode);
+
+  const pkgHtml=pkgs.length
+    ?'<div class="pkg-grid">'+pkgs.map(p=>{
+        const pop=!!(p.badge&&/попул/i.test(p.badge));
+        return '<button class="pkg'+(pop?' pop':'')+'" data-w="buy" data-pkg="'+esc(p.id)+'">'+
+          (p.badge?'<span class="pkg-b">'+esc(p.badge)+'</span>':'')+
+          '<div><div class="pkg-t">'+esc(p.title||'Пакет')+'</div><div class="pkg-cr">'+fmtCr(p.credits)+'<small>VEYRA Credits</small></div></div>'+
+          '<span class="pkg-st">'+p.stars+' ⭐</span></button>';
+      }).join('')+'</div>'
+    :(WAL.loading?'<div class="hint" style="text-align:center">Загрузка пакетов…</div>':'<div class="hint">Пакеты пополнения пока не настроены.</div>');
+
+  el.innerHTML=
+    '<div class="uc wal-hero">'+
+      '<div class="wal-lbl">Текущий баланс</div>'+
+      '<div class="wal-num">'+fmtCr(bal)+'</div>'+
+      '<div class="wal-unit">VEYRA Credits</div>'+
+      '<div class="wal-sub"><span>Начислено: '+fmtCr(cr.total_granted)+'</span><span>Потрачено: '+fmtCr(cr.total_spent)+'</span></div>'+
+      (gr>0?'<div class="bar" style="margin-top:12px"><i class="'+(pc<15||bal<=0?'low':'')+'" style="width:'+pc.toFixed(1)+'%"></i></div>':'')+
+      (testMode?'<div class="wal-mode">🧪 Тестовый режим · реальные ⭐ не списываются</div>':'')+
+    '</div>'+
+    '<h3>Пополнить через Telegram Stars</h3>'+pkgHtml+
+    '<p class="hint">'+(testMode?'Сейчас включён тестовый режим оплаты: вы можете нажать на любой пакет и проверить зачисление без списания реальных Telegram Stars.':'Кредиты зачисляются автоматически сразу после подтверждения оплаты в Telegram Stars.')+'</p>'+
+    '<h3>Промокод</h3><div class="gb"><input id="walCode" class="cn-promo" placeholder="Промокод" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<div class="btns one"><button class="btn pri" data-w="redeem">Применить код</button></div></div>'+
+    '<h3 id="walHistHead">История операций</h3>'+(WAL.loading&&!d?'<div class="hint" style="text-align:center">Загрузка истории…</div>':renderTxList(d&&d.transactions));
+
+  if(WAL.scrollHist){
+    WAL.scrollHist=false;
+    const hh=$('#walHistHead');
+    if(hh)setTimeout(()=>hh.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
+}
+async function loadWallet(silent){
+  WAL.loading=true;renderWallet();
+  try{
+    const j=await cloudJson('GET','/credits');
+    WAL.data=j;
+    S.providers.managed.credits={enabled:j.enabled,balance:j.balance,reserved:j.reserved,available:j.available,total_granted:j.total_granted,total_spent:j.total_spent};
+    save();renderUsageSafe();syncDrawerWal();
+  }catch(e){
+    if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить кошелёк',noNav:true});
+  }
+  WAL.loading=false;renderWallet();
+}
+function openWallet(scrollHist){
+  WAL.scrollHist=!!scrollHist;
+  if($('#wallet').classList.contains('open')){loadWallet(true);return}
+  $('#wallet').classList.add('open');pushLayer(closeWallet);
+  renderWallet();loadWallet(false);
+}
+function closeWallet(){
+  if(!$('#wallet').classList.contains('open'))return;
+  $('#wallet').classList.remove('open');popLayer(closeWallet);
+}
+async function buyPackage(pkgId,btn){
+  if(btn)btn.disabled=true;
+  try{
+    const inv=await cloudJson('POST','/payments/invoice',{package_id:pkgId});
+    const pkg=inv.package||{};
+    if(inv.mode==='test'){
+      const act=await notice({icon:'ok',title:'Тестовая оплата',
+        text:'Пакет «'+(pkg.title||'VEYRA Credits')+'»: +'+fmtCr(pkg.credits)+' VEYRA Credits за '+pkg.stars+' ⭐.\n\nРеальные Telegram Stars НЕ спишутся — это полная имитация оплаты и зачисления на баланс.',
+        actions:[{id:'pay',label:'Подтвердить тест (+'+fmtCr(pkg.credits)+' Cr)',kind:'pri'},{id:'cancel',label:'Отмена',kind:'ghost'}],dismiss:'cancel'});
+      if(act==='pay'){
+        const res=await cloudJson('POST','/payments/test-complete',{payment_id:inv.payment_id});
+        if(res.credits){S.providers.managed.credits=res.credits;save();renderUsageSafe();syncDrawerWal()}
+        hap('medium');toast('Тест пройден: +'+fmtCr(res.added)+' VEYRA Credits');
+        await loadWallet(true);
+      }
+    }else if(inv.mode==='stars'&&inv.invoice_url){
+      if(tg&&tg.openInvoice){
+        tg.openInvoice(inv.invoice_url,async status=>{
+          if(status==='paid'){
+            hap('medium');toast('Оплата прошла! Зачисляем кредиты…');
+            for(let k=0;k<6;k++){
+              await sleepMs(700);
+              try{
+                const st=await cloudJson('GET','/payments/status?id='+encodeURIComponent(inv.payment_id));
+                if(st.status==='paid'){
+                  if(st.credits){S.providers.managed.credits=st.credits;save();renderUsageSafe();syncDrawerWal()}
+                  await loadWallet(true);
+                  toast('Начислено +'+fmtCr(st.added)+' VEYRA Credits!');
+                  return;
+                }
+              }catch(e){}
+            }
+            await loadWallet(true);
+          }else if(status==='failed'){
+            warnBox('Оплата не прошла','Telegram не завершил платёж. Попробуйте ещё раз.');
+          }
+        });
+      }else{
+        infoBox('Откройте в Telegram','Оплата через Telegram Stars работает только внутри клиента Telegram.');
+      }
+    }
+  }catch(err){
+    showError(err,{where:'cloud',title:'Не удалось оформить оплату',noNav:true});
+  }
+  if(btn)btn.disabled=false;
+}
+$('#walBack').innerHTML=ic('back',24);
+$('#walBack').addEventListener('click',closeWallet);
+$('#walRefresh').innerHTML=ic('refresh',20);
+$('#walRefresh').addEventListener('click',()=>{hap();loadWallet(false)});
+$('#walBody').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-w]');if(!b)return;
+  const a=b.dataset.w;
+  if(a==='buy'){await buyPackage(b.dataset.pkg,b)}
+  else if(a==='redeem'){
+    const ci=$('#walCode'),v=ci?ci.value.trim():'';
+    if(!v){infoBox('Введите промокод','Вставьте промокод или ссылку быстрой настройки.');return}
+    b.disabled=true;
+    try{if(await redeemCode(v)){if(ci)ci.value='';toast('Промокод применён');await loadWallet(true)}}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось применить промокод',noNav:true})}
+    b.disabled=false;
+  }
+});
+
+/* ---------- Финансовая админ-панель (Этап 6) ---------- */
+const FIN={tab:'stats',days:30,stats:null,users:[],q:'',pricing:[],recentModels:[],starRate:0.013,packages:[],testMode:true,loading:false};
+const fmtUsd=n=>'$'+(Number(n)||0).toFixed(Math.abs(Number(n)||0)<1?4:2);
+
+function renderFinTabs(){
+  const el=$('#finTabs');if(!el)return;
+  const tabs=[['stats','Сводка'],['users','Балансы'],['pricing','Цены'],['packs','Пакеты']];
+  el.innerHTML=tabs.map(t=>'<button class="fin-tab'+(FIN.tab===t[0]?' on':'')+'" data-fin="tab" data-t="'+t[0]+'">'+t[1]+'</button>').join('');
+}
+function renderFin(){
+  renderFinTabs();
+  const el=$('#finContent');if(!el)return;
+
+  if(FIN.tab==='stats'){
+    const s=FIN.stats;
+    const pers=[[1,'Сегодня'],[7,'7 дней'],[30,'30 дней'],[0,'Всё время']];
+    const perHtml='<div class="fin-per">'+pers.map(x=>'<button class="fb-chip'+(FIN.days===x[0]?' on':'')+'" data-fin="per" data-d="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
+    if(!s){el.innerHTML=perHtml+'<div class="fb-empty">Загрузка статистики…</div>';return}
+    const profCls=s.profit_usd>0?'pos':(s.profit_usd<0?'neg':'');
+    el.innerHTML=
+      '<div class="gb ntf-box" style="margin-top:2px;margin-bottom:12px">'+
+        '<div class="ntf-row"><div class="ntf-lbl"><b>Тестовый режим оплаты ⭐</b><small>'+(s.test_mode?'Включён · покупки имитируются без списания реальных Stars':'Выключен · боевой приём реальных Telegram Stars')+'</small></div>'+
+        '<button class="ntf-sw'+(s.test_mode?' on':'')+'" data-fin="testmode" role="switch" aria-checked="'+!!s.test_mode+'" aria-label="Тестовый режим оплаты"><i></i></button></div>'+
+      '</div>'+
+      perHtml+
+      '<div class="fin-kpi">'+
+        '<div class="kpi"><small>Выручка (реальная)</small><b>'+fmtCr(s.revenue_stars)+' ⭐</b><span>'+fmtUsd(s.revenue_usd)+' · '+s.paid_count+' опл.</span></div>'+
+        '<div class="kpi"><small>Расходы API</small><b>'+fmtUsd(s.api_cost_usd)+'</b><span>'+fmtCr(s.requests_count)+' запр.</span></div>'+
+        '<div class="kpi"><small>Чистая прибыль</small><b class="'+profCls+'">'+(s.profit_usd>=0?'+':'')+fmtUsd(s.profit_usd)+'</b><span>курс 1 ⭐ = $'+s.star_usd_rate+'</span></div>'+
+        '<div class="kpi"><small>Списано кредитов</small><b>'+fmt(s.credits_spent)+'</b><span>'+fmt(s.prompt_tokens)+' / '+fmt(s.completion_tokens)+' ток.</span></div>'+
+      '</div>'+
+      '<div class="uc"><div class="uh"><b>Обязательства (остатки)</b></div>'+
+        '<div class="ul">На руках у пользователей: <em>'+fmtCr(s.total_balances)+' Cr</em> ('+s.wallet_users+' чел.)</div>'+
+        '<div class="ul sub">Всего выдано: '+fmtCr(s.total_granted_all)+' · Потрачено: '+fmtCr(s.total_spent_all)+'</div></div>'+
+      (s.test_count?'<div class="uc"><div class="uh"><b>Тестовые оплаты</b><button class="btn dan sm" data-fin="cleartests">Очистить</button></div>'+
+        '<div class="ul sub">Проведено '+s.test_count+' тестов на '+fmtCr(s.test_stars)+' ⭐ (+'+fmtCr(s.test_credits)+' Cr). В реальную выручку не входят.</div></div>':'')+
+      '<h3>Расход по моделям</h3>'+
+      (s.top_models&&s.top_models.length
+        ?s.top_models.map(m=>'<div class="uc" style="padding:10px 14px;margin-bottom:8px"><div class="uh"><b style="font-size:14px">'+esc(m.model)+'</b><small style="color:var(--muted)">'+fmtUsd(m.cost)+'</small></div>'+
+          '<div class="ul sub">'+esc(m.provider)+' · '+m.reqs+' запр. · '+fmt(m.pin)+'/'+fmt(m.pout)+' ток. · −'+fmtCr(m.cr)+' Cr</div></div>').join('')
+        :'<div class="hint">Данных о запросах за этот период пока нет.</div>');
+    return;
+  }
+
+  if(FIN.tab==='users'){
+    const q=(FIN.q||'').trim().toLowerCase();
+    const list=FIN.users.filter(u=>!q||String(u.user_id).indexOf(q)>=0||String(u.first_name||'').toLowerCase().indexOf(q)>=0||String(u.username||'').toLowerCase().indexOf(q)>=0);
+    el.innerHTML=
+      '<div class="row" style="margin:2px 0 12px;gap:8px">'+
+        '<label class="search" style="flex:1"><span>'+ic('search',16)+'</span><input id="finSearch" value="'+esc(FIN.q)+'" placeholder="Поиск по имени, @username, ID" autocomplete="off"></label>'+
+        '<button class="btn pri sm" data-fin="adjbyid" style="height:44px;padding:0 14px;white-space:nowrap">+ По ID</button>'+
+      '</div>'+
+      (FIN.loading&&!FIN.users.length?'<div class="fb-empty">Загрузка пользователей…</div>':
+        !list.length?'<div class="fb-empty">Пользователи не найдены.</div>':
+        list.map(u=>{
+          const sub=[u.username?'@'+String(u.username).replace(/^@/,''):'','ID '+u.user_id,u.has_managed?'промокод':'свой API'].filter(Boolean).join(' · ');
+          return '<div class="fin-u"><div class="fin-u-top"><div class="fin-u-who"><b>'+esc(u.first_name||('ID '+u.user_id))+'</b><small>'+esc(sub)+'</small></div>'+
+            '<div class="fin-u-bal">'+fmtCr(u.balance)+'<small>потр. '+fmt(u.total_spent)+'</small></div></div>'+
+            '<div class="rc-acts">'+
+              '<button class="btn pri sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="1">+ Начислить</button>'+
+              '<button class="btn sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="-1">− Списать</button>'+
+              '<button class="btn sm" data-fin="utx" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'">История</button>'+
+            '</div></div>';
+        }).join(''));
+    return;
+  }
+
+  if(FIN.tab==='pricing'){
+    const recChips=FIN.recentModels.slice(0,10).map(m=>'<button class="fb-chip" data-fin="pickm" data-m="'+esc(m)+'">'+esc(m.split('/').pop())+'</button>').join('');
+    el.innerHTML=
+      '<h3>Настройка цены модели</h3><div class="gb">'+
+        '<label>Модель (точное ID)</label><input id="prModel" placeholder="Например: google/gemini-2.5-flash" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+        (recChips?'<div class="fin-chips">'+recChips+'</div>':'')+
+        '<div class="fin-grid2">'+
+          '<div><label>Кредиты / 1 вх. ток.</label><input id="prIn" inputmode="decimal" value="1" placeholder="1"></div>'+
+          '<div><label>Кредиты / 1 вых. ток.</label><input id="prOut" inputmode="decimal" value="1" placeholder="1"></div>'+
+        '</div>'+
+        '<div class="fin-grid2">'+
+          '<div><label>Себест. вход $/1M</label><input id="prCostIn" inputmode="decimal" value="0" placeholder="0.30"></div>'+
+          '<div><label>Себест. выход $/1M</label><input id="prCostOut" inputmode="decimal" value="0" placeholder="2.50"></div>'+
+        '</div>'+
+        '<p class="hint" style="margin:8px 0 0">По умолчанию для всех моделей: 1 токен = 1 VEYRA Credit. Себестоимость $/1M используется для расчёта расходов и прибыли в Сводке.</p>'+
+        '<div class="btns one"><button class="btn pri" data-fin="prsave">Сохранить цену</button></div>'+
+      '</div>'+
+      '<h3>Настроенные модели</h3>'+
+      (FIN.pricing.length
+        ?FIN.pricing.map(x=>'<div class="uc" style="padding:10px 14px;margin-bottom:8px"><div class="uh"><b style="font-size:14px">'+esc(x.model)+'</b>'+
+            '<div style="display:flex;gap:6px"><button class="btn sm" data-fin="predit" data-m="'+esc(x.model)+'">Изм.</button>'+
+            '<button class="btn dan sm" data-fin="prdel" data-m="'+esc(x.model)+'" style="width:32px;height:32px;padding:0;display:grid;place-items:center">'+ic('trash',15)+'</button></div></div>'+
+            '<div class="ul sub">Списание: ×'+x.price_in+' вх. / ×'+x.price_out+' вых. · Себест.: $'+x.cost_in_usd+' / $'+x.cost_out_usd+' за 1M</div></div>').join('')
+        :'<div class="hint">Особые тарифы не заданы — все модели списывают 1:1 по токенам провайдера.</div>')+
+      '<h3>Курс Telegram Stars</h3><div class="gb">'+
+        '<label>Выплата за 1 ⭐ (в USD)</label><input id="prStarRate" inputmode="decimal" value="'+esc(FIN.starRate)+'">'+
+        '<div class="btns one"><button class="btn" data-fin="ratesave">Сохранить курс</button></div></div>';
+    return;
+  }
+
+  if(FIN.tab==='packs'){
+    el.innerHTML=
+      '<div class="gb ntf-box" style="margin-top:2px;margin-bottom:12px">'+
+        '<div class="ntf-row"><div class="ntf-lbl"><b>Тестовый режим оплаты ⭐</b><small>'+(FIN.testMode?'Включён · без списания реальных Stars':'Выключен · реальные платежи Telegram Stars')+'</small></div>'+
+        '<button class="ntf-sw'+(FIN.testMode?' on':'')+'" data-fin="testmode" role="switch" aria-checked="'+!!FIN.testMode+'"><i></i></button></div>'+
+      '</div>'+
+      '<h3>Пакеты VEYRA Credits</h3>'+
+      FIN.packages.map((p,i)=>
+        '<div class="uc" style="padding:11px 14px;margin-bottom:9px"><div class="uh"><b>'+esc(p.title)+' · '+fmtCr(p.credits)+' Cr</b>'+
+          '<div style="display:flex;gap:6px"><button class="btn sm" data-fin="pkedit" data-i="'+i+'">Изм.</button>'+
+          '<button class="btn dan sm" data-fin="pkdel" data-i="'+i+'" style="width:32px;height:32px;padding:0;display:grid;place-items:center">'+ic('trash',15)+'</button></div></div>'+
+          '<div class="ul sub">'+p.stars+' ⭐'+(p.badge?' · '+esc(p.badge):'')+(p.active===false?' · скрыт':'')+'</div></div>'
+      ).join('')+
+      '<div class="btns one"><button class="btn pri" data-fin="pkadd">+ Добавить пакет</button><button class="btn" data-fin="pkreset">По умолчанию</button></div>';
+  }
+}
+
+async function loadFin(silent){
+  FIN.loading=true;renderFin();
+  try{
+    if(FIN.tab==='stats'){
+      const j=await upApi('GET','/admin/finance/stats?days='+FIN.days);
+      FIN.stats=j;FIN.testMode=!!j.test_mode;FIN.starRate=j.star_usd_rate||0.013;
+    }else if(FIN.tab==='users'){
+      const j=await upApi('GET','/admin/finance/users');
+      FIN.users=Array.isArray(j.items)?j.items:[];
+    }else if(FIN.tab==='pricing'){
+      const j=await upApi('GET','/admin/finance/pricing');
+      FIN.pricing=Array.isArray(j.items)?j.items:[];
+      FIN.recentModels=Array.isArray(j.recent_models)?j.recent_models:[];
+      FIN.starRate=j.star_usd_rate||0.013;
+    }else if(FIN.tab==='packs'){
+      const j=await upApi('GET','/admin/finance/packages');
+      FIN.packages=Array.isArray(j.packages)?j.packages:[];
+      FIN.testMode=!!j.test_mode;
+    }
+  }catch(e){
+    if(!silent)showError(e,{where:'cloud',title:'Не удалось загрузить данные финансов',noNav:true});
+  }
+  FIN.loading=false;renderFin();
+}
+function openFinPage(){
+  if(!isAdmin||$('#finPage').classList.contains('open'))return;
+  $('#finPage').classList.add('open');pushLayer(closeFinPage);
+  loadFin(false);
+}
+function closeFinPage(){
+  if(!$('#finPage').classList.contains('open'))return;
+  $('#finPage').classList.remove('open');popLayer(closeFinPage);
+}
+function openAdjustDialog(uid,name,dir){
+  const d=$('#dlg');if(d.classList.contains('on'))return;
+  const isAdd=dir>=0;
+  d.classList.remove('context');
+  d.innerHTML=
+    '<div class="dcard fb" role="dialog" aria-modal="true">'+
+      '<div class="fb-h"><h4>'+(isAdd?'Начислить кредиты':'Списать кредиты')+'</h4><button class="ib" data-fa="close" aria-label="Закрыть">'+ic('x',20)+'</button></div>'+
+      '<p class="hint" style="margin:8px 2px 10px">'+esc(name)+(uid?' · ID '+esc(uid):'')+'</p>'+
+      (!uid?'<input id="faUid" inputmode="numeric" placeholder="Telegram ID пользователя" autocomplete="off">':'')+
+      '<input id="faAmt" inputmode="numeric" placeholder="Количество VEYRA Credits" value="'+(isAdd?'200000':'')+'" autocomplete="off">'+
+      '<div class="fin-chips">'+[50000,200000,500000,1000000].map(v=>'<button class="fb-chip" data-fa="preset" data-v="'+v+'">+'+fmt(v)+'</button>').join('')+'</div>'+
+      '<input id="faReason" maxlength="120" placeholder="Комментарий (необязательно)" autocomplete="off">'+
+      (isAdd?'<label class="fb-anon" style="margin:0 2px 12px;font-size:13.5px;color:var(--muted)"><input type="checkbox" id="faNotify" checked><span>Уведомить пользователя в боте</span></label>':'')+
+      '<button class="btn '+(isAdd?'pri':'dan')+' cn-b" data-fa="go">'+(isAdd?'Начислить':'Списать')+'</button>'+
+    '</div>';
+  d.classList.add('on');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(close)};
+  pushLayer(close);
+  d.onclick=async e=>{
+    if(e.target===d){close();return}
+    const b=e.target.closest('[data-fa]');if(!b)return;
+    const a=b.dataset.fa;
+    if(a==='close'){close();return}
+    if(a==='preset'){const i=$('#faAmt');if(i)i.value=b.dataset.v;hap();return}
+    if(a==='go'){
+      const targetId=(uid||($('#faUid')&&$('#faUid').value.trim())||'').trim();
+      if(!/^\d{3,20}$/.test(targetId)){infoBox('Неверный ID','Введите числовой Telegram ID пользователя.');return}
+      const rawAmt=Math.abs(parseInt($('#faAmt').value)||0);
+      if(!rawAmt){infoBox('Укажите сумму','Введите количество VEYRA Credits.');return}
+      const delta=isAdd?rawAmt:-rawAmt;
+      const reason=($('#faReason')&&$('#faReason').value.trim())||'';
+      const notify=isAdd&&!!($('#faNotify')&&$('#faNotify').checked);
+      b.disabled=true;
+      try{
+        await upApi('POST','/admin/finance/users/'+encodeURIComponent(targetId)+'/adjust',{amount:delta,reason:reason,notify:notify});
+        close();hap('medium');toast(isAdd?'Начислено +'+fmtCr(rawAmt)+' Cr':'Списано −'+fmtCr(rawAmt)+' Cr');
+        loadFin(true);
+        if(user&&String(user.id)===targetId)syncManaged().then(()=>{save();renderUsageSafe();syncDrawerWal()}).catch(()=>{});
+      }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось изменить баланс',noNav:true})}
+    }
+  };
+}
+async function openUserTxModal(uid,name){
+  const d=$('#dlg');if(d.classList.contains('on'))return;
+  d.classList.remove('context');
+  d.innerHTML='<div class="dcard fb" role="dialog" aria-modal="true"><div class="fb-h"><h4>История: '+esc(name)+'</h4><button class="ib" data-ft="close">'+ic('x',20)+'</button></div><div id="ftList" style="margin-top:12px"><div class="hint" style="text-align:center">Загрузка…</div></div></div>';
+  d.classList.add('on');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;popLayer(close)};
+  pushLayer(close);
+  d.onclick=e=>{if(e.target===d||e.target.closest('[data-ft="close"]'))close()};
+  try{
+    const j=await upApi('GET','/admin/finance/users/'+encodeURIComponent(uid)+'/tx');
+    const l=$('#ftList');if(l)l.innerHTML=renderTxList(j.items||[]);
+  }catch(err){close();showError(err,{where:'cloud',title:'Не удалось загрузить историю',noNav:true})}
+}
+function openPkgModal(idx){
+  const d=$('#dlg');if(d.classList.contains('on'))return;
+  const ex=idx!=null?FIN.packages[idx]:null;
+  d.classList.remove('context');
+  d.innerHTML=
+    '<div class="dcard fb" role="dialog" aria-modal="true">'+
+      '<div class="fb-h"><h4>'+(ex?'Редактировать пакет':'Новый пакет')+'</h4><button class="ib" data-pk="close">'+ic('x',20)+'</button></div>'+
+      '<label style="display:block;margin:10px 0 5px;color:var(--muted);font-size:13px">Название</label><input id="pkTitle" value="'+esc(ex?ex.title:'')+'" placeholder="Например: Оптимальный" maxlength="40">'+
+      '<div class="fin-grid2">'+
+        '<div><label style="display:block;margin:0 0 5px;color:var(--muted);font-size:13px">VEYRA Credits</label><input id="pkCr" inputmode="numeric" value="'+(ex?ex.credits:'500000')+'"></div>'+
+        '<div><label style="display:block;margin:0 0 5px;color:var(--muted);font-size:13px">Цена (⭐ Stars)</label><input id="pkSt" inputmode="numeric" value="'+(ex?ex.stars:'100')+'"></div>'+
+      '</div>'+
+      '<label style="display:block;margin:0 0 5px;color:var(--muted);font-size:13px">Бейдж (необязательно)</label><input id="pkBadge" value="'+esc(ex?ex.badge:'')+'" placeholder="Например: Популярный или Выгода 20%" maxlength="24">'+
+      '<button class="btn pri cn-b" data-pk="save">Сохранить</button>'+
+    '</div>';
+  d.classList.add('on');
+  const close=()=>{d.classList.remove('on');d.innerHTML='';d.onclick=null;d.style.paddingBottom='';popLayer(close)};
+  pushLayer(close);
+  d.onclick=async e=>{
+    if(e.target===d){close();return}
+    const b=e.target.closest('[data-pk]');if(!b)return;
+    if(b.dataset.pk==='close'){close();return}
+    if(b.dataset.pk==='save'){
+      const title=$('#pkTitle').value.trim(),cr=parseInt($('#pkCr').value)||0,st=parseInt($('#pkSt').value)||0,badge=$('#pkBadge').value.trim();
+      if(cr<1000||st<1){infoBox('Проверьте поля','Минимум 1 000 кредитов и 1 ⭐.');return}
+      const next=FIN.packages.map(x=>Object.assign({},x));
+      const obj={id:ex?ex.id:('pack_'+Date.now().toString(36)),title:title||(fmtCr(cr)+' Cr'),credits:cr,stars:st,badge:badge,active:true};
+      if(ex)next[idx]=obj;else next.push(obj);
+      b.disabled=true;
+      try{
+        const j=await upApi('PUT','/admin/finance/packages',{packages:next});
+        FIN.packages=j.packages||next;close();renderFin();toast('Пакеты сохранены');
+      }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось сохранить пакеты',noNav:true})}
+    }
+  };
+}
+$('#finBack').innerHTML=ic('back',24);
+$('#finBack').addEventListener('click',closeFinPage);
+$('#finRefresh').innerHTML=ic('refresh',20);
+$('#finRefresh').addEventListener('click',()=>{hap();loadFin(false)});
+$('#finBody').addEventListener('input',e=>{
+  if(e.target.id==='finSearch'){FIN.q=e.target.value;renderFin();const s=$('#finSearch');if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length)}}
+});
+$('#finBody').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-fin]');if(!b)return;
+  const a=b.dataset.fin;
+  if(a==='tab'){FIN.tab=b.dataset.t;hap();loadFin(false)}
+  else if(a==='per'){FIN.days=+b.dataset.d;hap();loadFin(false)}
+  else if(a==='testmode'){
+    const next=!FIN.testMode;b.disabled=true;
+    try{
+      const j=await upApi('PUT','/admin/finance/test-mode',{enabled:next});
+      FIN.testMode=!!j.test_mode;
+      if(FIN.stats)FIN.stats.test_mode=FIN.testMode;
+      renderFin();hap();
+      toast(FIN.testMode?'Тестовый режим оплаты включён':'Боевой режим Telegram Stars включён!');
+    }catch(err){showError(err,{where:'cloud',title:'Не удалось переключить режим',noNav:true})}
+    b.disabled=false;
+  }
+  else if(a==='cleartests'){
+    const ok=await dialog({title:'Очистить тестовые оплаты?',text:'Удалятся записи о тестовых платежах из статистики. Реальные платежи и балансы не затронутся.',ok:'Очистить',danger:true});
+    if(!ok)return;
+    try{await upApi('DELETE','/admin/finance/test-payments');toast('Тестовые оплаты очищены');loadFin(true)}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось очистить',noNav:true})}
+  }
+  else if(a==='adj'){openAdjustDialog(b.dataset.uid,b.dataset.nm,+b.dataset.dir)}
+  else if(a==='adjbyid'){openAdjustDialog('','Пользователь по ID',1)}
+  else if(a==='utx'){openUserTxModal(b.dataset.uid,b.dataset.nm)}
+  else if(a==='pickm'){const i=$('#prModel');if(i){i.value=b.dataset.m;i.focus()}hap()}
+  else if(a==='predit'){
+    const x=FIN.pricing.find(r=>r.model===b.dataset.m);if(!x)return;
+    $('#prModel').value=x.model;$('#prIn').value=x.price_in;$('#prOut').value=x.price_out;
+    $('#prCostIn').value=x.cost_in_usd;$('#prCostOut').value=x.cost_out_usd;
+    $('#finBody').scrollTo({top:0,behavior:'smooth'});
+  }
+  else if(a==='prsave'){
+    const model=$('#prModel').value.trim();
+    if(!model){infoBox('Укажите модель','Введите точное название модели или выберите её из списка.');return}
+    b.disabled=true;
+    try{
+      await upApi('PUT','/admin/finance/pricing',{
+        model:model,
+        price_in:parseFloat(String($('#prIn').value).replace(',','.'))||0,
+        price_out:parseFloat(String($('#prOut').value).replace(',','.'))||0,
+        cost_in_usd:parseFloat(String($('#prCostIn').value).replace(',','.'))||0,
+        cost_out_usd:parseFloat(String($('#prCostOut').value).replace(',','.'))||0
+      });
+      toast('Тариф сохранён');loadFin(true);
+    }catch(err){showError(err,{where:'cloud',title:'Не удалось сохранить тариф',noNav:true})}
+    b.disabled=false;
+  }
+  else if(a==='prdel'){
+    const m=b.dataset.m;
+    const ok=await dialog({title:'Сбросить тариф модели?',text:'«'+m+'» снова будет списывать 1:1 по токенам.',ok:'Сбросить',danger:true});
+    if(!ok)return;
+    try{await upApi('DELETE','/admin/finance/pricing?model='+encodeURIComponent(m));toast('Тариф сброшен');loadFin(true)}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось удалить тариф',noNav:true})}
+  }
+  else if(a==='ratesave'){
+    const r=parseFloat(String($('#prStarRate').value).replace(',','.'));
+    if(!Number.isFinite(r)||r<=0){infoBox('Некорректный курс','Например: 0.013');return}
+    b.disabled=true;
+    try{const j=await upApi('PUT','/admin/finance/pricing',{star_usd_rate:r});FIN.starRate=j.star_usd_rate;toast('Курс сохранён')}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось сохранить курс',noNav:true})}
+    b.disabled=false;
+  }
+  else if(a==='pkadd'){openPkgModal(null)}
+  else if(a==='pkedit'){openPkgModal(+b.dataset.i)}
+  else if(a==='pkdel'){
+    const i=+b.dataset.i,p=FIN.packages[i];if(!p)return;
+    if(FIN.packages.length<=1){infoBox('Нельзя удалить последний пакет','Должен остаться хотя бы один пакет пополнения.');return}
+    const ok=await dialog({title:'Удалить пакет?',text:'«'+p.title+'» ('+p.stars+' ⭐) будет удалён.',ok:'Удалить',danger:true});
+    if(!ok)return;
+    const next=FIN.packages.filter((_,k)=>k!==i);
+    try{const j=await upApi('PUT','/admin/finance/packages',{packages:next});FIN.packages=j.packages||next;renderFin();toast('Пакет удалён')}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось удалить пакет',noNav:true})}
+  }
+  else if(a==='pkreset'){
+    const ok=await dialog({title:'Сбросить пакеты по умолчанию?',ok:'Сбросить'});
+    if(!ok)return;
+    try{const j=await upApi('PUT','/admin/finance/packages',{reset:true});FIN.packages=j.packages||[];renderFin();toast('Пакеты восстановлены')}
+    catch(err){showError(err,{where:'cloud',title:'Не удалось сбросить пакеты',noNav:true})}
   }
 });
 
