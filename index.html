@@ -5331,6 +5331,7 @@ async function fbLoad(silent){
 function openFbPage(tab){
   if(!isAdmin)return;
   if(tab==='req'||tab==='rev')FB.tab=tab;
+  FB.arch=false;
   if($('#fbPage').classList.contains('open')){fbRender();return}
   buildQSection();
   $('#fbPage').classList.add('open');pushLayer(closeFbPage);
@@ -5340,6 +5341,12 @@ function openFbPage(tab){
 }
 function closeFbPage(){
   if(!$('#fbPage').classList.contains('open'))return;
+  if(FB.tab==='req'&&FB.arch){
+    FB.arch=false;fbRender();hap();
+    const bd=$('#fbPageBody');if(bd)bd.scrollTop=0;
+    return;
+  }
+  FB.arch=false;
   $('#fbPage').classList.remove('open');popLayer(closeFbPage);
 }
 $('#fbBack').innerHTML=ic('back',24);
@@ -5986,7 +5993,6 @@ function renderFin(){
               '<button class="btn pri sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="1">+ Начислить</button>'+
               '<button class="btn sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="-1">− Списать</button>'+
               '<button class="btn sm" data-fin="utx" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'">История</button>'+
-              '<button class="btn dan sm rc-del" data-fin="udel" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" aria-label="Удалить баланс">'+ic('trash',15)+'</button>'+
             '</div></div>';
         }).join(''));
     return;
@@ -6358,17 +6364,6 @@ $('#finBody').addEventListener('click',async e=>{
   else if(a==='adj'){openAdjustDialog(b.dataset.uid,b.dataset.nm,+b.dataset.dir)}
   else if(a==='adjbyid'){openAdjustDialog('','Пользователь по ID',1)}
   else if(a==='utx'){openUserTxModal(b.dataset.uid,b.dataset.nm)}
-  else if(a==='udel'){
-    const uid=b.dataset.uid,nm=b.dataset.nm||('ID '+uid);
-    const ok=await dialog({title:'Удалить баланс?',text:'Запись о балансе, история операций и системное подключение пользователя '+nm+' будут удалены.',ok:'Удалить',danger:true});
-    if(!ok)return;
-    b.disabled=true;
-    try{
-      await upApi('DELETE','/admin/finance/users/'+encodeURIComponent(uid)+'/balance');
-      FIN.users=FIN.users.filter(x=>String(x.user_id)!==String(uid));
-      FIN.ts.stats=0;renderFin();loadFin(true,'stats');toast('Запись удалена');
-    }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось удалить баланс',noNav:true})}
-  }
   else if(a==='pkadd'){openPkgModal(null)}
   else if(a==='pkedit'){openPkgModal(+b.dataset.i)}
   else if(a==='pkdel'){
