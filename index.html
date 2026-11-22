@@ -1372,6 +1372,26 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
 .fin-u-bal small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
 .fin-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
 .fin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* Архив кодов (серая кликабельная надпись справа от «Заявки и коды») */
+.fb-arch-link{font-size:13px;font-weight:600;color:var(--muted);padding:4px 6px;border-radius:10px;white-space:nowrap;transition:opacity .15s,color .15s}
+.fb-arch-link:active{opacity:.55}
+.fb-arch-link.on{color:var(--text)}
+/* Компактные карточки пакетов по 2 в ряд + превью кошелька пользователя */
+.pk-adm-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 12px}
+.pk-adm{display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:12px;border-radius:22px;background:var(--flt-bg);box-shadow:var(--flt-sh-sm);min-width:0}
+.pk-adm-top{min-width:0}
+.pk-adm-t{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-adm-cr{font-size:16px;font-weight:800;line-height:1.2;margin-top:2px}
+.pk-adm-sub{font-size:11.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-adm-acts{display:flex;align-items:center;gap:6px}
+.pk-adm-acts .btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.pk-adm-acts .pk-ed{flex:1;text-align:center}
+.pk-adm-acts .pk-dl{flex:none;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center}
+.wal-prev{margin-top:6px;padding:12px;border-radius:28px;background:var(--deb-bg);box-shadow:var(--deb-sh)}
+.wal-prev .wal-hero{margin-bottom:10px;padding:14px 14px 12px}
+.wal-prev .wal-num{font-size:26px}
+.wal-prev .wp-h{margin:10px 4px 6px;font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.wal-prev .pkg-grid{margin:4px 0 0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1429,7 +1449,7 @@ button.ufile{border:0;border-radius:999px;padding:9px 15px;background:var(--flt-
     <div id="fbPageBody">
       <div class="fb-tabs" id="fbTabs"></div>
       <div id="fbReqPane">
-        <div class="uh-row" id="fbReqHead" style="margin-top:4px"><h3>Заявки и коды</h3><button class="btn sm" id="fbReqReadAll" data-fba="readall" data-scope="req" hidden>Прочитать все</button></div>
+        <div class="uh-row" id="fbReqHead" style="margin-top:4px"><h3 id="fbReqTitle">Заявки и коды</h3><div style="display:flex;align-items:center;gap:8px;margin-left:auto"><button class="btn sm" id="fbReqReadAll" data-fba="readall" data-scope="req" hidden>Прочитать все</button><button class="fb-arch-link" id="fbArchBtn" data-fba="arch">Архив</button></div></div>
         <div id="fbReqList"></div>
         <div id="qSection"></div>
       </div>
@@ -5082,7 +5102,7 @@ async function qLoadModels(){
   }catch(e){showError(e,{where:'models',provider:p.name,title:'Не удалось загрузить список моделей',noNav:true})}
 }
 /* ---------- отдельная страница «Обращения» (2 вкладки: Заявки и Отзывы) ---------- */
-const FB={items:[],tab:'req',loading:false,loaded:false,notReady:false};
+const FB={items:[],tab:'req',arch:false,loading:false,loaded:false,notReady:false};
 const FB_LBL={review:'Отзыв',idea:'Предложение',bug:'Ошибка',code:'Заявка на код'};
 function syncFbBadges(){
   const n=unreadFeedback>0?String(unreadFeedback):'';
@@ -5242,16 +5262,35 @@ function fbRender(){
     '<button class="fb-tab'+(FB.tab==='rev'?' on':'')+'" data-fba="tab" data-tab="rev"><span>Отзывы</span>'+(revUnread?'<span class="fb-tbadge">'+revUnread+'</span>':'')+'</button>';
   if(reqPane)reqPane.hidden=FB.tab!=='req';
   if(revPane)revPane.hidden=FB.tab!=='rev';
-  if(reqAllBtn)reqAllBtn.hidden=!reqUnread;
+  if(reqAllBtn)reqAllBtn.hidden=FB.arch||!reqUnread;
   if(revAllBtn)revAllBtn.hidden=!revUnread;
 
-  // Вкладка «Заявки»: объединённые компактные карточки (заявка + код в одном окне), внизу всегда «Быстрая настройка»
+  // Вкладка «Заявки»: активные заявки и коды отдельно, использованные/неактивные коды — в «Архив»
   const now=Date.now();
+  const entries=buildUnifiedEntries(reqs,Q_CODES.items,now);
+  const activeEntries=[],archEntries=[];
+  entries.forEach(e=>{
+    const liveCodes=e.codes.filter(c=>!isCodeDead(c,now));
+    const deadCodes=e.codes.filter(c=>isCodeDead(c,now));
+    const keepActive=e.unread||liveCodes.length>0||deadCodes.length===0;
+    if(keepActive)activeEntries.push(Object.assign({},e,{codes:liveCodes}));
+    if(deadCodes.length>0)archEntries.push(Object.assign({},e,{unread:false,reqs:keepActive?[]:e.reqs,codes:deadCodes}));
+  });
+  const archCnt=archEntries.reduce((s,e)=>s+e.codes.length,0);
+  const reqTitle=$('#fbReqTitle'),archBtn=$('#fbArchBtn'),qSec=$('#qSection');
+  if(reqTitle)reqTitle.textContent=FB.arch?'Архив кодов':'Заявки и коды';
+  if(archBtn){
+    archBtn.textContent=FB.arch?'Заявки и коды':(archCnt?'Архив ('+archCnt+')':'Архив');
+    archBtn.classList.toggle('on',FB.arch);
+  }
+  if(qSec)qSec.hidden=FB.arch;
+
   if((FB.loading||Q_CODES.loading)&&!reqs.length&&!Q_CODES.items.length){
     reqList.innerHTML='<div class="fb-empty">Загрузка заявок и кодов…</div>';
+  }else if(FB.arch){
+    reqList.innerHTML=archEntries.length?archEntries.map(e=>fbEntryCard(e,now)).join(''):'<div class="fb-empty" style="padding:26px 16px">Использованных кодов в архиве пока нет.</div>';
   }else{
-    const entries=buildUnifiedEntries(reqs,Q_CODES.items,now);
-    reqList.innerHTML=entries.length?entries.map(e=>fbEntryCard(e,now)).join(''):'<div class="fb-empty" style="padding:22px 16px">Заявок и выданных кодов пока нет.</div>';
+    reqList.innerHTML=activeEntries.length?activeEntries.map(e=>fbEntryCard(e,now)).join(''):'<div class="fb-empty" style="padding:22px 16px">Активных заявок и кодов пока нет.</div>';
   }
 
   // Вкладка «Отзывы»: единый список без подвкладок, тип (Отзыв / Предложение / Ошибка) указан в каждой карточке
@@ -5331,16 +5370,17 @@ $('#fbPageBody').addEventListener('click',async e=>{
     }
     else if(ua==='qclearTarget'){Q_TARGET=null;qTargetRender();hap()}
     else if(ua==='qdel'){
-      const ok=await dialog({title:'Удалить код?',text:'Код '+ub.dataset.id+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.',ok:'Удалить',danger:true});
+      const ok=await dialog({title:'Удалить код?',text:'Код '+ub.dataset.id+' пропадёт из списка. Подключение и запись о балансе пользователя, активировавшего этот код, тоже будут удалены.',ok:'Удалить',danger:true});
       if(!ok)return;
-      try{await upApi('DELETE','/admin/setup-codes/'+ub.dataset.id+'?purge=1');qLoad(true)}catch(err){showError(err,{where:'cloud',title:'Не удалось удалить код'})}
+      try{await upApi('DELETE','/admin/setup-codes/'+ub.dataset.id+'?purge=1');FIN.ts.stats=0;FIN.ts.users=0;qLoad(true)}catch(err){showError(err,{where:'cloud',title:'Не удалось удалить код'})}
     }
     else if(ua==='qrev'){try{await upApi('DELETE','/admin/setup-codes/'+ub.dataset.id);qLoad(true)}catch(err){showError(err,{where:'cloud',title:'Не удалось отозвать код'})}}
     return;
   }
   const b=e.target.closest('[data-fba]');if(!b)return;
   const a=b.dataset.fba;
-  if(a==='tab'){FB.tab=b.dataset.tab==='rev'?'rev':'req';fbRender();hap()}
+  if(a==='tab'){FB.tab=b.dataset.tab==='rev'?'rev':'req';if(FB.tab==='req')FB.arch=false;fbRender();hap()}
+  else if(a==='arch'){FB.arch=!FB.arch;fbRender();hap()}
   else if(a==='read'){
     const id=b.dataset.id;b.disabled=true;
     try{
@@ -5386,6 +5426,7 @@ $('#fbPageBody').addEventListener('click',async e=>{
   else if(a==='mkcode'){
     const uid=b.dataset.uid||'';
     if(!uid)return;
+    if(FB.arch){FB.arch=false;fbRender()}
     Q_TARGET={user_id:uid,first_name:b.dataset.fn||'',username:b.dataset.un||'',request_id:b.dataset.reqid||''};
     buildQSection();
     qTargetRender();
@@ -5402,7 +5443,7 @@ $('#fbPageBody').addEventListener('click',async e=>{
     const cids=(b.dataset.codes||'').split(',').filter(Boolean);
     const title=rids.length&&cids.length?'Удалить заявку и код?':cids.length?'Удалить код?':'Удалить заявку?';
     const text=cids.length
-      ?(rids.length?'Заявка и код ('+cids.join(', ')+') будут удалены. Если код уже активирован, системное подключение пользователя отключится.':'Код '+cids.join(', ')+' пропадёт из списка. Подключение у тех, кто его уже активировал, тоже отключится.')
+      ?(rids.length?'Заявка и код ('+cids.join(', ')+') будут удалены. Если код был использован, системное подключение и запись о балансе пользователя тоже удалятся.':'Код '+cids.join(', ')+' будет удалён вместе с подключением и записью о балансе пользователя.')
       :'Заявка будет удалена из панели управления без возможности восстановления.';
     const ok=await dialog({title:title,text:text,ok:'Удалить',danger:true});
     if(!ok)return;
@@ -5412,7 +5453,7 @@ $('#fbPageBody').addEventListener('click',async e=>{
         ...cids.map(c=>upApi('DELETE','/admin/setup-codes/'+encodeURIComponent(c)+'?purge=1')),
         ...rids.map(id=>upApi('DELETE','/admin/feedback/'+encodeURIComponent(id)))
       ]);
-      if(cids.length)Q_CODES.items=Q_CODES.items.filter(x=>cids.indexOf(x.code)<0);
+      if(cids.length){Q_CODES.items=Q_CODES.items.filter(x=>cids.indexOf(x.code)<0);FIN.ts.stats=0;FIN.ts.users=0}
       if(rids.length)FB.items=FB.items.filter(x=>rids.indexOf(String(x.id))<0);
       fbRender();toast('Удалено');
     }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось удалить запись'})}
@@ -5850,7 +5891,7 @@ async function setFinTestMode(nextTest){
     FIN.testMode=!!j.test_mode;
     if(FIN.stats)FIN.stats.test_mode=FIN.testMode;
     WAL.ts=0;if(WAL.data)WAL.data.test_mode=FIN.testMode;if(S.walMeta)S.walMeta.test_mode=FIN.testMode;save();
-    syncFinTestSw();
+    syncFinTestSw();if(FIN.tab==='packs'&&$('#finPage').classList.contains('open'))renderFin();
     toast(FIN.testMode?'🧪 Тестовый режим оплаты включён':'⭐ Обычный режим Telegram Stars включён!');
   }catch(err){
     FIN.testMode=prev;
@@ -5905,7 +5946,7 @@ function renderFin(){
     el.innerHTML=
       barHtml+
       '<div class="fin-card">'+
-        '<div class="fin-ch"><h4>Кошелёк провайдера и кредиты</h4><button class="btn sm" data-fin="pwedit">'+(hasPw?'Изменить':'Настроить')+'</button></div>'+
+        '<div class="fin-ch"><h4>Кошелёк провайдера и кредиты</h4><button class="btn sm" data-fin="pwedit">Расчёт</button></div>'+
         pwHero+
         '<div class="fin-split">'+
           '<div class="fin-stat"><small>Выдано кредитов</small><b>'+fmtCr(s.total_granted_all)+'</b><span>На руках: '+fmtCr(s.total_balances)+' ('+s.wallet_users+' чел.)</span></div>'+
@@ -5913,7 +5954,7 @@ function renderFin(){
         '</div>'+
       '</div>'+
       '<div class="fin-card">'+
-        '<div class="fin-ch"><h4>Сводка по прибыли · '+esc(perObj[1])+'</h4><button class="btn sm" data-fin="pwedit">Расчёт</button></div>'+
+        '<div class="fin-ch"><h4>Сводка по прибыли · '+esc(perObj[1])+'</h4></div>'+
         '<div class="fin-hero">'+
           '<div class="fin-big '+profCls+'">'+(profVal>0?'+':'')+fmtUsd(profVal)+(margin!==null?'<span class="fin-margin'+(margin<0?' neg':'')+'">'+margin+'%</span>':'')+'</div>'+
           '<div class="fin-big-sub">Чистая прибыль за выбранный период</div>'+
@@ -5945,6 +5986,7 @@ function renderFin(){
               '<button class="btn pri sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="1">+ Начислить</button>'+
               '<button class="btn sm" data-fin="adj" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" data-dir="-1">− Списать</button>'+
               '<button class="btn sm" data-fin="utx" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'">История</button>'+
+              '<button class="btn dan sm rc-del" data-fin="udel" data-uid="'+esc(u.user_id)+'" data-nm="'+esc(u.first_name||('ID '+u.user_id))+'" aria-label="Удалить баланс">'+ic('trash',15)+'</button>'+
             '</div></div>';
         }).join(''));
     return;
@@ -5973,15 +6015,50 @@ function renderFin(){
   }
 
   if(FIN.tab==='packs'){
+    const visPkgs=FIN.packages.filter(p=>p.active!==false);
+    const prevCards=visPkgs.length
+      ?'<div class="pkg-grid">'+visPkgs.map((p,idx)=>{
+          const badgeText=(p.badge&&String(p.badge).trim())||(idx===0||p.id==='pack_200k'?'Базовый':'');
+          const isBase=!!(badgeText&&/базов/i.test(badgeText));
+          const pop=!!(badgeText&&/попул/i.test(badgeText));
+          return '<div class="pkg'+(pop?' pop':'')+'">'+
+            (badgeText?'<span class="pkg-b'+(isBase?' base':'')+'">'+esc(badgeText)+'</span>':'')+
+            '<div><div class="pkg-t">'+esc(p.title||'Пакет')+'</div><div class="pkg-cr">'+fmtCr(p.credits)+'<small>VEYRA Credits</small></div></div>'+
+            '<span class="pkg-st">'+p.stars+' ⭐</span></div>';
+        }).join('')+'</div>'
+      :'<div class="hint" style="text-align:center">Нет активных пакетов</div>';
+
     el.innerHTML=
       '<h3>Пакеты VEYRA Credits</h3>'+
+      '<div class="pk-adm-grid">'+
       FIN.packages.map((p,i)=>
-        '<div class="uc" style="padding:11px 14px;margin-bottom:9px"><div class="uh"><b>'+esc(p.title)+' · '+fmtCr(p.credits)+' Cr</b>'+
-          '<div style="display:flex;gap:6px"><button class="btn sm" data-fin="pkedit" data-i="'+i+'">Изм.</button>'+
-          '<button class="btn dan sm" data-fin="pkdel" data-i="'+i+'" style="width:32px;height:32px;padding:0;display:grid;place-items:center">'+ic('trash',15)+'</button></div></div>'+
-          '<div class="ul sub">'+p.stars+' ⭐'+(p.badge?' · '+esc(p.badge):'')+(p.active===false?' · скрыт':'')+'</div></div>'
+        '<div class="pk-adm">'+
+          '<div class="pk-adm-top">'+
+            '<div class="pk-adm-t">'+esc(p.title||'Пакет')+'</div>'+
+            '<div class="pk-adm-cr">'+fmtCr(p.credits)+'</div>'+
+            '<div class="pk-adm-sub">'+p.stars+' ⭐'+(p.badge?' · '+esc(p.badge):'')+(p.active===false?' · скрыт':'')+'</div>'+
+          '</div>'+
+          '<div class="pk-adm-acts">'+
+            '<button class="btn sm pk-ed" data-fin="pkedit" data-i="'+i+'">Изм.</button>'+
+            '<button class="btn dan sm pk-dl" data-fin="pkdel" data-i="'+i+'" aria-label="Удалить пакет">'+ic('trash',14)+'</button>'+
+          '</div>'+
+        '</div>'
       ).join('')+
-      '<div class="btns one"><button class="btn pri" data-fin="pkadd">+ Добавить пакет</button><button class="btn" data-fin="pkreset">По умолчанию</button></div>';
+      '</div>'+
+      '<div class="btns one"><button class="btn pri" data-fin="pkadd">+ Добавить пакет</button><button class="btn" data-fin="pkreset">По умолчанию</button></div>'+
+      '<h3>Превью кошелька пользователя</h3>'+
+      '<div class="wal-prev">'+
+        '<div class="uc wal-hero">'+
+          '<div class="wal-lbl">Текущий баланс</div>'+
+          '<div class="wal-num">200 000</div>'+
+          '<div class="wal-unit">VEYRA Credits</div>'+
+          '<div class="wal-sub"><span>Начислено: 200 000</span><span>Потрачено: 0</span></div>'+
+          '<div class="bar" style="margin-top:10px"><i style="width:100%"></i></div>'+
+          (FIN.testMode?'<div class="wal-mode">🧪 Тестовый режим · реальные ⭐ не списываются</div>':'')+
+        '</div>'+
+        '<div class="wp-h">Пополнить через Telegram Stars</div>'+
+        prevCards+
+      '</div>';
   }
 }
 
@@ -6281,6 +6358,17 @@ $('#finBody').addEventListener('click',async e=>{
   else if(a==='adj'){openAdjustDialog(b.dataset.uid,b.dataset.nm,+b.dataset.dir)}
   else if(a==='adjbyid'){openAdjustDialog('','Пользователь по ID',1)}
   else if(a==='utx'){openUserTxModal(b.dataset.uid,b.dataset.nm)}
+  else if(a==='udel'){
+    const uid=b.dataset.uid,nm=b.dataset.nm||('ID '+uid);
+    const ok=await dialog({title:'Удалить баланс?',text:'Запись о балансе, история операций и системное подключение пользователя '+nm+' будут удалены.',ok:'Удалить',danger:true});
+    if(!ok)return;
+    b.disabled=true;
+    try{
+      await upApi('DELETE','/admin/finance/users/'+encodeURIComponent(uid)+'/balance');
+      FIN.users=FIN.users.filter(x=>String(x.user_id)!==String(uid));
+      FIN.ts.stats=0;renderFin();loadFin(true,'stats');toast('Запись удалена');
+    }catch(err){b.disabled=false;showError(err,{where:'cloud',title:'Не удалось удалить баланс',noNav:true})}
+  }
   else if(a==='pkadd'){openPkgModal(null)}
   else if(a==='pkedit'){openPkgModal(+b.dataset.i)}
   else if(a==='pkdel'){
